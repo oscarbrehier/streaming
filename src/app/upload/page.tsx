@@ -76,7 +76,7 @@ export default function Page() {
 
 				<FileUploadSection
 					onFileSelect={setFile}
-					selectedMovie={null}
+					selectedMovie={selectedMedia}
 					uploadedFile={file}
 				/>
 

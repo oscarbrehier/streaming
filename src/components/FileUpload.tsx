@@ -4,17 +4,16 @@ import type React from "react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Upload, Check, X, RefreshCw } from "lucide-react"
-import VideoPlayer from "./Player"
-import { HLSPlayer } from "./HLSPlayer"
 
 interface FileUploadSectionProps {
 	onFileSelect: (file: File | null) => void
-	selectedMovie: string | null
+	selectedMovie: any | null
 	uploadedFile: File | null
 }
 
 export default function FileUploadSection({ onFileSelect, selectedMovie, uploadedFile }: FileUploadSectionProps) {
 
+	const [file, setFile] = useState<File | null>(null);
 	const [isDragging, setIsDragging] = useState(false);
 	const [progress, setProgress] = useState(0);
 	const [isUploading, setIsUploading] = useState(false);
@@ -60,11 +59,12 @@ export default function FileUploadSection({ onFileSelect, selectedMovie, uploade
 	const processFile = async (file: File) => {
 
 		onFileSelect(file);
-		await upload(file);
+		setFile(file);
+		// await upload(file);
 
 	};
 
-	async function upload(file: File) {
+	async function upload() {
 
 		if (!file) return;
 
@@ -123,7 +123,7 @@ export default function FileUploadSection({ onFileSelect, selectedMovie, uploade
 
 	async function getConvertProgress(filename: string) {
 
-		const res = await fetch(`/api/convert/progress?dir=media/${filename}_hls`);
+		const res = await fetch(`/api/convert/progress?dir=media/${filename}`);
 		const data = await res.json();
 
 		return data.percent ?? 0;
@@ -137,19 +137,22 @@ export default function FileUploadSection({ onFileSelect, selectedMovie, uploade
 		setIsConverting(true);
 		setProgress(0);
 
+		const mediaId = selectedMovie.id;
+
 		try {
 
 			fetch("/api/convert", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({
-					filename
+					filename,
+					mediaId
 				})
 			});
 
 			const interval = setInterval(async () => {
 
-				const progress = await getConvertProgress(filename);
+				const progress = await getConvertProgress(mediaId);
 				setProgress(progress);
 
 				if (progress >= 100) {
@@ -160,9 +163,8 @@ export default function FileUploadSection({ onFileSelect, selectedMovie, uploade
 
 			}, 1000);
 
-			const url = `/api/media/${filename}_hls/index.m3u8`;
+			const url = `/api/media/${mediaId}/index.m3u8`;
 			setVideoUrl(url);
-			console.log(url);
 
 		} catch (err) {
 
@@ -280,7 +282,7 @@ export default function FileUploadSection({ onFileSelect, selectedMovie, uploade
 
 			</div>
 
-			{isComplete && videoUrl && (
+			{/* {isComplete && videoUrl && (
 
 				<div className="w-96">
 					<HLSPlayer
@@ -288,13 +290,14 @@ export default function FileUploadSection({ onFileSelect, selectedMovie, uploade
 					/>
 				</div>
 
-			)}
+			)} */}
 
 			<div className="pt-8 border-t border-border">
 
 				<Button
+					onClick={(e) => upload()}
 					className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
-					disabled={!uploadedFile || !selectedMovie || isUploading}
+					disabled={!selectedMovie || !file || isUploading || isConverting || isComplete}
 				>
 					Complete Upload
 				</Button>
