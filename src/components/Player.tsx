@@ -7,6 +7,7 @@ import { BiFullscreen } from "react-icons/bi";
 import { MdOutlineSubtitles, MdSubtitles } from "react-icons/md";
 import { IoChevronBack } from "react-icons/io5";
 import { motion } from "framer-motion";
+import Hls from "hls.js";
 
 interface VideoPlayerProps {
 	videoUrl: string;
@@ -25,6 +26,7 @@ export default function VideoPlayer({
 	initialTimecode = 0,
 	showRating = true
 }: VideoPlayerProps) {
+
 	const router = useRouter();
 	const videoRef = useRef<HTMLVideoElement>(null);
 	const playerRef = useRef<HTMLDivElement>(null);
@@ -42,15 +44,53 @@ export default function VideoPlayer({
 
 	// Load video and set initial timecode
 	useEffect(() => {
+
 		if (videoRef.current && initialTimecode > 0) {
 			videoRef.current.currentTime = initialTimecode;
-		}
+		};
+
 	}, [initialTimecode]);
+
+	// HLS support
+	useEffect(() => {
+
+		if (!videoUrl || !videoRef.current) return ;
+
+		const video = videoRef.current;
+
+		if (videoUrl.endsWith(".m3u8")) {
+
+			if (video.canPlayType("application/vnd.apple.mpegurl")) {
+
+				video.src = videoUrl;
+
+			} else if (Hls.isSupported()) {
+
+				const hls = new Hls();
+				hls.loadSource(videoUrl);
+				hls.attachMedia(video);
+
+				return () => {
+					hls.destroy();
+				};
+
+			};
+
+		} else {
+
+			video.src = videoUrl;
+
+		};
+
+	}, [videoUrl]);
 
 	// Update timecode display
 	useEffect(() => {
+		
 		const updateCurrentTime = () => {
+
 			if (videoRef.current) {
+				
 				const playingTime = formatTime(videoRef.current.currentTime);
 				setFormattedTime(playingTime);
 				setTimecode(videoRef.current.currentTime);
@@ -58,93 +98,122 @@ export default function VideoPlayer({
 				// Call callback if provided
 				if (onTimeUpdate) {
 					onTimeUpdate(videoRef.current.currentTime);
-				}
-			}
+				};
+
+			};
+			
 		};
 
 		if (videoRef.current?.duration) {
 			setFormattedDuration(formatTime(videoRef.current.duration));
-		}
+		};
 
 		const intervalId = setInterval(updateCurrentTime, 100);
 		return () => clearInterval(intervalId);
+
 	}, [videoRef.current?.currentTime, videoRef.current?.duration, onTimeUpdate]);
 
 	// Handle controls visibility
 	useEffect(() => {
+
 		const handleMouseMove = () => {
+
 			setControls(true);
+
 			if (mouseMoveTimeout.current) {
 				clearTimeout(mouseMoveTimeout.current);
-			}
+			};
+
 			if (playing) {
+
 				mouseMoveTimeout.current = setTimeout(() => {
 					setControls(false);
 				}, 3000);
-			}
+
+			};
+
 		};
 
 		if (playing) {
+
 			document.addEventListener("mousemove", handleMouseMove);
 			mouseMoveTimeout.current = setTimeout(() => {
 				setControls(false);
 			}, 3000);
+
 		} else {
 			setControls(true);
-		}
+		};
 
 		return () => {
+
 			document.removeEventListener("mousemove", handleMouseMove);
 			if (mouseMoveTimeout.current) {
 				clearTimeout(mouseMoveTimeout.current);
-			}
+			};
+
 		};
+
 	}, [playing]);
 
 	// Keyboard shortcuts
 	useEffect(() => {
+
 		const handleKeyDown = (e: KeyboardEvent) => {
+
 			if (e.code === 'Space') {
 				e.preventDefault();
 				handleMediaButtons();
-			}
+			};
+
 			if (e.code === 'KeyF') {
 				e.preventDefault();
 				handleFullscreen();
-			}
+			};
+
 			if (e.code === 'ArrowRight') {
 				e.preventDefault();
 				skipForward();
-			}
+			};
+
 			if (e.code === 'ArrowLeft') {
 				e.preventDefault();
 				skipBackward();
-			}
+			};
+
 		};
 
 		document.addEventListener('keydown', handleKeyDown);
 		return () => document.removeEventListener('keydown', handleKeyDown);
+
 	}, [playing, fullscreen]);
 
 	const handleMediaButtons = () => {
+
 		if (!videoRef.current) return;
 
 		if (playing) {
 			videoRef.current.pause();
 		} else {
 			videoRef.current.play();
-		}
+		};
+
 		setPlaying(!playing);
+
 	};
 
 	const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+
 		if (!videoRef.current) return;
+
 		const newTime = (Number(e.target.value) / 100) * videoRef.current.duration;
 		videoRef.current.currentTime = newTime;
 		setTimecode(newTime);
+
 	};
 
 	const formatTime = (time: number) => {
+
 		const seconds = time;
 		const hours = Math.floor(seconds / 3600);
 		const minutes = Math.floor((seconds % 3600) / 60);
@@ -155,60 +224,78 @@ export default function VideoPlayer({
 		const formattedSeconds = remainingSeconds < 10 ? `0${remainingSeconds}` : remainingSeconds;
 
 		return `${formattedHours}${formattedMinutes}:${formattedSeconds}`;
+
 	};
 
 	const changeVolume = (value: string) => {
+
 		const volumeValue = Number(value);
+
 		setVolume(volumeValue);
+
 		if (videoRef.current) {
 			videoRef.current.volume = volumeValue;
-		}
+		};
+
 	};
 
 	const handleFullscreen = () => {
+
 		if (!playerRef.current) return;
 
 		if (fullscreen) {
 			document.exitFullscreen();
 		} else {
 			playerRef.current.requestFullscreen();
-		}
+		};
+
 		setFullscreen(!fullscreen);
+
 	};
 
 	const handleCaptions = (e: React.MouseEvent) => {
+
 		e.preventDefault();
 		setCaptions(!captions);
 
 		if (videoRef.current && videoRef.current.textTracks[0]) {
 			const track = videoRef.current.textTracks[0];
 			track.mode = captions ? 'hidden' : 'showing';
-		}
+		};
+
 	};
 
 	const updateRating = (ratingValue: number) => {
+
 		setRating(ratingValue);
 		if (onRating) {
 			onRating(ratingValue);
-		}
+		};
+
 	};
 
 	const skipForward = () => {
+
 		if (videoRef.current) {
+
 			videoRef.current.currentTime = Math.min(
 				videoRef.current.currentTime + 10,
 				videoRef.current.duration
 			);
-		}
+
+		};
+
 	};
 
 	const skipBackward = () => {
+
 		if (videoRef.current) {
 			videoRef.current.currentTime = Math.max(
 				videoRef.current.currentTime - 10,
 				0
 			);
-		}
+		};
+
 	};
 
 	return (
@@ -216,7 +303,7 @@ export default function VideoPlayer({
 			<video
 				className="h-screen w-full absolute object-contain"
 				ref={videoRef}
-				src={videoUrl}
+				// src={videoUrl}
 			>
 				{subtitleUrl && (
 					<track

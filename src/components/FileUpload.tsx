@@ -4,6 +4,8 @@ import type React from "react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Upload, Check, X, RefreshCw } from "lucide-react"
+import VideoPlayer from "./Player"
+import { HLSPlayer } from "./HLSPlayer"
 
 interface FileUploadSectionProps {
 	onFileSelect: (file: File | null) => void
@@ -18,6 +20,8 @@ export default function FileUploadSection({ onFileSelect, selectedMovie, uploade
 	const [isUploading, setIsUploading] = useState(false);
 	const [isConverting, setIsConverting] = useState(false);
 	const [isComplete, setIsComplete] = useState(false);
+	
+	const [videoUrl, setVideoUrl] = useState<null | string>(null);
 
 	const handleDragOver = (e: React.DragEvent) => {
 
@@ -156,6 +160,10 @@ export default function FileUploadSection({ onFileSelect, selectedMovie, uploade
 
 			}, 1000);
 
+			const url = `/api/media/${filename}_hls/index.m3u8`;
+			setVideoUrl(url);
+			console.log(url);
+
 		} catch (err) {
 
 			console.error("Failed converting:", err);
@@ -272,6 +280,16 @@ export default function FileUploadSection({ onFileSelect, selectedMovie, uploade
 
 			</div>
 
+			{isComplete && videoUrl && (
+
+				<div className="w-96">
+					<HLSPlayer
+						source={videoUrl}
+					/>
+				</div>
+
+			)}
+
 			<div className="pt-8 border-t border-border">
 
 				<Button
@@ -290,5 +308,6 @@ export default function FileUploadSection({ onFileSelect, selectedMovie, uploade
 		</div>
 
 	);
-	
+
+
 };
