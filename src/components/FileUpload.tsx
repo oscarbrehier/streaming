@@ -1,10 +1,9 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Upload, Check, X } from "lucide-react"
+import { Upload, Check, X, RefreshCw } from "lucide-react"
 
 interface FileUploadSectionProps {
 	onFileSelect: (file: File | null) => void
@@ -15,8 +14,10 @@ interface FileUploadSectionProps {
 export default function FileUploadSection({ onFileSelect, selectedMovie, uploadedFile }: FileUploadSectionProps) {
 
 	const [isDragging, setIsDragging] = useState(false);
-	const [uploadProgress, setUploadProgress] = useState(0);
+	const [progress, setProgress] = useState(0);
 	const [isUploading, setIsUploading] = useState(false);
+	const [isConverting, setIsConverting] = useState(false);
+	const [isComplete, setIsComplete] = useState(false);
 
 	const handleDragOver = (e: React.DragEvent) => {
 
@@ -63,8 +64,11 @@ export default function FileUploadSection({ onFileSelect, selectedMovie, uploade
 
 		if (!file) return;
 
+		let filename: string | null = null;
+
+		setIsComplete(false);
 		setIsUploading(true);
-		setUploadProgress(0);
+		setProgress(0);
 
 		const CHUNK_SIZE = 5 * 1024 * 1024;
 		const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
@@ -93,28 +97,90 @@ export default function FileUploadSection({ onFileSelect, selectedMovie, uploade
 			};
 
 			const progress = ((chunkIndex + 1) / totalChunks) * 100;
-			setUploadProgress(progress);
+			setProgress(progress);
+
+			if (chunkIndex == totalChunks - 1) {
+
+				const data = await res.json();
+				filename = data.filename;
+
+			};
 
 		};
 
 		setIsUploading(false);
-		setUploadProgress(100);
+		setProgress(100);
+
+		if (filename) {
+			convert(filename);
+		};
+
+	};
+
+	async function getConvertProgress(filename: string) {
+
+		const res = await fetch(`/api/convert/progress?dir=media/${filename}_hls`);
+		const data = await res.json();
+
+		return data.percent ?? 0;
+
+	};
+
+	async function convert(filename: string) {
+
+		if (!filename) return;
+
+		setIsConverting(true);
+		setProgress(0);
+
+		try {
+
+			fetch("/api/convert", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					filename
+				})
+			});
+
+			const interval = setInterval(async () => {
+
+				const progress = await getConvertProgress(filename);
+				setProgress(progress);
+
+				if (progress >= 100) {
+					clearInterval(interval);
+					setIsConverting(false);
+					setIsComplete(true);
+				}
+
+			}, 1000);
+
+		} catch (err) {
+
+			console.error("Failed converting:", err);
+			setIsConverting(false);
+
+		};
+
+		setProgress(100);
 
 	};
 
 	const handleClearFile = () => {
 		onFileSelect(null);
-		setUploadProgress(0);
+		setProgress(0);
 	};
 
 	return (
 
 		<div className="w-full h-full p-8 bg-card border-r border-border flex flex-col justify-between">
+
 			<div>
+
 				<h1 className="text-3xl font-bold text-foreground mb-2">Upload Movie</h1>
 				<p className="text-muted-foreground mb-8">Select a file and choose a movie to associate it with</p>
 
-				{/* Drag and Drop Area */}
 				<div
 					onDragOver={handleDragOver}
 					onDragLeave={handleDragLeave}
@@ -122,6 +188,7 @@ export default function FileUploadSection({ onFileSelect, selectedMovie, uploade
 					className={`border-2 border-dashed rounded-lg p-12 text-center transition-all cursor-pointer ${isDragging ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
 						}`}
 				>
+
 					<input
 						type="file"
 						id="file-input"
@@ -129,68 +196,99 @@ export default function FileUploadSection({ onFileSelect, selectedMovie, uploade
 						className="hidden"
 						accept="video/*,.mkv,.mp4,.avi,.mov,.flv,.wmv"
 					/>
+
 					<label htmlFor="file-input" className="cursor-pointer">
 						<Upload className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
 						<h2 className="text-lg font-semibold text-foreground mb-2">Drop your movie file here</h2>
 						<p className="text-sm text-muted-foreground mb-4">or click to browse from your computer</p>
 						<p className="text-xs text-muted-foreground">Supported: MP4, MKV, AVI, MOV, FLV, WMV</p>
 					</label>
+
 				</div>
 
-				{/* File Information */}
 				{uploadedFile && (
+
 					<div className="mt-8 bg-secondary/10 border border-secondary rounded-lg p-6">
+
 						<div className="flex items-center justify-between mb-4">
+
 							<div className="flex items-center gap-3">
-								{isUploading || uploadProgress < 100 ? (
+
+								{progress < 100 && (
 									<div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-										<Upload className="w-5 h-5 text-primary" />
+										{isUploading && <Upload className="w-5 h-5 text-primary" />}
+										{isConverting && <RefreshCw className="w-5 h-5 text-primary" />}
 									</div>
-								) : (
+								)}
+
+								{isComplete && (
 									<div className="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center">
 										<Check className="w-5 h-5 text-green-500" />
 									</div>
 								)}
+
 								<div>
 									<p className="font-semibold text-foreground">{uploadedFile.name}</p>
 									<p className="text-sm text-muted-foreground">{(uploadedFile.size / (1024 * 1024)).toFixed(2)} MB</p>
 								</div>
+
 							</div>
+
 							<button onClick={handleClearFile} className="p-2 hover:bg-destructive/10 rounded-lg transition">
 								<X className="w-5 h-5 text-destructive" />
 							</button>
+
 						</div>
 
-						{/* Progress Bar */}
-						{isUploading && uploadProgress < 100 && (
+						{(isUploading || isConverting) && progress < 100 && (
+
 							<div className="w-full">
+
 								<div className="w-full h-2 bg-border rounded-full overflow-hidden">
 									<div
 										className="h-full bg-primary transition-all duration-300"
-										style={{ width: `${uploadProgress}%` }}
+										style={{ width: `${progress}%` }}
 									/>
 								</div>
-								<p className="text-xs text-muted-foreground mt-2">{Math.round(uploadProgress)}% uploaded</p>
+
+								<div className="w-full flex justify-between mt-2">
+
+									<p className="text-xs text-muted-foreground">
+										{isConverting ? "Converting" : "Uploading"}
+									</p>
+
+									<p className="text-xs text-muted-foreground">{Math.round(progress)}%</p>
+
+								</div>
+
 							</div>
 						)}
-						{uploadProgress === 100 && !isUploading && <p className="text-sm text-green-600">Upload complete</p>}
+
+						{progress === 100 && !isUploading && <p className="text-sm text-green-600">Complete</p>}
+
 					</div>
+
 				)}
+
 			</div>
 
-			{/* Upload Button */}
 			<div className="pt-8 border-t border-border">
+
 				<Button
 					className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
 					disabled={!uploadedFile || !selectedMovie || isUploading}
 				>
 					Complete Upload
 				</Button>
+
 				<p className="text-xs text-muted-foreground text-center mt-4">
 					{!selectedMovie ? "Select a movie/tv show from the right panel to proceed" : "Ready to upload"}
 				</p>
+
 			</div>
+
 		</div>
 
 	);
+	
 };
