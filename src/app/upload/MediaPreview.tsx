@@ -26,17 +26,25 @@ export function MediaPreview({
 
 			</div>
 
-			<div
-				style={{ backgroundImage: `url(${constructImg(media.backdrop_path)})` }}
-				className="h-84 w-full bg-red-500 rounded-md bg-cover"
-			/>
+			{
+				media.backdrop_path && (
+					<div
+						style={{ backgroundImage: `url(${constructImg(media.backdrop_path)})` }}
+						className="h-84 w-full rounded-md bg-cover"
+					/>
+				)
+			}
 
 			<div className="flex space-x-4 mt-4">
 
-				<img
-					className="h-84 rounded-md"
-					src={constructImg(media.poster_path)} alt=""
-				/>
+				{
+					media.poster_path && (
+						<img
+							className="h-84 rounded-md"
+							src={constructImg(media.poster_path)} alt=""
+						/>
+					)
+				}
 
 				<div className="space-y-2">
 

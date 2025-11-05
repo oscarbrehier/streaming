@@ -4,7 +4,7 @@ export function Navbar() {
 
 		<div className="h-10 w-full flex space-x-4">
 
-			<p>home</p>
+			<p className="">home</p>
 			<p>search</p>
 			<p>settings</p>
 

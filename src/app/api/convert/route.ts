@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
 		};
 
 		const inputFile = path.join(process.cwd(), "media", filename);
-		const outDir = path.join(process.cwd(), "media", mediaId);
+		const outDir = path.join(process.cwd(), "media", mediaId.toString());
 
 		await mkdir(outDir, { recursive: true });
 		await convertToHLS(inputFile, outDir);

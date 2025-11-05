@@ -7,11 +7,11 @@ import { Upload, Check, X, RefreshCw } from "lucide-react"
 
 interface FileUploadSectionProps {
 	onFileSelect: (file: File | null) => void
-	selectedMovie: any | null
+	selectedMedia: any | null
 	uploadedFile: File | null
 }
 
-export default function FileUploadSection({ onFileSelect, selectedMovie, uploadedFile }: FileUploadSectionProps) {
+export default function FileUploadSection({ onFileSelect, selectedMedia, uploadedFile }: FileUploadSectionProps) {
 
 	const [file, setFile] = useState<File | null>(null);
 	const [isDragging, setIsDragging] = useState(false);
@@ -137,7 +137,7 @@ export default function FileUploadSection({ onFileSelect, selectedMovie, uploade
 		setIsConverting(true);
 		setProgress(0);
 
-		const mediaId = selectedMovie.id;
+		const mediaId = selectedMedia.id;
 
 		try {
 
@@ -188,8 +188,8 @@ export default function FileUploadSection({ onFileSelect, selectedMovie, uploade
 
 			<div>
 
-				<h1 className="text-3xl font-bold text-foreground mb-2">Upload Movie</h1>
-				<p className="text-muted-foreground mb-8">Select a file and choose a movie to associate it with</p>
+				<h1 className="text-3xl font-bold text-foreground mb-2">Upload Media</h1>
+				<p className="text-muted-foreground mb-8">Select a file and choose a movie/tv show to associate it with</p>
 
 				<div
 					onDragOver={handleDragOver}
@@ -209,7 +209,7 @@ export default function FileUploadSection({ onFileSelect, selectedMovie, uploade
 
 					<label htmlFor="file-input" className="cursor-pointer">
 						<Upload className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-						<h2 className="text-lg font-semibold text-foreground mb-2">Drop your movie file here</h2>
+						<h2 className="text-lg font-semibold text-foreground mb-2">Drop your file here</h2>
 						<p className="text-sm text-muted-foreground mb-4">or click to browse from your computer</p>
 						<p className="text-xs text-muted-foreground">Supported: MP4, MKV, AVI, MOV, FLV, WMV</p>
 					</label>
@@ -282,28 +282,18 @@ export default function FileUploadSection({ onFileSelect, selectedMovie, uploade
 
 			</div>
 
-			{/* {isComplete && videoUrl && (
-
-				<div className="w-96">
-					<HLSPlayer
-						source={videoUrl}
-					/>
-				</div>
-
-			)} */}
-
 			<div className="pt-8 border-t border-border">
 
 				<Button
 					onClick={(e) => upload()}
 					className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
-					disabled={!selectedMovie || !file || isUploading || isConverting || isComplete}
+					disabled={!selectedMedia || !file || isUploading || isConverting || isComplete}
 				>
-					Complete Upload
+					{selectedMedia ? `Upload as: ${selectedMedia?.title || selectedMedia?.name} (${selectedMedia.id})` : "Complete Upload"}
 				</Button>
 
 				<p className="text-xs text-muted-foreground text-center mt-4">
-					{!selectedMovie ? "Select a movie/tv show from the right panel to proceed" : "Ready to upload"}
+					{!selectedMedia ? "Select a movie/tv show from the right panel to proceed" : !uploadedFile ? "Select or drop a file to upload" : "Ready to upload"}
 				</p>
 
 			</div>

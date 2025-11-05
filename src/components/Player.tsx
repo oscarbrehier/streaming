@@ -300,8 +300,9 @@ export default function VideoPlayer({
 
 	return (
 		<div className="h-auto w-auto relative bg-black" ref={playerRef}>
+
 			<video
-				className="h-screen w-full absolute object-contain"
+				className="h-screen w-full absolute object-contain bg-black"
 				ref={videoRef}
 				// src={videoUrl}
 			>

@@ -5,7 +5,7 @@ export default function Page() {
 
 	return (
 
-		<div className="h-auto w-full p-8">
+		<div className="h-screen w-full p-8 dark bg-background">
 
 			<Navbar />
 			
