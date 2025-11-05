@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { constructImg } from "@/utils/movies/constructImg";
+import { constructImg } from "@/utils/tmdb/constructImg";
 import { ArrowLeft } from "lucide-react";
 
 export function MediaPreview({

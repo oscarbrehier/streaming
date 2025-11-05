@@ -1,5 +1,5 @@
-import { fetchtTMDB } from "@/utils/movies/fetchTMDB";
-import { getImages } from "@/utils/movies/getImages";
+import { fetchtTMDB } from "@/utils/tmdb/fetchTMDB";
+import { getImages } from "@/utils/tmdb/getImages";
 import Link from "next/link";
 
 export async function HeroBanner() {

@@ -2,7 +2,7 @@ export function Navbar() {
 
 	return (
 
-		<div className="h-10 w-full flex space-x-4">
+		<div className="w-full flex space-x-4 px-8 pt-4 pb-1">
 
 			<p className="">home</p>
 			<p>search</p>

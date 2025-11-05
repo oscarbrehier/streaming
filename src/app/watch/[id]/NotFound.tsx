@@ -1,5 +1,4 @@
-// import { IconFolderCode } from "@tabler/icons-react";
-import { ArrowUpRightIcon, Film } from "lucide-react";
+import { Film } from "lucide-react";
 import { Button } from "@/components/ui/button"
 import {
 	Empty,
