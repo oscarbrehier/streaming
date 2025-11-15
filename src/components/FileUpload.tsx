@@ -184,7 +184,7 @@ export default function FileUploadSection({ onFileSelect, selectedMedia, uploade
 
 	return (
 
-		<div className="w-full h-full p-8 bg-card border-r border-border flex flex-col justify-between">
+		<div className="w-full h-full p-8 bg-background border-r border-border flex flex-col justify-between">
 
 			<div>
 

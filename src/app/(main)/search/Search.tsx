@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { constructImg } from "@/utils/tmdb/constructImg";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export interface TMDBMovie {
 	id: number;
@@ -38,6 +38,7 @@ export function Search({
 }) {
 
 	const router = useRouter();
+	const searchInputRef = useRef<HTMLInputElement>(null);
 
 	const [searchQuery, setSearchQuery] = useState<string | null>(query ?? null);
 	const [mediaType, setMediaType] = useState<"all" | "movie" | "tv">(type ?? "all");
@@ -65,8 +66,16 @@ export function Search({
 	}, [mediaType]);
 
 	useEffect(() => {
-		console.log(data);
-	}, [data]);
+
+		if (searchInputRef.current) {
+
+			const len = searchInputRef.current.value.length;
+			searchInputRef.current.focus();
+			searchInputRef.current.setSelectionRange(len, len);
+
+		};
+
+	}, []);
 
 	return (
 
@@ -75,6 +84,7 @@ export function Search({
 			<div className="flex flex-col space-y-2 w-1/2">
 
 				<Input
+					ref={searchInputRef}
 					className="w-full"
 					placeholder="Search for movies, TV shows..."
 					value={searchQuery ?? ""}
@@ -111,7 +121,7 @@ export function Search({
 
 					return (
 
-						<div key={item.id} className="relative w-full rounded-md overflow-hidden grid grid-cols-1 grid-rows-1">
+						<a href={`/${item.type || mediaType}/${item.id}`} key={item.id} className="relative w-full rounded-md overflow-hidden grid grid-cols-1 grid-rows-1">
 
 							<div className="relative w-full col-start-1 row-start-1" style={{ paddingBottom: '150%' }}>
 
@@ -145,7 +155,7 @@ export function Search({
 								</div>
 							)}
 
-						</div>
+						</a>
 
 					);
 

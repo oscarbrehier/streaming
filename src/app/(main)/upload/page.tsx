@@ -70,9 +70,9 @@ export default function Page() {
 
 	return (
 
-		<div className="h-auto min-h-screen w-full bg-white grid grid-cols-2">
+		<div className="absolute top-0 left-0 h-screen w-full flex border-t border-border">
 
-			<div className="h-screen">
+			<div className="h-full w-1/2 pt-14">
 
 				<FileUploadSection
 					onFileSelect={setFile}
@@ -82,7 +82,7 @@ export default function Page() {
 
 			</div>
 
-			<div className="h-screen w-full flex flex-col space-y-10 pt-8 p-8">
+			<div className="flex-1 w-1/2 flex flex-col space-y-10 pt-22 p-8">
 
 				{!selectedMedia ? (
 
@@ -118,7 +118,7 @@ export default function Page() {
 
 						</div>
 
-						<div className="w-full h-screen grid grid-cols-4 gap-4 overflow-y-auto">
+						<div className="w-full grid xl:grid-cols-4 grid-cols-2 gap-4 overflow-y-auto">
 
 							{
 								searchResults.map((item) => (

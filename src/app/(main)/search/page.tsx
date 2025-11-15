@@ -1,4 +1,3 @@
-import { fetchtTMDB } from "@/utils/tmdb/fetchTMDB";
 import { Search } from "./Search";
 import { searchTMDB } from "@/utils/tmdb/search";
 
@@ -23,7 +22,6 @@ export default async function Page({
 		try {
 
 			data = await searchTMDB(query, mediaType);
-			console.log(data)
 
 		} catch (err) {
 
