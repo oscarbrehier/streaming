@@ -1,6 +1,6 @@
 "use server"
 
-export async function fetchtTMDB(endpoint: string, options: RequestInit = {}) {
+export async function fetchtTMDB<T = any>(endpoint: string, options: RequestInit = {}) {
 
 	const headers: Record<string, string> = {
 		...(!(options.body instanceof FormData) && { "Content-Type": "application/json" }),
@@ -23,6 +23,6 @@ export async function fetchtTMDB(endpoint: string, options: RequestInit = {}) {
 	};
 
 	const data = await res.json();
-	return data;
+	return data as T;
 
 };
