@@ -203,11 +203,13 @@ declare global {
 
 	type MovieSearchResponse = PaginatedResponse<MovieSummary>;
 
+	type UserRole = "member" | "admin";
+
 	interface InviteCode {
 		id: string;
 		code_hash: string;
 		code_hint: string;
-		role: string;
+		role: UserRole;
 		max_uses: number;
 		uses: number;
 		created_by: string;

@@ -1,12 +1,6 @@
-"use client"
-
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { generateInviteCode } from "@/actions/generateInviteCode";
-import { useState } from "react";
 import { GenerateInviteCode } from "./GenerateInviteCode";
+import { Separator } from "@/components/ui/separator";
+import { InviteCodes } from "./InviteCodes";
 
 export default function Page() {
 
@@ -24,9 +18,11 @@ export default function Page() {
 
 			</div>
 
-			<div className="h-full w-96 border-r border-border p-8">
+			<div className="h-full w-96 border-r border-border p-8 space-y-8">
 
 				<GenerateInviteCode />
+				<Separator />
+				<InviteCodes/>
 
 			</div>
 

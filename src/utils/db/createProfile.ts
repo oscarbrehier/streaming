@@ -1,7 +1,7 @@
 "use server"
 
 import { createClient } from "../supabase/server"
-import { createLog } from "./createLog";
+import { createAuditLog } from "./createAuditLog";
 
 export async function createProfile(profileData: Omit<UserProfile, "created_at">): Promise<{ error: string | null }> {
 
@@ -13,7 +13,7 @@ export async function createProfile(profileData: Omit<UserProfile, "created_at">
 	
 	if (error) {
 
-		createLog({
+		await createAuditLog({
 			user_id: profileData.id,
 			action: "profile_create",
 			resource: error.message,

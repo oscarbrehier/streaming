@@ -5,39 +5,43 @@ import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { generateInviteCode } from "@/actions/generateInviteCode";
 import { useState } from "react";
-import { testRateLimit } from "@/actions/testRateLimit";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export function GenerateInviteCode() {
 
 	const [inviteCode, setInviteCode] = useState("");
-	const [error, setError] = useState("");
+	const [form, setForm] = useState<{ error: string, role: UserRole }>({
+		error: "",
+		role: "member"
+	});
 
 	async function handleGenerateInviteCode() {
 
-		const result = await testRateLimit();
+		setForm(prev => ({ ...prev, error: "" }));
+		setInviteCode("");
 
-		console.log(result);
+		try {
 
-		// setError("");
-		// setInviteCode("");
+			const { code, error } = await generateInviteCode(form.role);
 
-		// const { code, error: generationError } = await generateInviteCode();
-		
-		// if (generationError || !code) {
+			if (error || !code) {
 
-		// 	setError(generationError ?? "An error occurred.");
-		// 	return ;
+				setForm(prev => ({ ...prev, error: error ?? "An error occurred." }));
+				return;
 
-		// };
+			};
 
-		// setInviteCode(code);
+			setInviteCode(code);
+
+		} catch (err) {
+			setForm(prev => ({ ...prev, error: (err as Error).message }));
+		};
 
 	};
 
 	return (
 
 		<div className="space-y-4">
-
 
 			<Field className="grid w-full items-center gap-3">
 
@@ -50,14 +54,34 @@ export function GenerateInviteCode() {
 				/>
 
 				<FieldError>
-					{error}
+					{form.error}
 				</FieldError>
 
 			</Field>
 
-			<Button onClick={handleGenerateInviteCode} className="w-full">
-				Generate Invite Code
-			</Button>
+			<div className="flex items-center space-x-2 w-full">
+
+				<Select
+					defaultValue="member"
+					onValueChange={(v: UserRole) => setForm(prev => ({ ...prev, role: v }))}
+				
+				>
+					<SelectTrigger>
+						<SelectValue placeholder="Role" />
+					</SelectTrigger>
+
+					<SelectContent>
+						<SelectItem value="member">member</SelectItem>
+						<SelectItem value="admin">admin</SelectItem>
+					</SelectContent>
+
+				</Select>
+
+				<Button onClick={handleGenerateInviteCode} className="flex-1">
+					Generate Invite Code
+				</Button>
+
+			</div>
 
 		</div>
 

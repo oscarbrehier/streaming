@@ -7,7 +7,7 @@ import { MovieOverview } from "./MovieDescription";
 export async function HeroBanner() {
 
 	const mediaType = "movie";
-	const mediaId = `152603`;
+	const mediaId = `289`;
 	const data = await fetchtTMDB(`/${mediaType}/${mediaId}?language=en-US&append_to_response=images`);
 
 	return (

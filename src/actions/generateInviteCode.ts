@@ -3,6 +3,9 @@
 import crypto from "crypto";
 import { createClient } from "../utils/supabase/server";
 import { hashInvite } from "../utils/db/hashInvite";
+import { useRateLimit } from "@/lib/rateLimit";
+import { revalidatePath, revalidateTag } from "next/cache";
+import { createAuditLog } from "@/utils/db/createAuditLog";
 
 function generateInviteHint(code: string): string {
 
@@ -13,7 +16,10 @@ function generateInviteHint(code: string): string {
 
 };
 
-export async function generateInviteCode(): Promise<{
+async function handler(
+	supabase: Awaited<ReturnType<typeof createClient>>,
+	role: UserRole,
+): Promise<{
 	error?: string;
 	code?: string;
 }> {
@@ -37,26 +43,55 @@ export async function generateInviteCode(): Promise<{
 	const hashedCode = hashInvite(result);
 	const codeHint = generateInviteHint(result);
 
-	const supabase = await createClient();
-	const { data: { user }} = await supabase.auth.getUser();
+	// const supabase = await createClient();
+	const { data: { user } } = await supabase.auth.getUser();
 
 	if (!user) {
+
+		await createAuditLog({
+			user_id: "unknown",
+			action: "unauthenticated_access_attempt",
+			resource: "invites:generate",
+			details: {
+				context: "User not authenticated"
+			}
+		});
+
 		return { error: "Not authenticated" };
+
 	};
 
-	const { error } = await supabase
+	const max_uses = 1;
+	const expires_at = new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString();
+
+	const { data, error } = await supabase
 		.from("invites")
 		.insert({
 			code_hash: hashedCode,
 			code_hint: codeHint,
-			role: "member",
-			max_uses: 1,
+			role,
+			max_uses,
 			uses: 0,
 			created_by: user?.id,
-			expires_at: new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString()
-		});
+			expires_at
+		})
+		.select()
+		.single();
 
 	if (error) {
+
+		await createAuditLog({
+			user_id: user?.id ?? "unknown",
+			action: "invite_generation_failed",
+			resource: "invites",
+			details: {
+				error: error.message,
+				role,
+				max_uses,
+				expires_at,
+				context: "Database insert failed"
+			}
+		});
 
 		return {
 			error: error.message
@@ -64,8 +99,27 @@ export async function generateInviteCode(): Promise<{
 
 	};
 
+	await createAuditLog({
+		user_id: user.id,
+		action: "invite_generated",
+		resource: data.id,
+		details: { role, max_uses, expires_at }
+	});
+
+	revalidateTag("invite-codes", "max");
+	revalidatePath("/dashboard");
+
 	return {
 		code: result
 	};
 
 };
+
+export async function generateInviteCode(role: UserRole): Promise<{
+	error?: string;
+	code?: string;
+}> {
+
+	const rateLimitedHandler = await useRateLimit(handler, "invites");
+	return rateLimitedHandler(role);
+}

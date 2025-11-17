@@ -1,6 +1,7 @@
 import { Open_Sans, Bodoni_Moda } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { Suspense } from "react";
 
 export const bodoni = Bodoni_Moda({
 	subsets: ["latin"],
@@ -32,7 +33,9 @@ export default function RootLayout({
 					disableTransitionOnChange
 				>
 
-					{children}
+					<Suspense>
+						{children}
+					</Suspense>
 
 				</ThemeProvider>
 
