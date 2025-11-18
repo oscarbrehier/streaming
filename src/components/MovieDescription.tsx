@@ -32,7 +32,7 @@ export function MovieOverview({
 				}
 			</p>
 
-			<div className="flex space-x-4">
+			<div className="flex flex-col items-start space-y-4">
 				{children}
 			</div>
 

@@ -24,21 +24,25 @@ export async function HeroBanner() {
 
 			<MovieOverview movie={data}>
 
-				<Link
-					href={`/watch/${data.id}`}
-					className="capitalize bg-white text-black text-lg py-2 px-6 rounded-3xl cursor-pointer flex items-center space-x-4"
-				>
-					<Play className="text-black mt-0.5" fill="#000" size={16} />
-					<span>Watch now</span>
-				</Link>
+				<div className="flex space-x-4">
 
-				<Link
-					href={`/movie/${data.id}`}
-					className="capitalize bg-neutral-300/10 backdrop-blur-md text-neutral-200 text-lg py-2 px-6 rounded-3xl cursor-pointer flex items-center space-x-4"
-				>
-					<Info className="text-neutral-200 mt-0.5" size={16} />
-					<span>More Info</span>
-				</Link>
+					<Link
+						href={`/watch/${data.id}`}
+						className="capitalize bg-white text-black text-lg py-2 px-6 rounded-3xl cursor-pointer flex items-center space-x-4"
+					>
+						<Play className="text-black mt-0.5" fill="#000" size={16} />
+						<span>Watch now</span>
+					</Link>
+
+					<Link
+						href={`/movie/${data.id}`}
+						className="capitalize bg-neutral-300/10 backdrop-blur-md text-neutral-200 text-lg py-2 px-6 rounded-3xl cursor-pointer flex items-center space-x-4"
+					>
+						<Info className="text-neutral-200 mt-0.5" size={16} />
+						<span>More Info</span>
+					</Link>
+
+				</div>
 
 			</MovieOverview>
 

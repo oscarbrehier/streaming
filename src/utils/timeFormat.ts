@@ -13,3 +13,20 @@ export const formatTime = (time: number): string => {
 	return parts.join(':');
 
 };
+
+export const formatTimeHuman = (time: number): string => {
+
+	const totalSeconds = Math.floor(time);
+	const hours = Math.floor(totalSeconds / 3600);
+	const minutes = Math.floor((totalSeconds % 3600) / 60);
+	const seconds = totalSeconds % 60;
+
+	if (hours > 0) {
+		return `${hours}h${minutes.toString().padStart(2, '0')}`;
+	} else if (minutes > 0) {
+		return `${minutes}m${seconds.toString()}s`;
+	} else {
+		return `${seconds}s`;
+	};
+
+};

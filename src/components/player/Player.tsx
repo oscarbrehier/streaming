@@ -44,7 +44,7 @@ export default function VideoPlayer({
 	mediaStatus
 }: VideoPlayerProps) {
 
-	const { updateRating } = new MediaService(supabase);
+	const { updateRating, setMediaDuration } = new MediaService(supabase, mediaId, userId);
 
 	const router = useRouter();
 	const videoRef = useRef<HTMLVideoElement>(null);
@@ -56,7 +56,7 @@ export default function VideoPlayer({
 		volume, setVolume,
 		formattedTime, setFormattedTime,
 		formattedDuration, setFormattedDuration,
-		updatePlaybackTime 
+		updatePlaybackTime
 	} = useMediaState(videoRef)
 
 	const [fullscreen, setFullscreen] = useState(false);
@@ -98,6 +98,17 @@ export default function VideoPlayer({
 		};
 
 	}, [videoUrl]);
+
+	useEffect(() => {
+
+		if (!videoRef || !videoRef.current) return ;
+
+		if (!mediaStatus.duration_sec) {
+			console.log(videoRef.current.duration)
+			setMediaDuration(videoRef.current.duration);
+		};
+
+	}, [videoRef.current?.duration]);
 
 	// Update timecode display
 	useEffect(() => {
@@ -185,7 +196,7 @@ export default function VideoPlayer({
 	const handleUpdateRating = (ratingValue: number) => {
 
 		setRating(ratingValue);
-		updateRating(mediaId, userId, ratingValue);
+		updateRating(ratingValue);
 
 	};
 
@@ -246,7 +257,7 @@ export default function VideoPlayer({
 			</video>
 
 			<div className={`h-screen w-full absolute flex flex-col justify-between z-[2147483647] transition-opacity duration-300 ${controls ? 'opacity-100' : 'opacity-0'}`}>
-				
+
 				{/* Top Bar - Back Button */}
 				<div className='h-12 w-full flex items-center px-5 pt-5'>
 					<button

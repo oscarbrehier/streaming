@@ -1,5 +1,7 @@
 import { MovieOverview } from "@/components/MovieDescription";
 import { TrailerPlayer } from "@/components/TrailerPlayer";
+import { createClient } from "@/utils/supabase/server";
+import { formatTimeHuman } from "@/utils/timeFormat";
 import { constructImg } from "@/utils/tmdb/constructImg";
 import { getImages } from "@/utils/tmdb/getImages";
 import { getMovie } from "@/utils/tmdb/getMovie";
@@ -32,11 +34,28 @@ export default async function Page({
 	searchParams
 }: PageProps) {
 
-	const { id } = await params;
+	const { id: mediaId } = await params;
 
-	const movie = await getMovie(id);
+	const movie = await getMovie(mediaId);
+	const isAvailable = await checkAvailability(mediaId);
 
-	const isAvailable = await checkAvailability(id);
+	let userMediaStatus: UserMediaStatus | null = null;
+
+	const supabase = await createClient();
+	const { data: { user } } = await supabase.auth.getUser();
+
+	if (user) {
+
+		const { data, error } = await supabase
+			.from("user_media_status")
+			.select("*")
+			.eq("media_id", mediaId)
+			.eq("user_id", user.id)
+			.single();
+
+		if (!error && data) userMediaStatus = data;
+
+	};
 
 	return (
 
@@ -53,6 +72,32 @@ export default async function Page({
 				movie={movie}
 			>
 
+				{userMediaStatus && (
+
+					<div className="flex items-center space-x-4">
+
+						<div className="w-72 h-1 relative">
+
+							<div className="w-full h-full rounded-full bg-neutral-800 absolute" />
+							<div 
+								style={{
+									width: `${(userMediaStatus.progress_sec / userMediaStatus.duration_sec) * 100}%`
+								}}
+								className="h-full rounded-full bg-yellow-400 absolute" 
+							/>
+
+						</div>
+
+						<p className="text-sm text-neutral-300 w">
+							<span>{formatTimeHuman(userMediaStatus.progress_sec)} watched</span>
+							&nbsp;of&nbsp;
+							<span>{formatTimeHuman(userMediaStatus.duration_sec)}</span>
+						</p>
+
+					</div>
+
+				)}
+
 				{isAvailable && (
 
 					<Link
@@ -60,12 +105,13 @@ export default async function Page({
 						className="capitalize bg-white text-black text-lg py-2 px-6 rounded-3xl cursor-pointer flex items-center space-x-4"
 					>
 						<Play className="text-black mt-0.5" fill="#000" size={16} />
-						<span>Watch now</span>
+						<span>{userMediaStatus ? "Resume" : "Watch Now"}</span>
 					</Link>
 
 				)}
 
 			</MovieOverview>
+
 			{/* 
 			{
 				logo ? (

@@ -16,8 +16,10 @@ async function updateUserMediaStatus(
 	let { data, error } = await supabase
 		.from("user_media_status")
 		.select(`*`)
-		.single();
+		.limit(1)
+		.maybeSingle();
 
+	console.log(error)
 	if (error) return null;
 
 	if (!data) {
