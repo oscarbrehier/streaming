@@ -18,7 +18,7 @@ const rateLimiterDefault: RateLimit = {
 export async function useRateLimit<Args extends any[], Return>(
 	handler: (supabase: Awaited<ReturnType<typeof createClient>>, ...args: Args) => Promise<Return>,
 	resource: string,
-	options?: RateLimit
+	options?: Partial<RateLimit>
 ): Promise<(...args: Args) => Promise<Return>> {
 
 	return async (...args: Args): Promise<Return> => {
