@@ -1,9 +1,11 @@
 "use server"
 
+import { useRateLimit } from "@/lib/rateLimit";
 import { consumeInvite } from "@/utils/db/consumeInvite";
 import { createProfile } from "@/utils/db/createProfile";
 import { validateInvite } from "@/utils/db/validateInvite";
 import { createClient } from "@/utils/supabase/server";
+import { Session } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -38,6 +40,43 @@ export type RegisterFormState = {
 	}
 };
 
+export async function registerHandler(
+	supabase: Awaited<ReturnType<typeof createClient>>,
+	validatedData: z.infer<typeof formSchema>
+): Promise<Session> {
+
+	const isValidInvite = await validateInvite(validatedData.inviteCode);
+
+	if (!isValidInvite) {
+		throw new Error("Invalid signup information.");
+	};
+
+	const invite = isValidInvite as InviteCode;
+
+	const { data, error } = await supabase.auth.signUp({
+		email: validatedData.email,
+		password: validatedData.password
+	});
+
+	if (error || !data.session || !data.user) {
+		throw new Error(error?.message ?? "An error occurred. Please try again later.");
+	};
+
+	const user = data.user;
+
+	await consumeInvite(invite as InviteCode);
+
+	await createProfile({
+		id: user.id,
+		email: user.email!,
+		display_name: "",
+		role: invite.role
+	});
+
+	return data.session;
+
+};
+
 export async function register(prevState: RegisterFormState, formData: FormData) {
 
 	const rawData = {
@@ -60,52 +99,31 @@ export async function register(prevState: RegisterFormState, formData: FormData)
 
 	};
 
-	const isValidInvite = await validateInvite(rawData.inviteCode);
+	const rateLimitedRegister = await useRateLimit(registerHandler, "register", {
+		maxRequests: 3,
+		windowSize: 60 * 60 * 1000
+	});
 
-	if (!isValidInvite) {
+	try {
 
+		const session = await rateLimitedRegister(validateFields.data);
+
+		(await cookies()).set({
+			name: "sb-access-token",
+			value: session.access_token,
+			httpOnly: true,
+			path: "/",
+		});
+
+		
+	} catch (err) {
+		
 		return {
-			error: "Invalid signup information.",
-			values: rawData
+			values: rawData,
+			error: err instanceof Error ? err.message : "An error occurred. Please try again later.",
 		};
-
+		
 	};
-
-	const invite = isValidInvite as InviteCode;
-
-	const supabase = await createClient();
-
-	const { data, error } = await supabase.auth.signUp({
-		email: rawData.email,
-		password: rawData.password
-	});
-
-	if (error || !data.session || !data.user) {
-
-		return {
-			error: error?.message ?? "An error occurred. Please try again later.",
-			values: rawData
-		};
-
-	};
-
-	const user = data.user;
-
-	await consumeInvite(invite as InviteCode);
-
-	await createProfile({
-		id: user.id,
-		email: user.email!,
-		display_name: "",
-		role: invite.role
-	});
-
-	(await cookies()).set({
-		name: "sb-access-token",
-		value: data.session.access_token,
-		httpOnly: true,
-		path: "/",
-	});
 
 	redirect("/");
 
