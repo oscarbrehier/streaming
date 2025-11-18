@@ -51,7 +51,7 @@ async function updateUserMediaStatus(
 export default async function Page({ params }: PageProps) {
 
 	const { id } = await params;
-	const mediaPath = `/api/media/${id}/index.m3u8`;
+	const mediaPath = `/api/media/${id}/master.m3u8`;
 
 	const res = await fetch(`http://localhost:3000${mediaPath}`);
 

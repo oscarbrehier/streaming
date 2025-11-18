@@ -3,9 +3,6 @@ import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
 import fs from "fs/promises";
 
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
-
 export async function POST(req: NextRequest) {
 
 	try {
