@@ -1,4 +1,4 @@
-import VideoPlayer from "@/components/Player";
+import VideoPlayer from "@/components/player/Player";
 import { MediaNotFound } from "./NotFound";
 import { createClient } from "@/utils/supabase/server";
 
