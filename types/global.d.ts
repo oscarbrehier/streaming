@@ -236,6 +236,19 @@ declare global {
 		created_at: Date;
 	};
 
+	interface UserMediaStatus {
+		id: string;
+		user_id: string;
+		media_id: string;
+		progress_sec: number;
+		duration_sec: number;
+		completed: boolean;
+		favorited: boolean;
+		rating?: number;
+		last_watched: Date;
+		metadata?: Record<string, any>;
+	};
+
 };
 
 export { };

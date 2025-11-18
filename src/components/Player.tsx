@@ -8,23 +8,77 @@ import { MdOutlineSubtitles, MdSubtitles } from "react-icons/md";
 import { IoChevronBack } from "react-icons/io5";
 import { motion } from "framer-motion";
 import Hls from "hls.js";
+import { createClient } from "@/utils/supabase/client";
 
 interface VideoPlayerProps {
+	userId: string;
+	mediaId: string;
 	videoUrl: string;
 	subtitleUrl?: string;
-	onTimeUpdate?: (currentTime: number) => void;
 	onRating?: (rating: number) => void;
-	initialTimecode?: number;
 	showRating?: boolean;
+	mediaStatus: UserMediaStatus;
+};
+
+const supabase = createClient();
+
+async function updateProgress(mediaId: string, userId: string, progress: number) {
+
+	if (!mediaId || !userId) return;
+
+	await supabase
+		.from("user_media_status")
+		.upsert({
+			media_id: mediaId,
+			user_id: userId,
+			progress_sec: progress
+		}, {
+			onConflict: "user_id, media_id"
+		});
+
 }
 
+async function markAsComplete(mediaId: string, userId: string): Promise<{ success: boolean }> {
+
+	if (!mediaId || !userId) return { success: false };
+
+	const maxRetries = 2;
+	let retry = 0;
+
+	while (retry <= maxRetries) {
+
+		const { error } = await supabase
+			.from("user_media_status")
+			.upsert({
+				user_id: userId,
+				media_id: mediaId,
+				completed: true
+			}, {
+				onConflict: "user_id, media_id"
+			});
+
+		if (!error) return { success: true };
+
+		if (retry <= maxRetries) {
+			await new Promise((resolve) => setTimeout(resolve, 5 * 1000));
+		};
+
+		retry++;
+
+	};
+
+	return { success: false };
+
+};
+
 export default function VideoPlayer({
+	userId,
+	mediaId,
 	videoUrl,
 	subtitleUrl,
-	onTimeUpdate,
 	onRating,
-	initialTimecode = 0,
-	showRating = true
+	showRating = true,
+	mediaStatus
 }: VideoPlayerProps) {
 
 	const router = useRouter();
@@ -33,28 +87,53 @@ export default function VideoPlayer({
 	const mouseMoveTimeout = useRef<NodeJS.Timeout | null>(null);
 
 	const [timecode, setTimecode] = useState(0);
-	const [playing, setPlaying] = useState(false);
+	const [isPlaying, setIsPlaying] = useState(false);
 	const [volume, setVolume] = useState(0.5);
 	const [controls, setControls] = useState(true);
 	const [fullscreen, setFullscreen] = useState(false);
 	const [captions, setCaptions] = useState(true);
 	const [formattedTime, setFormattedTime] = useState("0:00");
 	const [formattedDuration, setFormattedDuration] = useState("0:00");
-	const [rating, setRating] = useState(0);
+	const [rating, setRating] = useState(mediaStatus.rating ?? 0);
+	const [isMarkedComplete, setIsMarkedComplete] = useState(mediaStatus.completed ?? false);
+	const [isSeeking, setIsSeeking] = useState(false);
 
-	// Load video and set initial timecode
-	useEffect(() => {
+	async function handleProgressUpdate() {
 
-		if (videoRef.current && initialTimecode > 0) {
-			videoRef.current.currentTime = initialTimecode;
+		if (!videoRef.current) return;
+
+		const timecode = videoRef.current.currentTime;
+		const duration = videoRef.current.duration;
+
+		const viewPercentage = (timecode / duration) * 100;
+
+		if (viewPercentage >= 90 && !isMarkedComplete) {
+
+			const { success } = await markAsComplete(mediaId, userId);
+			setIsMarkedComplete(success);
+
 		};
 
-	}, [initialTimecode]);
+		await updateProgress(mediaId, userId, timecode);
+
+	};
+
+	function updatePlaybackTime() {
+
+		if (videoRef.current) {
+
+			const playingTime = formatTime(videoRef.current.currentTime);
+			setFormattedTime(playingTime);
+			setTimecode(videoRef.current.currentTime);
+
+		};
+
+	};
 
 	// HLS support
 	useEffect(() => {
 
-		if (!videoUrl || !videoRef.current) return ;
+		if (!videoUrl || !videoRef.current) return;
 
 		const video = videoRef.current;
 
@@ -86,32 +165,20 @@ export default function VideoPlayer({
 
 	// Update timecode display
 	useEffect(() => {
-		
-		const updateCurrentTime = () => {
-
-			if (videoRef.current) {
-				
-				const playingTime = formatTime(videoRef.current.currentTime);
-				setFormattedTime(playingTime);
-				setTimecode(videoRef.current.currentTime);
-
-				// Call callback if provided
-				if (onTimeUpdate) {
-					onTimeUpdate(videoRef.current.currentTime);
-				};
-
-			};
-			
-		};
 
 		if (videoRef.current?.duration) {
 			setFormattedDuration(formatTime(videoRef.current.duration));
 		};
 
-		const intervalId = setInterval(updateCurrentTime, 100);
-		return () => clearInterval(intervalId);
+		const playbackInterval = isPlaying ? setInterval(updatePlaybackTime, 100) : null;
+		const updateProgressInterval = setInterval(async () => handleProgressUpdate(), 20 * 1000);
 
-	}, [videoRef.current?.currentTime, videoRef.current?.duration, onTimeUpdate]);
+		return () => {
+			if (playbackInterval) clearInterval(playbackInterval);
+			clearInterval(updateProgressInterval);
+		};
+
+	}, [videoRef.current?.currentTime, videoRef.current?.duration, handleProgressUpdate]);
 
 	// Handle controls visibility
 	useEffect(() => {
@@ -124,7 +191,7 @@ export default function VideoPlayer({
 				clearTimeout(mouseMoveTimeout.current);
 			};
 
-			if (playing) {
+			if (isPlaying) {
 
 				mouseMoveTimeout.current = setTimeout(() => {
 					setControls(false);
@@ -134,7 +201,7 @@ export default function VideoPlayer({
 
 		};
 
-		if (playing) {
+		if (isPlaying) {
 
 			document.addEventListener("mousemove", handleMouseMove);
 			mouseMoveTimeout.current = setTimeout(() => {
@@ -154,7 +221,7 @@ export default function VideoPlayer({
 
 		};
 
-	}, [playing]);
+	}, [isPlaying]);
 
 	// Keyboard shortcuts
 	useEffect(() => {
@@ -186,19 +253,20 @@ export default function VideoPlayer({
 		document.addEventListener('keydown', handleKeyDown);
 		return () => document.removeEventListener('keydown', handleKeyDown);
 
-	}, [playing, fullscreen]);
+	}, [isPlaying, fullscreen]);
 
 	const handleMediaButtons = () => {
 
 		if (!videoRef.current) return;
 
-		if (playing) {
+		if (isPlaying) {
 			videoRef.current.pause();
 		} else {
 			videoRef.current.play();
 		};
 
-		setPlaying(!playing);
+		handleProgressUpdate();
+		setIsPlaying(!isPlaying);
 
 	};
 
@@ -206,8 +274,12 @@ export default function VideoPlayer({
 
 		if (!videoRef.current) return;
 
+		setIsSeeking(true);
+		updatePlaybackTime();
+
 		const newTime = (Number(e.target.value) / 100) * videoRef.current.duration;
 		videoRef.current.currentTime = newTime;
+
 		setTimecode(newTime);
 
 	};
@@ -304,7 +376,14 @@ export default function VideoPlayer({
 			<video
 				className="h-screen w-full absolute object-contain bg-black"
 				ref={videoRef}
-				// src={videoUrl}
+				onLoadedMetadata={() => {
+
+					if (videoRef.current && mediaStatus.progress_sec > 0) {
+						videoRef.current.currentTime = mediaStatus.progress_sec;
+						updatePlaybackTime();
+					};
+
+				}}
 			>
 				{subtitleUrl && (
 					<track
@@ -328,7 +407,7 @@ export default function VideoPlayer({
 				</div>
 
 				{/* Center - Rating (when paused) */}
-				{playing === false && showRating && (
+				{isPlaying === false && showRating && (
 					<div className="flex-1 flex justify-center items-center">
 						<motion.div
 							initial={{ scale: 0.5 }}
@@ -389,6 +468,12 @@ export default function VideoPlayer({
 							step={0.01}
 							value={(timecode / (videoRef.current?.duration || 1)) * 100 || 0}
 							onChange={handleSeek}
+							onMouseUp={() => {
+								if (isSeeking) {
+									handleProgressUpdate();
+									setIsSeeking(false);
+								};
+							}}
 						/>
 					</div>
 
@@ -398,9 +483,9 @@ export default function VideoPlayer({
 							{/* Play/Pause */}
 							<button
 								className="hover:bg-neutral-700 transition-all ease-in-out duration-200 w-8 h-8 flex items-center justify-center rounded-md"
-								title={playing ? 'Pause (Space)' : 'Play (Space)'}
+								title={isPlaying ? 'Pause (Space)' : 'Play (Space)'}
 								onClick={handleMediaButtons}>
-								{playing ? <FaPause className="text-white" /> : <FaPlay className="text-white" />}
+								{isPlaying ? <FaPause className="text-white" /> : <FaPlay className="text-white" />}
 							</button>
 
 							{/* Volume */}
