@@ -26,8 +26,6 @@ const chartConfig = {
 	}
 } satisfies ChartConfig;
 
-function roundValue
-
 export function SysInfoChart({
 	title,
 	description,
