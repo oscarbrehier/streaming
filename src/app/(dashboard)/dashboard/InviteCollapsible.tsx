@@ -20,7 +20,7 @@ export function InviteCollapsible({
 			<button
 				onClick={() => setCollapsed(prev => !prev)}
 				className="text-neutral-100 cursor-pointer">
-					{invite.code_hint}
+				{invite.code_hint}
 			</button>
 
 			{!collapsed && (

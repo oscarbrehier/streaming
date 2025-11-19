@@ -1,8 +1,9 @@
 import { GenerateInviteCode } from "./GenerateInviteCode";
 import { Separator } from "@/components/ui/separator";
 import { InviteCodes } from "./InviteCodes";
+import { SystemInformation } from "./SystemInformation";
 
-export default function Page() {
+export default async function Page() {
 
 	return (
 
@@ -18,11 +19,21 @@ export default function Page() {
 
 			</div>
 
-			<div className="h-full w-96 border-r border-border p-8 space-y-8">
+			<div className="w-full h-full flex">
 
-				<GenerateInviteCode />
-				<Separator />
-				<InviteCodes/>
+				<div className="h-full w-96 border-r border-border p-8 space-y-8">
+
+					<GenerateInviteCode />
+					<Separator />
+					<InviteCodes />
+
+				</div>
+
+				<div className="p-8">
+
+					<SystemInformation />
+
+				</div>
 
 			</div>
 
