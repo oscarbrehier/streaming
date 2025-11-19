@@ -87,16 +87,14 @@ export async function convertToHLS(inputPath: string, outputDir: string): Promis
 
 					await fs.writeFile(progressFile, JSON.stringify({ percent: 100 }));
 
-					const masterPlaylist = `
-						#EXTM3U
-						#EXT-X-VERSION:3
-						#EXT-X-STREAM-INF:BANDWIDTH=5000000,RESOLUTION=1920x1080
-						stream_0/playlist.m3u8
-						#EXT-X-STREAM-INF:BANDWIDTH=3000000,RESOLUTION=1280x720
-						stream_1/playlist.m3u8
-						#EXT-X-STREAM-INF:BANDWIDTH=1500000,RESOLUTION=854x480
-						stream_2/playlist.m3u8
-					`;
+					const masterPlaylist = `#EXTM3U
+#EXT-X-VERSION:3
+#EXT-X-STREAM-INF:BANDWIDTH=5000000,RESOLUTION=1920x1080
+stream_0/playlist.m3u8
+#EXT-X-STREAM-INF:BANDWIDTH=3000000,RESOLUTION=1280x720
+stream_1/playlist.m3u8
+#EXT-X-STREAM-INF:BANDWIDTH=1500000,RESOLUTION=854x480
+stream_2/playlist.m3u8`;
 
 					await fs.writeFile(path.join(outputDir, "master.m3u8"), masterPlaylist);
 					resolve();

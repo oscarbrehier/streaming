@@ -15,6 +15,7 @@ import { MediaService } from "@/services/media";
 import { ProgressBar } from "./ProgressBar";
 import { useMediaState } from "@/hooks/player/useMediaState";
 import { ControlButtons } from "./ControlButtons";
+import { useVideoQuality } from "@/hooks/player/useVideoQuality";
 
 interface VideoPlayerProps {
 	userId: string;
@@ -47,8 +48,10 @@ export default function VideoPlayer({
 	const { updateRating, setMediaDuration } = new MediaService(supabase, mediaId, userId);
 
 	const router = useRouter();
+
 	const videoRef = useRef<HTMLVideoElement>(null);
 	const playerRef = useRef<HTMLDivElement>(null);
+	const hlsRef = useRef<Hls>(null);
 
 	const {
 		timecode, setTimecode,
@@ -65,6 +68,7 @@ export default function VideoPlayer({
 
 	const { controls } = useVideoControls(videoRef, isPlaying);
 	const { handleProgressUpdate } = useVideoProgress(videoRef, mediaId, userId, mediaStatus.completed);
+	const { qualities, changeQuality, currentQuality, setupQualityListener } = useVideoQuality(hlsRef); 
 
 	// HLS support
 	useEffect(() => {
@@ -82,6 +86,11 @@ export default function VideoPlayer({
 			} else if (Hls.isSupported()) {
 
 				const hls = new Hls();
+
+				hlsRef.current = hls;
+
+				setupQualityListener(hls);
+
 				hls.loadSource(videoUrl);
 				hls.attachMedia(video);
 
@@ -306,6 +315,9 @@ export default function VideoPlayer({
 							captions={captions}
 							onCaptionChange={handleCaptions}
 							onFullscreenChange={handleFullscreen}
+							currentQuality={currentQuality}
+							qualities={qualities}
+							onQualityChange={changeQuality}
 						/>
 
 					</div>
