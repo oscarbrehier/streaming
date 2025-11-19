@@ -275,6 +275,7 @@ declare global {
 
 	interface SysChartDefiniton {
 		title: string;
+		description: string;
 		chartData: SysMetric[];
 		labels?: string[];
 	};

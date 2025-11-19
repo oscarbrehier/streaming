@@ -26,13 +26,17 @@ const chartConfig = {
 	}
 } satisfies ChartConfig;
 
+function roundValue
+
 export function SysInfoChart({
 	title,
+	description,
 	chartData,
 	labels
 }: {
-	title: string,
-	chartData: SysMetric[],
+	title: string;
+	description: string;
+	chartData: SysMetric[];
 	labels?: string[];
 }) {
 
@@ -74,14 +78,20 @@ export function SysInfoChart({
 
 	const lastItem = chartData.at(-1);
 
+	const parsedDescription = isArrayMetric
+		? (lastItem?.metric as number[]).reduce(
+			(desc, value) => desc.replace(/%v/, value.toFixed(2)),
+			description
+		)
+		: description.replace(/%v/, (lastItem?.metric as number).toFixed(2));
+
 	return (
 
 		<Card className="w-96">
 
 			<CardHeader>
 				<CardTitle>{title}</CardTitle>
-				<CardDescription>{isArrayMetric ? "Array detected" : "Single value"}</CardDescription>
-				{/* <CardDescription>{Math.round((chartData.at(-1)?.metric + Number.EPSILON) * 100) / 100}%</CardDescription>) */}
+				<CardDescription>{parsedDescription}</CardDescription>
 			</CardHeader>
 
 			<CardContent>

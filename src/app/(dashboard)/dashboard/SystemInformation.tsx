@@ -11,9 +11,9 @@ const EMPTY_DATA = Array.from({ length: 20 }, (_, i) => ({
 export function SystemInformation() {
 
 	const [chartsData, setChartsData] = useState<Record<string, SysChartDefiniton>>({
-		cpu: { title: "CPU Usage", chartData: EMPTY_DATA },
-		memory: { title: "Memory Usage",  chartData: EMPTY_DATA },
-		network: { title: "Network",  chartData: EMPTY_DATA, labels: ["Download", "Upload"] },
+		cpu: { title: "CPU Usage", description: "%v%", chartData: EMPTY_DATA },
+		memory: { title: "Memory Usage", description: "%v%",  chartData: EMPTY_DATA },
+		network: { title: "Network", description: "Download: %v | Upload %v",  chartData: EMPTY_DATA, labels: ["Download (Mbps)", "Upload (Mbps)"] },
 	});
 
 	async function fetchServerStats() {
@@ -29,7 +29,7 @@ export function SystemInformation() {
 
 				const cpuData = { metric: cpu.total, timestamp, max: 100 };
 				const memData = { metric: mem.total, timestamp, max: 100 };
-				const netData = { metric: [network.rx, network.tx], timestamp, labels: ["Download", "Upload"] };
+				const netData = { metric: [network.rx, network.tx], timestamp };
 
 				console.log(netData);
 
@@ -64,6 +64,7 @@ export function SystemInformation() {
 				<SysInfoChart
 					key={key}
 					title={data.title}
+					description={data.description}
 					chartData={data.chartData}
 					labels={data.labels}
 				/>
