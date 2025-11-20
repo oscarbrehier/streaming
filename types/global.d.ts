@@ -1,5 +1,10 @@
 declare global {
 
+	interface APIResponse {
+		result?: any;
+		error?: string;
+	};
+
 	interface Genre {
 		id: number;
 		name: string;
@@ -279,6 +284,13 @@ declare global {
 		max?: number;
 		labels?: string[];
 	};
+
+	type MediaHealth = {
+		playlist: string;
+		errors: string[];
+		code: number;
+	};
+
 
 };
 

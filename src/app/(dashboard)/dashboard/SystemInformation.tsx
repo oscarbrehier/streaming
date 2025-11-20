@@ -57,8 +57,6 @@ export function SystemInformation() {
 	return (
 
 		<div className="text-4xl text-white font-semibold w-full grid grid-cols-3 gap-4">
-
-			{/* <CPULoadChart chartData={cpu.slice(-20)} currentLoad={currentLoad} /> */}
 			
 			{Object.entries(chartsData).map(([key, data]) => (
 
