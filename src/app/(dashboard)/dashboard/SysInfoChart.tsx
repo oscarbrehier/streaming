@@ -1,6 +1,6 @@
 "use client"
 
-import { Bar, BarChart, YAxis } from "recharts"
+import { Area, AreaChart, Bar, BarChart, YAxis } from "recharts"
 import {
 	Card,
 	CardContent,
@@ -30,12 +30,14 @@ export function SysInfoChart({
 	title,
 	description,
 	chartData,
-	labels
+	labels,
+	max,
 }: {
 	title: string;
 	description: string;
 	chartData: SysMetric[];
 	labels?: string[];
+	max?: number;
 }) {
 
 	const isArrayMetric = Array.isArray(chartData[chartData.length - 1]?.metric);
@@ -96,7 +98,95 @@ export function SysInfoChart({
 
 				<ChartContainer config={chartConfig} className="h-30 w-full">
 
+					<AreaChart accessibilityLayer data={normalizedData}>
 
+						{max && <YAxis domain={[0, max]} hide />}
+
+						<defs>
+
+							{
+								isArrayMetric ? (chartData[chartData.length - 1]?.metric as number[]).map((_, index) => (
+
+									<linearGradient
+										key={index}
+										x1="0" y1="0" x2="0" y2="1"
+										id={`fill_${index}`}
+									>
+
+										<stop
+											offset="5%"
+											stopColor={`var(--color-metric_${index})`}
+											stopOpacity={0.8}
+										/>
+										<stop
+											offset="95%"
+											stopColor={`var(--color-metric_${index})`}
+											stopOpacity={0.1}
+										/>
+
+									</linearGradient>
+
+								)) : (
+									
+									<linearGradient
+										x1="0" y1="0" x2="0" y2="1"
+										id={`fill_0`}
+									>
+
+										<stop
+											offset="5%"
+											stopColor={`var(--color-metric_0)`}
+											stopOpacity={0.8}
+										/>
+										<stop
+											offset="95%"
+											stopColor={`var(--color-metric_0)`}
+											stopOpacity={0.1}
+										/>
+
+									</linearGradient>
+
+								)
+							}
+
+						</defs>
+
+						{
+							isArrayMetric
+								? (chartData[chartData.length - 1]?.metric as number[]).map((_, index) => (
+
+									<Area
+										key={index}
+										dataKey={`metric_${index}`}
+										type="natural"
+										fill={`url(#fill_${index})`}
+										fillOpacity={0.4}
+										stroke={`var(--color-metric_${index})`}
+										stackId="a"
+										isAnimationActive={false}
+									/>
+
+								))
+								: (
+
+									<Area
+										dataKey="metric"
+										type="natural"
+										fill="url(#fill_0)"
+										fillOpacity={0.4}
+										stroke="var(--color-metric_0)"
+										stackId="a"
+										isAnimationActive={false}
+									/>
+
+								)
+						}
+
+						{isArrayMetric && (<ChartLegend content={<ChartLegendContent />} />)}
+
+					</AreaChart>
+
+					{/* 
 					<BarChart accessibilityLayer data={normalizedData}>
 
 						{lastItem?.max && <YAxis domain={[0, lastItem.max]} hide />}
@@ -113,7 +203,7 @@ export function SysInfoChart({
 
 						{isArrayMetric && (<ChartLegend content={<ChartLegendContent />} />)}
 
-					</BarChart>
+					</BarChart> */}
 
 				</ChartContainer>
 

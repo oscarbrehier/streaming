@@ -1,34 +1,35 @@
 "use client";
 import { useEffect, useState } from "react";
-import { CPULoadChart } from "./CPULoadChart";
 import { SysInfoChart } from "./SysInfoChart";
 
-const EMPTY_DATA = Array.from({ length: 20 }, (_, i) => ({
-	metric: 0,
+const EMPTY_DATA = (items?: number) => Array.from({ length: 20 }, (_, i) => ({
+	metric: items ? Array(items).fill(0) : 0,
 	timestamp: 0,
 }));
 
 export function SystemInformation() {
 
 	const [chartsData, setChartsData] = useState<Record<string, SysChartDefiniton>>({
-		cpu: { title: "CPU Usage", description: "%v%", chartData: EMPTY_DATA },
-		memory: { title: "Memory Usage", description: "%v%",  chartData: EMPTY_DATA },
-		network: { title: "Network", description: "Download: %v | Upload %v",  chartData: EMPTY_DATA, labels: ["Download (Mbps)", "Upload (Mbps)"] },
+		cpu: { title: "CPU Usage", description: "%v%", chartData: EMPTY_DATA(0), max: 100 },
+		memory: { title: "Memory Usage", description: "%v%",  chartData: EMPTY_DATA(0), max: 100 },
+		network: { title: "Network", description: "Download: %v | Upload %v",  chartData: EMPTY_DATA(2), labels: ["Download (Mbps)", "Upload (Mbps)"] },
 	});
 
 	async function fetchServerStats() {
 
 		try {
 
-			const res = await fetch("http://localhost:3000/api/health/disk-usage");
+			const res = await fetch("http://localhost:3001/api/health/system");
 
 			if (res.ok) {
 
-				const data: SysInfo = await res.json();
-				const { cpu, mem, network, timestamp } = data;
+				const { results, error }: { results?: SysInfo, error?: string } = await res.json();
+				if (error || !results) return ;
 
-				const cpuData = { metric: cpu.total, timestamp, max: 100 };
-				const memData = { metric: mem.total, timestamp, max: 100 };
+				const { cpu, mem, network, timestamp } = results;
+
+				const cpuData = { metric: cpu.total, timestamp };
+				const memData = { metric: mem.usedPercent, timestamp };
 				const netData = { metric: [network.rx, network.tx], timestamp };
 
 				console.log(netData);
@@ -67,6 +68,7 @@ export function SystemInformation() {
 					description={data.description}
 					chartData={data.chartData}
 					labels={data.labels}
+					max={data.max}
 				/>
 
 			))}

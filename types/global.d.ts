@@ -270,13 +270,13 @@ declare global {
 	interface SysMetric {
 		metric: number | number[];
 		timestamp: number;
-		max?: number;
 	};
 
 	interface SysChartDefiniton {
 		title: string;
 		description: string;
 		chartData: SysMetric[];
+		max?: number;
 		labels?: string[];
 	};
 
