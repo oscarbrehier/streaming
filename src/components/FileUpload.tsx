@@ -1,9 +1,10 @@
 "use client"
 
-import type React from "react"
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Upload, Check, X, RefreshCw } from "lucide-react"
+import type React from "react";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Upload, Check, X, RefreshCw } from "lucide-react";
+import { v4 as uuid } from "uuid";
 
 interface FileUploadSectionProps {
 	onFileSelect: (file: File | null) => void
@@ -64,60 +65,101 @@ export default function FileUploadSection({ onFileSelect, selectedMedia, uploade
 
 	};
 
+	async function uploadChunk(uploadSessionId: string, chunk: Blob, totalChunks: number, chunkIndex: number, filename: string) {
+
+		const formData = new FormData();
+
+		formData.append("uploadSessionId", uploadSessionId);
+		formData.append("file", chunk);
+		formData.append("totalChunks", totalChunks.toString());
+		formData.append("currentChunk", chunkIndex.toString());
+		
+		if (chunkIndex === 0) formData.append("originalFilename", filename);
+
+		const res = await fetch("http://localhost:3001/api/media/upload/chunk", {
+			method: "POST",
+			body: formData
+		});
+
+		if (!res.ok) {
+			throw new Error("Chunk upload failed");
+		};
+
+	};
+
 	async function upload() {
 
 		if (!file) return;
 
-		let filename: string | null = null;
+		const CHUNK_SIZE = 1024 * 1024;
+		const totalChunks = Math.ceil(file.size / CHUNK_SIZE) - 1;
+		const uploadSessionId = uuid();
 
-		setIsComplete(false);
-		setIsUploading(true);
-		setProgress(0);
+		let startByte = 0;
+		for (let chunkIndex = 0; chunkIndex <= totalChunks; chunkIndex++) {
 
-		const CHUNK_SIZE = 5 * 1024 * 1024;
-		const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+			const endByte = Math.min(startByte + CHUNK_SIZE, file.size);
+			const chunk = file.slice(startByte, endByte);
 
-		for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
-
-			const start = chunkIndex * CHUNK_SIZE;
-			const end = Math.min(start + CHUNK_SIZE, file.size);
-			const chunk = file.slice(start, end);
-
-			const formData = new FormData();
-			formData.append("chunk", chunk);
-			formData.append("chunkIndex", String(chunkIndex));
-			formData.append("totalChunks", String(totalChunks));
-			formData.append("filename", file.name);
-
-			const res = await fetch("/api/upload", {
-				method: "POST",
-				body: formData,
-			});
-
-			if (!res.ok) {
-				console.error("Chunk upload failed:", await res.text());
-				setIsUploading(false);
-				return;
-			};
-
-			const progress = ((chunkIndex + 1) / totalChunks) * 100;
-			setProgress(progress);
-
-			if (chunkIndex == totalChunks - 1) {
-
-				const data = await res.json();
-				filename = data.filename;
-
-			};
+			await uploadChunk(uploadSessionId, chunk, totalChunks, chunkIndex, file.name);
+			
+			startByte = endByte;
 
 		};
 
-		setIsUploading(false);
-		setProgress(100);
+		return ;
+		
 
-		if (filename) {
-			convert(filename);
-		};
+		// let filename: string | null = null;
+
+		// setIsComplete(false);
+		// setIsUploading(true);
+		// setProgress(0);
+
+		// // const CHUNK_SIZE = 5 * 1024 * 1024;
+		// const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+
+		// for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
+
+		// 	const start = chunkIndex * CHUNK_SIZE;
+		// 	const end = Math.min(start + CHUNK_SIZE, file.size);
+		// 	const chunk = file.slice(start, end);
+
+		// 	const formData = new FormData();
+		// 	formData.append("chunk", chunk);
+		// 	formData.append("chunkIndex", String(chunkIndex));
+		// 	formData.append("totalChunks", String(totalChunks));
+		// 	formData.append("filename", file.name);
+
+		// 	const res = await fetch("/api/upload", {
+		// 		method: "POST",
+		// 		body: formData,
+		// 	});
+
+		// 	if (!res.ok) {
+		// 		console.error("Chunk upload failed:", await res.text());
+		// 		setIsUploading(false);
+		// 		return;
+		// 	};
+
+		// 	const progress = ((chunkIndex + 1) / totalChunks) * 100;
+		// 	setProgress(progress);
+
+		// 	if (chunkIndex == totalChunks - 1) {
+
+		// 		const data = await res.json();
+		// 		filename = data.filename;
+
+		// 	};
+
+		// };
+
+		// setIsUploading(false);
+		// setProgress(100);
+
+		// if (filename) {
+		// 	convert(filename);
+		// };
 
 	};
 
@@ -287,7 +329,7 @@ export default function FileUploadSection({ onFileSelect, selectedMedia, uploade
 				<Button
 					onClick={(e) => upload()}
 					className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
-					disabled={!selectedMedia || !file || isUploading || isConverting || isComplete}
+					// disabled={!selectedMedia || !file || isUploading || isConverting || isComplete}
 				>
 					{selectedMedia ? `Upload as: ${selectedMedia?.title || selectedMedia?.name} (${selectedMedia.id})` : "Complete Upload"}
 				</Button>

@@ -15,16 +15,37 @@ export default function DashboardLayout({
 				className="w-full h-16 flex justify-between items-center border-b border-border px-8 z-50 bg-background fixed"
 			>
 
-				<p
-					className="text-lg font-semibold"
-				>Dashboard</p>
-
 				<Link
-					href="dashboard/media"
-					className="text-sm"
+					href="/dashboard"
+					className="text-lg font-semibold"
 				>
-					Media Health
+					Dashboard
 				</Link>
+
+				<div className="space-x-8">
+
+					<Link
+						href="/dashboard/upload"
+						className="text-sm"
+					>
+						Upload Media
+					</Link>
+
+					<Link
+						href="/dashboard/media"
+						className="text-sm"
+					>
+						Media Health
+					</Link>
+
+					<Link
+						href="/dashboard/conversions"
+						className="text-sm"
+					>
+						Video Conversion Queue
+					</Link>
+
+				</div>
 
 			</div>
 
