@@ -1,6 +1,6 @@
 import { fetchtTMDB } from "./fetchTMDB";
 
-export async function getImages(mediaId: string, tv?: boolean): Promise<{ backdrops: [], logos: [], posters: [] }> {
+export async function getImages(mediaId: string, tv?: boolean): Promise<Images> {
 
 	const endpoint = tv 
 		? `/tv/${mediaId}/images`
