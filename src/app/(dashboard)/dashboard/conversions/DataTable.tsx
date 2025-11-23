@@ -5,7 +5,7 @@ import {
 	flexRender,
 	getCoreRowModel,
 	useReactTable,
-} from "@tanstack/react-table"
+} from "@tanstack/react-table";
 
 import {
 	Table,
@@ -16,6 +16,7 @@ import {
 	TableRow,
 } from "@/components/ui/table"
 import { columns, Job } from "./columns"
+import { cn } from "@/lib/utils";
 
 interface DataTableProps<TData, TValue> {
 	columns: ColumnDef<TData, TValue>[]
@@ -27,8 +28,6 @@ export function DataTable({
 }: {
 	data: Job[]
 }) {
-
-	console.log(data)
 
 	const table = useReactTable({
 		data,
@@ -44,7 +43,7 @@ export function DataTable({
 						<TableRow key={headerGroup.id}>
 							{headerGroup.headers.map((header) => {
 								return (
-									<TableHead key={header.id}>
+									<TableHead key={header.id} className="h-14 px-8">
 										{header.isPlaceholder
 											? null
 											: flexRender(
@@ -57,15 +56,15 @@ export function DataTable({
 						</TableRow>
 					))}
 				</TableHeader>
-				<TableBody>
+				<TableBody className="**:data-[slot=table-cell]:first:w-8">
 					{table.getRowModel().rows?.length ? (
 						table.getRowModel().rows.map((row) => (
 							<TableRow
 								key={row.id}
 								data-state={row.getIsSelected() && "selected"}
 							>
-								{row.getVisibleCells().map((cell) => (
-									<TableCell key={cell.id}>
+								{row.getVisibleCells().map((cell, idx) => (
+									<TableCell key={cell.id} className={cn("h-10", idx === row.getAllCells().length - 1 ? "px-2" : "px-8")}>
 										{flexRender(cell.column.columnDef.cell, cell.getContext())}
 									</TableCell>
 								))}
@@ -73,7 +72,7 @@ export function DataTable({
 						))
 					) : (
 						<TableRow>
-							<TableCell colSpan={columns.length} className="h-24 text-center">
+							<TableCell colSpan={columns.length} className="h-24 px-8 text-center">
 								No results.
 							</TableCell>
 						</TableRow>

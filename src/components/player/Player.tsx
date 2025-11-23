@@ -20,6 +20,7 @@ import { useVideoQuality } from "@/hooks/player/useVideoQuality";
 interface VideoPlayerProps {
 	userId: string;
 	mediaId: string;
+	title?: string;
 	videoUrl: string;
 	subtitleUrl?: string;
 	onRating?: (rating: number) => void;
@@ -38,6 +39,7 @@ const ratings = [
 export default function VideoPlayer({
 	userId,
 	mediaId,
+	title,
 	videoUrl,
 	subtitleUrl,
 	onRating,
@@ -268,13 +270,19 @@ export default function VideoPlayer({
 			<div className={`h-screen w-full absolute flex flex-col justify-between z-[2147483647] transition-opacity duration-300 ${controls ? 'opacity-100' : 'opacity-0'}`}>
 
 				{/* Top Bar - Back Button */}
-				<div className='h-12 w-full flex items-center px-5 pt-5'>
+				<div className='h-12 w-full flex items-center px-5 pt-5 space-x-8'>
+
 					<button
 						onClick={() => router.back()}
 						title="Back"
 						className='text-2xl cursor-pointer hover:bg-neutral-700 h-8 w-8 rounded-md flex items-center justify-center transition-colors'>
 						<IoChevronBack className="text-white" />
 					</button>
+
+					{title && (
+						<p className="font-medium text-lg mb-1">{title}</p>
+					)}
+
 				</div>
 
 				{/* Rating (when paused and activated) */}

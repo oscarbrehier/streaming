@@ -1,6 +1,7 @@
 import VideoPlayer from "@/components/player/Player";
 import { MediaNotFound } from "./NotFound";
 import { createClient } from "@/utils/supabase/server";
+import { getMovie } from "@/utils/tmdb/getMovie";
 
 interface PageProps {
 	params: Promise<{ id: string }>;
@@ -19,7 +20,6 @@ async function updateUserMediaStatus(
 		.limit(1)
 		.maybeSingle();
 
-	console.log(error)
 	if (error) return null;
 
 	if (!data) {
@@ -51,9 +51,9 @@ async function updateUserMediaStatus(
 export default async function Page({ params }: PageProps) {
 
 	const { id } = await params;
-	const mediaPath = `/api/media/${id}/master.m3u8`;
+	const mediaPath = `http://localhost:3001/api/media/${id}/master.m3u8`;
 
-	const res = await fetch(`http://localhost:3000${mediaPath}`);
+	const res = await fetch(mediaPath, { cache: "no-store" });
 
 	if (res.status !== 200) {
 		return <MediaNotFound />;
@@ -69,9 +69,12 @@ export default async function Page({ params }: PageProps) {
 		return <MediaNotFound />;
 	};
 
+	const movie = await getMovie(id);
+
 	return (
 
 		<VideoPlayer
+			title={movie.title}
 			mediaId={id}
 			userId={user.id}
 			mediaStatus={mediaStatus}
