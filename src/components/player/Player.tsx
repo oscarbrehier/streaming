@@ -275,8 +275,8 @@ export default function VideoPlayer({
 					<button
 						onClick={() => router.back()}
 						title="Back"
-						className='text-2xl cursor-pointer hover:bg-neutral-700 h-8 w-8 rounded-md flex items-center justify-center transition-colors'>
-						<IoChevronBack className="text-white" />
+						className='text-2xl cursor-pointer hover:bg-neutral-500/30 size-10 rounded-full flex items-center justify-center transition-colors'>
+						<IoChevronBack className="text-neutral-100" size={20} />
 					</button>
 
 					{title && (

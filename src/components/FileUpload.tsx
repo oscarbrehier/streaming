@@ -3,14 +3,17 @@
 import type React from "react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Upload, Check, X, RefreshCw } from "lucide-react";
+import { Upload, Check, X } from "lucide-react";
 import { v4 as uuid } from "uuid";
+import { createClient } from "@/utils/supabase/client";
 
 interface FileUploadSectionProps {
 	onFileSelect: (file: File | null) => void
 	selectedMedia: any | null
 	uploadedFile: File | null
-}
+};
+
+const supabase = createClient();
 
 export default function FileUploadSection({ onFileSelect, selectedMedia, uploadedFile }: FileUploadSectionProps) {
 
@@ -18,10 +21,8 @@ export default function FileUploadSection({ onFileSelect, selectedMedia, uploade
 	const [isDragging, setIsDragging] = useState(false);
 	const [progress, setProgress] = useState(0);
 	const [isUploading, setIsUploading] = useState(false);
-	const [isConverting, setIsConverting] = useState(false);
 	const [isComplete, setIsComplete] = useState(false);
-	
-	const [videoUrl, setVideoUrl] = useState<null | string>(null);
+	const [error, setError] = useState<string | null>(null);
 
 	const handleDragOver = (e: React.DragEvent) => {
 
@@ -61,11 +62,12 @@ export default function FileUploadSection({ onFileSelect, selectedMedia, uploade
 
 		onFileSelect(file);
 		setFile(file);
-		// await upload(file);
 
 	};
 
-	async function uploadChunk(uploadSessionId: string, chunk: Blob, totalChunks: number, chunkIndex: number, filename: string) {
+	async function uploadChunk(uploadSessionId: string, chunk: Blob, totalChunks: number, chunkIndex: number, filename: string, accessToken: string) {
+
+		if (!accessToken) throw new Error("Unauthorized");
 
 		const formData = new FormData();
 
@@ -73,11 +75,14 @@ export default function FileUploadSection({ onFileSelect, selectedMedia, uploade
 		formData.append("file", chunk);
 		formData.append("totalChunks", totalChunks.toString());
 		formData.append("currentChunk", chunkIndex.toString());
-		
+
 		if (chunkIndex === 0) formData.append("originalFilename", filename);
 
 		const res = await fetch("http://localhost:3001/api/media/upload/chunk", {
 			method: "POST",
+			headers: {
+				"Authorization": `Bearer ${accessToken}`
+			},
 			body: formData
 		});
 
@@ -91,131 +96,46 @@ export default function FileUploadSection({ onFileSelect, selectedMedia, uploade
 
 		if (!file) return;
 
+		setError(null);
+
+		const { data: { session } } = await supabase.auth.getSession();
+		if (!session || !session.access_token) {
+			setError("You must be logged in to upload");
+			return;
+		};
+
+		setIsUploading(true);
+
 		const CHUNK_SIZE = 1024 * 1024;
 		const totalChunks = Math.ceil(file.size / CHUNK_SIZE) - 1;
 		const uploadSessionId = uuid();
 
-		let startByte = 0;
-		for (let chunkIndex = 0; chunkIndex <= totalChunks; chunkIndex++) {
-
-			const endByte = Math.min(startByte + CHUNK_SIZE, file.size);
-			const chunk = file.slice(startByte, endByte);
-
-			await uploadChunk(uploadSessionId, chunk, totalChunks, chunkIndex, file.name);
-			
-			startByte = endByte;
-
-		};
-
-		return ;
-		
-
-		// let filename: string | null = null;
-
-		// setIsComplete(false);
-		// setIsUploading(true);
-		// setProgress(0);
-
-		// // const CHUNK_SIZE = 5 * 1024 * 1024;
-		// const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
-
-		// for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
-
-		// 	const start = chunkIndex * CHUNK_SIZE;
-		// 	const end = Math.min(start + CHUNK_SIZE, file.size);
-		// 	const chunk = file.slice(start, end);
-
-		// 	const formData = new FormData();
-		// 	formData.append("chunk", chunk);
-		// 	formData.append("chunkIndex", String(chunkIndex));
-		// 	formData.append("totalChunks", String(totalChunks));
-		// 	formData.append("filename", file.name);
-
-		// 	const res = await fetch("/api/upload", {
-		// 		method: "POST",
-		// 		body: formData,
-		// 	});
-
-		// 	if (!res.ok) {
-		// 		console.error("Chunk upload failed:", await res.text());
-		// 		setIsUploading(false);
-		// 		return;
-		// 	};
-
-		// 	const progress = ((chunkIndex + 1) / totalChunks) * 100;
-		// 	setProgress(progress);
-
-		// 	if (chunkIndex == totalChunks - 1) {
-
-		// 		const data = await res.json();
-		// 		filename = data.filename;
-
-		// 	};
-
-		// };
-
-		// setIsUploading(false);
-		// setProgress(100);
-
-		// if (filename) {
-		// 	convert(filename);
-		// };
-
-	};
-
-	async function getConvertProgress(filename: string) {
-
-		const res = await fetch(`/api/convert/progress?dir=media/${filename}`);
-		const data = await res.json();
-
-		return data.percent ?? 0;
-
-	};
-
-	async function convert(filename: string) {
-
-		if (!filename) return;
-
-		setIsConverting(true);
-		setProgress(0);
-
-		const mediaId = selectedMedia.id;
-
 		try {
 
-			fetch("/api/convert", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({
-					filename,
-					mediaId
-				})
-			});
+			let startByte = 0;
+			for (let chunkIndex = 0; chunkIndex <= totalChunks; chunkIndex++) {
 
-			const interval = setInterval(async () => {
+				const endByte = Math.min(startByte + CHUNK_SIZE, file.size);
+				const chunk = file.slice(startByte, endByte);
 
-				const progress = await getConvertProgress(mediaId);
-				setProgress(progress);
+				await uploadChunk(uploadSessionId, chunk, totalChunks, chunkIndex, file.name, session.access_token);
 
-				if (progress >= 100) {
-					clearInterval(interval);
-					setIsConverting(false);
-					setIsComplete(true);
-				}
+				startByte = endByte;
 
-			}, 1000);
+			};
 
-			const url = `/api/media/${mediaId}/index.m3u8`;
-			setVideoUrl(url);
+			setIsComplete(true);
 
 		} catch (err) {
 
-			console.error("Failed converting:", err);
-			setIsConverting(false);
+			console.error("Upload failed:", err);
+			setError("Upload failed. Please check your permissions.");
+
+		} finally {
+
+			setIsUploading(false);
 
 		};
-
-		setProgress(100);
 
 	};
 
@@ -269,7 +189,6 @@ export default function FileUploadSection({ onFileSelect, selectedMedia, uploade
 								{progress < 100 && (
 									<div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
 										{isUploading && <Upload className="w-5 h-5 text-primary" />}
-										{isConverting && <RefreshCw className="w-5 h-5 text-primary" />}
 									</div>
 								)}
 
@@ -292,7 +211,7 @@ export default function FileUploadSection({ onFileSelect, selectedMedia, uploade
 
 						</div>
 
-						{(isUploading || isConverting) && progress < 100 && (
+						{(isUploading) && progress < 100 && (
 
 							<div className="w-full">
 
@@ -306,7 +225,7 @@ export default function FileUploadSection({ onFileSelect, selectedMedia, uploade
 								<div className="w-full flex justify-between mt-2">
 
 									<p className="text-xs text-muted-foreground">
-										{isConverting ? "Converting" : "Uploading"}
+										Uploading
 									</p>
 
 									<p className="text-xs text-muted-foreground">{Math.round(progress)}%</p>
@@ -329,18 +248,28 @@ export default function FileUploadSection({ onFileSelect, selectedMedia, uploade
 				<Button
 					onClick={(e) => upload()}
 					className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
-					// disabled={!selectedMedia || !file || isUploading || isConverting || isComplete}
+					disabled={!selectedMedia || !file || isUploading || isComplete}
 				>
 					{selectedMedia ? `Upload as: ${selectedMedia?.title || selectedMedia?.name} (${selectedMedia.id})` : "Complete Upload"}
 				</Button>
 
-				<p className="text-xs text-muted-foreground text-center mt-4">
-					{!selectedMedia ? "Select a movie/tv show from the right panel to proceed" : !uploadedFile ? "Select or drop a file to upload" : "Ready to upload"}
-				</p>
+				{error ? (
+
+					<p className="text-xs text-destructive text-center mt-4">
+						{error}
+					</p>
+
+				) : (
+
+					<p className="text-xs text-muted-foreground text-center mt-4">
+						{!selectedMedia ? "Select a movie/tv show from the right panel to proceed" : !uploadedFile ? "Select or drop a file to upload" : "Ready to upload"}
+					</p>
+
+				)}
 
 			</div>
 
-		</div>
+		</div >
 
 	);
 

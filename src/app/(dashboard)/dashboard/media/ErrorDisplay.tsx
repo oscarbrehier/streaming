@@ -4,8 +4,10 @@ import { Item, ItemActions, ItemContent, ItemDescription, ItemTitle } from "@/co
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
-import { Skeleton } from "@/components/ui/skeleton";
 import { LoaderCircle } from "lucide-react";
+import { createClient } from "@/utils/supabase/client";
+
+const supabase = createClient();
 
 export function ErrorDisplay() {
 
@@ -17,7 +19,16 @@ export function ErrorDisplay() {
 
 		async function fetchData() {
 
-			const res = await fetch("http://localhost:3001/api/health/media", { cache: "no-store", next: { revalidate: 0 } });
+			const { data: { session } } = await supabase.auth.getSession();
+			if (!session || !session.access_token) return null;
+
+			const res = await fetch("http://localhost:3001/api/health/media", {
+				headers: {
+					"Authorization": `Bearer ${session.access_token}`
+				},
+				cache: "no-store", next: { revalidate: 0 } 
+			});
+
 			if (!res.ok) return null;
 
 			const reader = res.body!.getReader();
@@ -37,9 +48,9 @@ export function ErrorDisplay() {
 
 					setData(prev => ([...prev, JSON.parse(line)]));
 				}
-				
+
 			};
-			
+
 			setLoading(false);
 
 		};

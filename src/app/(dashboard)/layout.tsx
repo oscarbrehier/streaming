@@ -1,3 +1,4 @@
+import { Toaster } from "@/components/ui/sonner";
 import Link from "next/link";
 import { Suspense } from "react"
 
@@ -10,6 +11,8 @@ export default function DashboardLayout({
 	return (
 
 		<div className="h-auto min-h-screen w-full flex flex-col">
+
+			<Toaster />
 
 			<div
 				className="w-full h-16 flex justify-between items-center border-b border-border px-8 z-50 bg-background fixed"

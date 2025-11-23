@@ -1,6 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
 import { SysInfoChart } from "./SysInfoChart";
+import { createClient } from "@/utils/supabase/client";
+
+const supabase = createClient();
 
 const EMPTY_DATA = (items?: number) => Array.from({ length: 20 }, (_, i) => ({
 	metric: items ? Array(items).fill(0) : 0,
@@ -11,20 +14,27 @@ export function SystemInformation() {
 
 	const [chartsData, setChartsData] = useState<Record<string, SysChartDefiniton>>({
 		cpu: { title: "CPU Usage", description: "%v%", chartData: EMPTY_DATA(0), max: 100 },
-		memory: { title: "Memory Usage", description: "%v%",  chartData: EMPTY_DATA(0), max: 100 },
-		network: { title: "Network", description: "Download: %v | Upload %v",  chartData: EMPTY_DATA(2), labels: ["Download (Mbps)", "Upload (Mbps)"] },
+		memory: { title: "Memory Usage", description: "%v%", chartData: EMPTY_DATA(0), max: 100 },
+		network: { title: "Network", description: "Download: %v | Upload %v", chartData: EMPTY_DATA(2), labels: ["Download (Mbps)", "Upload (Mbps)"] },
 	});
 
 	async function fetchServerStats() {
 
 		try {
 
-			const res = await fetch("http://localhost:3001/api/health/system");
+			const { data: { session } } = await supabase.auth.getSession();
+			if (!session || !session.access_token) return null;
+
+			const res = await fetch("http://localhost:3001/api/health/system", {
+				headers: {
+					"Authorization": `Bearer ${session.access_token}`
+				}
+			});
 
 			if (res.ok) {
 
 				const { results, error }: { results?: SysInfo, error?: string } = await res.json();
-				if (error || !results) return ;
+				if (error || !results) return;
 
 				const { cpu, mem, network, timestamp } = results;
 
@@ -57,7 +67,7 @@ export function SystemInformation() {
 	return (
 
 		<div className="text-4xl text-white font-semibold w-full grid grid-cols-3 gap-4">
-			
+
 			{Object.entries(chartsData).map(([key, data]) => (
 
 				<SysInfoChart

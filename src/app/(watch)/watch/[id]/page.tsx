@@ -52,13 +52,13 @@ export default async function Page({ params }: PageProps) {
 
 	const { id } = await params;
 	const mediaPath = `http://localhost:3001/api/media/${id}/master.m3u8`;
-
+	
 	const res = await fetch(mediaPath, { cache: "no-store" });
-
+	
 	if (res.status !== 200) {
 		return <MediaNotFound />;
 	};
-
+	
 	const supabase = await createClient();
 	const { data: { user } } = await supabase.auth.getUser();
 
