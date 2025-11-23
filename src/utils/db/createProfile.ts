@@ -13,6 +13,8 @@ export async function createProfile(profileData: Omit<UserProfile, "created_at">
 	
 	if (error) {
 
+		console.log(error);
+
 		await createAuditLog({
 			user_id: profileData.id,
 			action: "profile_create",

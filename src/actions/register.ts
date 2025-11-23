@@ -20,10 +20,7 @@ const formSchema = z.object({
 		.string(),
 	inviteCode: z
 		.string()
-		.regex(
-			/^[A-Z0-9_-]{4}(?:-[A-Z0-9_-]{4})+$/,
-			"Invalid invite code format"
-		),
+		.length(13, "Invalid code format")
 }).refine((data) => data.password === data.confirmPassword, {
 	message: "Passwords do not match",
 	path: ["confirmPassword"]

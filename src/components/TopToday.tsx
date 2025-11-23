@@ -37,7 +37,7 @@ export function TopToday({
 
 	return (
 
-		<div className="relative w-full max-w-7xl w overflow-x-clip mt-20 h-auto flex flex-col space-y-2">
+		<div className="relative w-full max-w-7xl w overflow-x-clip h-auto flex flex-col space-y-2">
 
 			<div className="flex space-x-2">
 
