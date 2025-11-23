@@ -16,7 +16,11 @@ jobs:
           command: npm install
       - run:
           name: Build project
-          command: npm run build
+          command: | 
+            export NEXT_PUBLIC_SUPABASE_URL=$SUPABASE_URL
+            export NEXT_PUBLIC_SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
+            export SUPABASE_SERVICE_ROLE_SECRET=$SUPABASE_SERVICE_ROLE_SECRET
+            npm run build
 
   deploy:
     executor: node-executor
