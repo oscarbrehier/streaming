@@ -33,9 +33,7 @@ jobs:
           name: Deploy to VPS
           command: |
             ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} "\
-              if [ ! -d ~/streaming ]; then \
-                echo 'Cloning repository...' && \
-                git clone https://github.com/oscarbrehier/streaming.git ~/streaming; \
+              git clone https://github.com/oscarbrehier/streaming.git ~/streaming; && \
               fi && \
               cd ~/streaming && \
               echo 'Pulling latest changes...' && \
