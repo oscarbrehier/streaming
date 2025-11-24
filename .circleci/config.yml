@@ -16,7 +16,7 @@ jobs:
           command: npm install
       - run:
           name: Build project
-          command: | 
+          command: |
             export NEXT_PUBLIC_SUPABASE_URL=$SUPABASE_URL
             export NEXT_PUBLIC_SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
             export SUPABASE_SERVICE_ROLE_SECRET=$SUPABASE_SERVICE_ROLE_SECRET
@@ -33,13 +33,20 @@ jobs:
           name: Deploy to VPS
           command: |
             ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} "\
-              cd ~/streaming || git clone https://github.com/oscarbrehier/streaming.git ~/streaming && \
-              cd ~/streaming-api && \
+              if [ ! -d ~/streaming ]; then \
+                echo 'Cloning repository...' && \
+                git clone https://github.com/oscarbrehier/streaming.git ~/streaming; \
+              fi && \
+              cd ~/streaming && \
+              echo 'Pulling latest changes...' && \
               git pull origin main && \
-              npm install && \
+              echo 'Installing dependencies...' && \
               npm ci && \
+              echo 'Building project...' && \
               npm run build && \
-              pm2 restart streaming || pm2 start dist/src/server.js --name streaming
+              echo 'Restarting PM2 process...' && \
+              (pm2 describe streaming > /dev/null 2>&1 && pm2 restart streaming || pm2 start dist/src/server.js --name streaming) && \
+              pm2 save \
             "
 
 workflows:
