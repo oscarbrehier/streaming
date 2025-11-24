@@ -13,45 +13,94 @@ jobs:
       - checkout
       - run:
           name: Install dependencies
-          command: npm install
+          command: npm ci
+      - run:
+          name: Create production env file for build
+          command: |
+            echo "NEXT_PUBLIC_SUPABASE_URL=${SUPABASE_URL}" > .env.production
+            echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}" >> .env.production
+            echo "SUPABASE_SERVICE_ROLE_SECRET=${SUPABASE_SERVICE_ROLE_SECRET}" >> .env.production
+            echo "Created .env.production for build"
       - run:
           name: Build project
-          command: |
-            export NEXT_PUBLIC_SUPABASE_URL=$SUPABASE_URL
-            export NEXT_PUBLIC_SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
-            export SUPABASE_SERVICE_ROLE_SECRET=$SUPABASE_SERVICE_ROLE_SECRET
-            npm run build
+          command: npm run build
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .next
+            - package.json
+            - package-lock.json
+            - public
+            - next.config.js
 
   deploy:
     executor: node-executor
     steps:
+      - attach_workspace:
+          at: ~/repo
+      
       - add_ssh_keys
+      
       - run:
-          name: Verify SSH connection
-          command: ssh -o StrictHostKeyChecking=no deployer@$SERVER_IP "echo 'SSH connection successful'"
-      - run:
-          name: Deploy to VPS
+          name: Deploy Next.js app to VPS
           command: |
+            ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} "mkdir -p ~/streaming && rm -rf ~/streaming/.next"
+            
+            scp -r .next deployer@${SERVER_IP}:~/streaming/
+            scp -r public deployer@${SERVER_IP}:~/streaming/
+            scp package.json package-lock.json deployer@${SERVER_IP}:~/streaming/
+            scp next.config.js deployer@${SERVER_IP}:~/streaming/ || echo "No next.config.js found"
+            
             ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} "\
-              git clone https://github.com/oscarbrehier/streaming.git ~/streaming; && \
-              fi && \
               cd ~/streaming && \
-              echo 'Pulling latest changes...' && \
-              git pull origin main && \
-              echo 'Installing dependencies...' && \
-              npm ci && \
-              echo 'Building project...' && \
-              npm run build && \
-              echo 'Restarting PM2 process...' && \
-              (pm2 describe streaming > /dev/null 2>&1 && pm2 restart streaming || pm2 start dist/src/server.js --name streaming) && \
-              pm2 save \
+              echo 'NEXT_PUBLIC_SUPABASE_URL=${SUPABASE_URL}' > .env.production && \
+              echo 'NEXT_PUBLIC_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}' >> .env.production && \
+              echo 'SUPABASE_SERVICE_ROLE_SECRET=${SUPABASE_SERVICE_ROLE_SECRET}' >> .env.production && \
+              echo 'Created .env.production file on server' \
+            "
+            
+            ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} "\
+              cd ~/streaming && \
+              echo 'Files in streaming dir:' && \
+              ls -la && \
+              npm ci --production && \
+              echo 'module.exports = {' > ecosystem.config.cjs && \
+              echo '  apps: [{' >> ecosystem.config.cjs && \
+              echo '    name: \"streaming\",' >> ecosystem.config.cjs && \
+              echo '    script: \"./node_modules/next/dist/bin/next\",' >> ecosystem.config.cjs && \
+              echo '    args: \"start\",' >> ecosystem.config.cjs && \
+              echo '    cwd: \"/home/deployer/streaming\",' >> ecosystem.config.cjs && \
+              echo '    instances: 1,' >> ecosystem.config.cjs && \
+              echo '    exec_mode: \"cluster\",' >> ecosystem.config.cjs && \
+              echo '    env: {' >> ecosystem.config.cjs && \
+              echo '      NODE_ENV: \"production\",' >> ecosystem.config.cjs && \
+              echo '      PORT: \"${PORT:-3000}\",' >> ecosystem.config.cjs && \
+              echo '      NEXT_PUBLIC_SUPABASE_URL: \"${SUPABASE_URL}\",' >> ecosystem.config.cjs && \
+              echo '      NEXT_PUBLIC_SUPABASE_ANON_KEY: \"${SUPABASE_ANON_KEY}\",' >> ecosystem.config.cjs && \
+              echo '      SUPABASE_SERVICE_ROLE_SECRET: \"${SUPABASE_SERVICE_ROLE_SECRET}\"' >> ecosystem.config.cjs && \
+              echo '    }' >> ecosystem.config.cjs && \
+              echo '  }]' >> ecosystem.config.cjs && \
+              echo '};' >> ecosystem.config.cjs && \
+              echo 'Created ecosystem.config.cjs' && \
+              cat ecosystem.config.cjs && \
+              pm2 delete streaming 2>/dev/null || true && \
+              pm2 start ecosystem.config.cjs && \
+              pm2 save && \
+              echo 'Deployment completed successfully' && \
+              pm2 list \
             "
 
 workflows:
   version: 2
   build_and_deploy:
     jobs:
-      - build
+      - build:
+          filters:
+            branches:
+              only: main
       - deploy:
           requires:
             - build
+          filters:
+            branches:
+              only: main
