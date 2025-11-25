@@ -8,7 +8,7 @@ jobs:
       - checkout
 
       - run:
-          name: Install Docker if not installed
+          name: Install Docker (if missing)
           command: |
             if ! command -v docker >/dev/null 2>&1; then
               curl -fsSL https://get.docker.com -o install-docker.sh
@@ -25,9 +25,9 @@ jobs:
           command: |
             IMAGE_TAG="${DOCKER_USERNAME}/streaming-web:${CIRCLE_SHA1}"
             IMAGE_LATEST="${DOCKER_USERNAME}/streaming-web:latest"
-            
+
             export DOCKER_BUILDKIT=1
-            
+
             docker build \
               --cache-from ${IMAGE_LATEST} \
               --build-arg BUILDKIT_INLINE_CACHE=1 \
@@ -39,7 +39,8 @@ jobs:
               -t ${IMAGE_TAG} \
               -t ${IMAGE_LATEST} \
               .
-            
+
+            # Push both tags
             docker push ${IMAGE_TAG}
             docker push ${IMAGE_LATEST}
 
@@ -54,12 +55,12 @@ jobs:
               "cd ~/streaming && \
                echo 'DOCKER_USERNAME=${DOCKER_USERNAME}' > .env.deploy && \
                echo 'IMAGE_TAG=${CIRCLE_SHA1}' >> .env.deploy"
-            
+
             ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} \
               "cd ~/streaming && \
                export \$(cat .env.deploy | xargs) && \
                docker-compose pull nextapp && \
-               docker-compose up -d --no-build --remove-orphans"
+               docker-compose up -d --no-build --remove-orphans --force-recreate nextapp"
 
       - run:
           name: Verify Deployment
