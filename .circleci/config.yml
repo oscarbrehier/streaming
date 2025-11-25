@@ -38,32 +38,29 @@ jobs:
     steps:
       - attach_workspace:
           at: ~/repo
-      
       - add_ssh_keys
-      
       - run:
           name: Deploy Next.js app to VPS
           command: |
-            ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} "mkdir -p ~/streaming && rm -rf ~/streaming/.next"
-            
+            ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} "\
+              mkdir -p ~/streaming && rm -rf ~/streaming/.next \
+            "
             scp -r .next deployer@${SERVER_IP}:~/streaming/
             scp -r public deployer@${SERVER_IP}:~/streaming/
             scp package.json package-lock.json deployer@${SERVER_IP}:~/streaming/
-            scp next.config.js deployer@${SERVER_IP}:~/streaming/ || echo "No next.config.js found"
-            
+            scp next.config.js deployer@${SERVER_IP}:~/streaming/ || echo 'No next.config.js found'
+
             ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} "\
               cd ~/streaming && \
-              echo 'NEXT_PUBLIC_SUPABASE_URL=${SUPABASE_URL}' > .env.production && \
-              echo 'NEXT_PUBLIC_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}' >> .env.production && \
-              echo 'SUPABASE_SERVICE_ROLE_SECRET=${SUPABASE_SERVICE_ROLE_SECRET}' >> .env.production && \
-              echo 'Created .env.production file on server' \
-            "
-            
-            ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} "\
-              cd ~/streaming && \
-              echo 'Files in streaming dir:' && \
-              ls -la && \
+              # Assign port via Portly on VPS \
+              PORT_STREAMING=\$(portly port --min 3000 --max 9000 --a streaming) && \
+              echo \"PORT=\$PORT_STREAMING\" > .env.production && \
+              echo \"NEXT_PUBLIC_SUPABASE_URL=${SUPABASE_URL}\" >> .env.production && \
+              echo \"NEXT_PUBLIC_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}\" >> .env.production && \
+              echo \"SUPABASE_SERVICE_ROLE_SECRET=${SUPABASE_SERVICE_ROLE_SECRET}\" >> .env.production && \
+              echo 'Created .env.production on VPS' && \
               npm ci --production && \
+              # Create PM2 ecosystem file \
               echo 'module.exports = {' > ecosystem.config.cjs && \
               echo '  apps: [{' >> ecosystem.config.cjs && \
               echo '    name: \"streaming\",' >> ecosystem.config.cjs && \
@@ -74,17 +71,16 @@ jobs:
               echo '    exec_mode: \"cluster\",' >> ecosystem.config.cjs && \
               echo '    env: {' >> ecosystem.config.cjs && \
               echo '      NODE_ENV: \"production\",' >> ecosystem.config.cjs && \
-              echo '      PORT: \"${PORT:-3000}\",' >> ecosystem.config.cjs && \
-              echo '      NEXT_PUBLIC_SUPABASE_URL: \"${SUPABASE_URL}\",' >> ecosystem.config.cjs && \
-              echo '      NEXT_PUBLIC_SUPABASE_ANON_KEY: \"${SUPABASE_ANON_KEY}\",' >> ecosystem.config.cjs && \
-              echo '      SUPABASE_SERVICE_ROLE_SECRET: \"${SUPABASE_SERVICE_ROLE_SECRET}\"' >> ecosystem.config.cjs && \
+              echo '      PORT: process.env.PORT,' >> ecosystem.config.cjs && \
+              echo '      NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,' >> ecosystem.config.cjs && \
+              echo '      NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,' >> ecosystem.config.cjs && \
+              echo '      SUPABASE_SERVICE_ROLE_SECRET: process.env.SUPABASE_SERVICE_ROLE_SECRET' >> ecosystem.config.cjs && \
               echo '    }' >> ecosystem.config.cjs && \
               echo '  }]' >> ecosystem.config.cjs && \
               echo '};' >> ecosystem.config.cjs && \
-              echo 'Created ecosystem.config.cjs' && \
-              cat ecosystem.config.cjs && \
+              # Restart app \
               pm2 delete streaming 2>/dev/null || true && \
-              pm2 start ecosystem.config.cjs && \
+              pm2 start ecosystem.config.cjs --env production && \
               pm2 save && \
               echo 'Deployment completed successfully' && \
               pm2 list \
