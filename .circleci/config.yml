@@ -24,14 +24,15 @@ jobs:
       - run:
           name: Build project
           command: npm run build
+      - run:
+          name: Create deployment archive
+          command: |
+            tar -czf deploy.tar.gz .next public package.json package-lock.json $([ -f next.config.js ] && echo next.config.js || echo "")
+            ls -lh deploy.tar.gz
       - persist_to_workspace:
           root: .
           paths:
-            - .next
-            - package.json
-            - package-lock.json
-            - public
-            - next.config.js
+            - deploy.tar.gz
 
   deploy:
     executor: node-executor
@@ -40,27 +41,16 @@ jobs:
           at: ~/repo
       - add_ssh_keys
       - run:
-          name: Create deployment directory
+          name: Copy and extract deployment archive
           command: |
-            ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} "mkdir -p ~/streaming && rm -rf ~/streaming/.next"
-      - run:
-          name: Copy build files
-          command: |
-            scp -r .next deployer@${SERVER_IP}:~/streaming/
-            scp -r public deployer@${SERVER_IP}:~/streaming/
-            scp package.json package-lock.json deployer@${SERVER_IP}:~/streaming/
-      - run:
-          name: Copy next config if exists
-          command: |
-            if [ -f next.config.js ]; then
-              scp next.config.js deployer@${SERVER_IP}:~/streaming/
-            else
-              echo "No next.config.js found, skipping"
-            fi
+            echo "Copying deployment archive..."
+            scp -C deploy.tar.gz deployer@${SERVER_IP}:/tmp/deploy.tar.gz
+            echo "Extracting on server..."
+            ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} "mkdir -p ~/streaming && cd ~/streaming && tar -xzf /tmp/deploy.tar.gz && rm /tmp/deploy.tar.gz && echo 'Extraction complete'"
       - run:
           name: Setup environment on VPS
           command: |
-            ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} "cd ~/streaming && PORT_STREAMING=\$(portly --min 3000 --max 9000 --a streaming) && echo \"PORT=\${PORT_STREAMING}\" > .env.production && echo \"NEXT_PUBLIC_SUPABASE_URL=${SUPABASE_URL}\" >> .env.production && echo \"NEXT_PUBLIC_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}\" >> .env.production && echo \"SUPABASE_SERVICE_ROLE_SECRET=${SUPABASE_SERVICE_ROLE_SECRET}\" >> .env.production && echo \"Created .env.production on VPS with PORT=\${PORT_STREAMING}\""
+            ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} "cd ~/streaming && PORT_STREAMING=\$(portly --min 3000 --max 9000 -a streaming) && echo \"PORT=\${PORT_STREAMING}\" > .env.production && echo \"NEXT_PUBLIC_SUPABASE_URL=${SUPABASE_URL}\" >> .env.production && echo \"NEXT_PUBLIC_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}\" >> .env.production && echo \"SUPABASE_SERVICE_ROLE_SECRET=${SUPABASE_SERVICE_ROLE_SECRET}\" >> .env.production && echo \"Created .env.production on VPS with PORT=\${PORT_STREAMING}\""
       - run:
           name: Install production dependencies
           command: |
