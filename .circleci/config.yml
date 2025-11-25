@@ -25,9 +25,9 @@ jobs:
           command: |
             IMAGE_TAG="${DOCKER_USERNAME}/streaming-web:${CIRCLE_SHA1}"
             IMAGE_LATEST="${DOCKER_USERNAME}/streaming-web:latest"
-            
+
             export DOCKER_BUILDKIT=1
-            
+
             docker build \
               --cache-from ${IMAGE_LATEST} \
               --build-arg BUILDKIT_INLINE_CACHE=1 \
@@ -39,7 +39,7 @@ jobs:
               -t ${IMAGE_TAG} \
               -t ${IMAGE_LATEST} \
               .
-            
+
             docker push ${IMAGE_TAG}
             docker push ${IMAGE_LATEST}
 
