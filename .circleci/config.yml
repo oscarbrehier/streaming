@@ -1,6 +1,6 @@
-# version: 2.1
+# # version: 2.1
 
-# executors:
+# jobs:
 #   build:
 #     docker:
 #       - image: cimg/node:22.14
@@ -13,11 +13,9 @@
 #           docker build \
 #             --build-arg TMDB_READ_TOKEN="$TMDB_READ_TOKEN" \
 #             --build-arg TMDB_API_KEY="$TMDB_API_KEY" \
-#             --build-arg NEXT_PUBLIC_SUPABASE_URL="$SUPABASE_URL" \
-#             --build-arg NEXT_PUBLIC_SUPABASE_URL="$SUPABASE_URL" \
-#             --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
+#             --build-arg SUPABASE_URL="$SUPABASE_URL" \
+#             --build-arg SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
 #             --build-arg SUPABASE_SERVICE_ROLE_SECRET="$SUPABASE_SERVICE_ROLE_SECRET" \
-#             --build-arg NODE_ENV=production \
 #             -t streaming-web .
 
 #       - run: docker save streaming-web | gzip > streaming-web.tar.gz
@@ -31,12 +29,11 @@
 #     machine:
 #       image: ubuntu-2204:2024.01.1
 #     steps:
-#       - checkout
 #       - attach_workspace:
 #           at: .
 
 #       - run: |
-#           scp -o StrictHostKeyChecking=no nextapp.tar.gz deployer@${SERVER_IP}:~/streaming
+#           scp -o StrictHostKeyChecking=no streaming-web.tar.gz deployer@${SERVER_IP}:~/streaming/
 
 #       - run: |
 #           ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} << 'EOF'

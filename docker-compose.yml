@@ -13,6 +13,7 @@ services:
         SUPABASE_SERVICE_ROLE_SECRET: ${SUPABASE_SERVICE_ROLE_SECRET}
     env_file:
       - .env.production
+    restart: always
     expose:
       - "3005"
 
