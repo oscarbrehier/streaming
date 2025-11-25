@@ -2,28 +2,23 @@ version: 2.1
 
 jobs:
   build:
-    machine: true
+    docker:
+      - image: cimg/node:22.14
     steps:
       - checkout
 
-      - run:
-          name: Install Node.js dependencies
-          command: npm ci
+      - run: npm ci
 
-      - run:
-          name: Build Docker image
-          command: |
-            docker build \
-              --build-arg TMDB_READ_TOKEN="$TMDB_READ_TOKEN" \
-              --build-arg TMDB_API_KEY="$TMDB_API_KEY" \
-              --build-arg SUPABASE_URL="$SUPABASE_URL" \
-              --build-arg SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
-              --build-arg SUPABASE_SERVICE_ROLE_SECRET="$SUPABASE_SERVICE_ROLE_SECRET" \
-              -t streaming-web .
+      - run: |
+          docker build \
+            --build-arg TMDB_READ_TOKEN="$TMDB_READ_TOKEN" \
+            --build-arg TMDB_API_KEY="$TMDB_API_KEY" \
+            --build-arg SUPABASE_URL="$SUPABASE_URL" \
+            --build-arg SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
+            --build-arg SUPABASE_SERVICE_ROLE_SECRET="$SUPABASE_SERVICE_ROLE_SECRET" \
+            -t streaming-web .
 
-      - run:
-          name: Save Docker image to tar.gz
-          command: docker save streaming-web | gzip > streaming-web.tar.gz
+      - run: docker save streaming-web | gzip > streaming-web.tar.gz
 
       - persist_to_workspace:
           root: .
@@ -31,35 +26,40 @@ jobs:
             - streaming-web.tar.gz
 
   deploy:
-    machine: true
+    machine:
+      image: ubuntu-2204:2024.01.1
+
     steps:
       - attach_workspace:
           at: .
 
       - run:
-          name: Install Docker on server
+          name: Upload Docker image to VPS
           command: |
-            ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} "sudo apt-get update && sudo apt-get install -y docker.io docker-compose && sudo systemctl enable docker && sudo systemctl start docker"
+            scp -o StrictHostKeyChecking=no streaming-web.tar.gz deployer@${SERVER_IP}:~/streaming/
 
       - run:
-          name: Copy Docker image to server
-          command: scp -o StrictHostKeyChecking=no streaming-web.tar.gz deployer@${SERVER_IP}:~/streaming/
+          name: Extract image
+          command: |
+            ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} \
+              "cd ~/streaming && gunzip -f streaming-web.tar.gz"
 
       - run:
-          name: Unpack Docker image on server
-          command: ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} "cd ~/streaming && gunzip -f streaming-web.tar.gz && docker load < streaming-web.tar"
+          name: Load Docker image
+          command: |
+            ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} \
+              "cd ~/streaming && docker load < streaming-web.tar"
 
       - run:
-          name: Stop existing containers
-          command: ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} "cd ~/streaming && docker-compose down"
+          name: Restart Docker Compose
+          command: |
+            ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} \
+              "cd ~/streaming && docker-compose down && docker-compose up -d --build --remove-orphans"
 
       - run:
-          name: Start containers with Docker Compose
-          command: ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} "cd ~/streaming && docker-compose up -d --build --remove-orphans"
-
-      - run:
-          name: Verify containers running
-          command: ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} "docker ps"
+          name: Verify running containers
+          command: |
+            ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} "docker ps"
 
 workflows:
   build_and_deploy:
