@@ -1,19 +1,54 @@
-FROM node:22.14.0-alpine AS builder
+# --- base image ---
+FROM node:22.14.0-alpine AS base
 WORKDIR /app
 
+RUN apk add --no-cache python3 make g++
+
 COPY package*.json ./
-RUN npm install
+RUN npm ci
+
+# --- build stage ---
+FROM base AS builder
+WORKDIR /app
+
+ARG TMDB_READ_TOKEN
+ARG TMDB_API_KEY
+ARG SUPABASE_URL
+ARG SUPABASE_ANON_KEY
+ARG SUPABASE_SERVICE_ROLE_SECRET
+
+ENV TMDB_READ_TOKEN=${TMDB_READ_TOKEN}
+ENV TMDB_API_KEY=${TMDB_API_KEY}
+ENV NEXT_PUBLIC_SUPABASE_URL=${SUPABASE_URL}
+ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+ENV SUPABASE_SERVICE_ROLE_SECRET=${SUPABASE_SERVICE_ROLE_SECRET}
 
 COPY . .
 RUN npm run build
 
+# --- runtine stage ---
 FROM node:22.14.0-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
 
-COPY --from=builder /app ./
+ARG TMDB_READ_TOKEN
+ARG TMDB_API_KEY
+ARG SUPABASE_URL
+ARG SUPABASE_ANON_KEY
+ARG SUPABASE_SERVICE_ROLE_SECRET
+
+ENV TMDB_READ_TOKEN=${TMDB_READ_TOKEN}
+ENV TMDB_API_KEY=${TMDB_API_KEY}
+ENV NEXT_PUBLIC_SUPABASE_URL=${SUPABASE_URL}
+ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+ENV SUPABASE_SERVICE_ROLE_SECRET=${SUPABASE_SERVICE_ROLE_SECRET}
+
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/node_modules ./node_modules
 
 EXPOSE 3005
-
 CMD ["npm", "start"]
