@@ -1,15 +1,17 @@
-# --- base image ---
-FROM node:22.14.0-alpine AS base
+# --- dependencies stage ---
+FROM node:22.14.0-alpine AS deps
 WORKDIR /app
 
 RUN apk add --no-cache python3 make g++
 
 COPY package*.json ./
-RUN npm ci
 
+RUN npm ci && \
+    cp -R node_modules /tmp/prod_modules && \
+    npm ci
 
 # --- build stage ---
-FROM base AS builder
+FROM node:22.14.0-alpine AS builder
 WORKDIR /app
 
 ARG TMDB_READ_TOKEN
@@ -24,9 +26,10 @@ ENV NEXT_PUBLIC_SUPABASE_URL=${SUPABASE_URL}
 ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
 ENV SUPABASE_SERVICE_ROLE_SECRET=${SUPABASE_SERVICE_ROLE_SECRET}
 
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN npm run build
 
+RUN npm run build
 
 # --- runtime stage ---
 FROM node:22.14.0-alpine AS runner
@@ -42,10 +45,16 @@ ENV NEXT_PUBLIC_SUPABASE_URL=""
 ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=""
 ENV SUPABASE_SERVICE_ROLE_SECRET=""
 
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/node_modules ./node_modules
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nextjs
+
+COPY --from=deps /tmp/prod_modules ./node_modules
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
+COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
+
+USER nextjs
 
 EXPOSE 3005
+
 CMD ["npm", "start"]

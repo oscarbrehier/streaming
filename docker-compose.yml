@@ -2,20 +2,15 @@ version: '3.9'
 
 services:
   nextapp:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        TMDB_READ_TOKEN: ${TMDB_READ_TOKEN}
-        TMDB_API_KEY: ${TMDB_API_KEY}
-        SUPABASE_URL: ${SUPABASE_URL}
-        SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
-        SUPABASE_SERVICE_ROLE_SECRET: ${SUPABASE_SERVICE_ROLE_SECRET}
+    image: ${DOCKER_USERNAME}/streaming-web:${IMAGE_TAG:-latest}
+    container_name: streaming_nextapp
     env_file:
       - .env.production
     restart: always
     expose:
       - "3005"
+    networks:
+      - app_network
 
   nginx:
     image: nginx:alpine
@@ -30,4 +25,9 @@ services:
     depends_on:
       - nextapp
     restart: always
+    networks:
+      - app_network
 
+networks:
+  app_network:
+    driver: bridge

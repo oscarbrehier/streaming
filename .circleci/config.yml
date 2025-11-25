@@ -8,77 +8,84 @@ jobs:
       - checkout
 
       - run:
-          name: Install Node & Docker
+          name: Install Docker if not installed
           command: |
-            curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
-            sudo apt-get install -y nodejs
-
             if ! command -v docker >/dev/null 2>&1; then
               curl -fsSL https://get.docker.com -o install-docker.sh
               sudo sh install-docker.sh
             fi
 
-      - run: npm ci
+      - run:
+          name: Login to Docker Hub
+          command: |
+            echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 
       - run:
-          name: Build Docker image
+          name: Build and Push Docker Image
           command: |
+            IMAGE_TAG="${DOCKER_USERNAME}/streaming-web:${CIRCLE_SHA1}"
+            IMAGE_LATEST="${DOCKER_USERNAME}/streaming-web:latest"
+            
+            export DOCKER_BUILDKIT=1
+            
             docker build \
+              --cache-from ${IMAGE_LATEST} \
+              --build-arg BUILDKIT_INLINE_CACHE=1 \
               --build-arg TMDB_READ_TOKEN="$TMDB_READ_TOKEN" \
               --build-arg TMDB_API_KEY="$TMDB_API_KEY" \
               --build-arg SUPABASE_URL="$SUPABASE_URL" \
               --build-arg SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
               --build-arg SUPABASE_SERVICE_ROLE_SECRET="$SUPABASE_SERVICE_ROLE_SECRET" \
-              -t streaming-web .
-
-      - run: docker save streaming-web | gzip > streaming-web.tar.gz
-
-      - persist_to_workspace:
-          root: .
-          paths:
-            - streaming-web.tar.gz
+              -t ${IMAGE_TAG} \
+              -t ${IMAGE_LATEST} \
+              .
+            
+            docker push ${IMAGE_TAG}
+            docker push ${IMAGE_LATEST}
 
   deploy:
     machine:
       image: ubuntu-2204:2024.01.1
     steps:
-      - attach_workspace:
-          at: .
-
       - run:
-          name: Install Docker (if missing)
-          command: |
-            if ! command -v docker >/dev/null 2>&1; then
-              curl -fsSL https://get.docker.com -o install-docker.sh
-              sudo sh install-docker.sh
-            fi
-
-      - run:
-          name: Upload image to server
-          command: |
-            scp -o StrictHostKeyChecking=no streaming-web.tar.gz deployer@${SERVER_IP}:~/streaming/
-
-      - run:
-          name: Load image on server
+          name: Deploy to Server
           command: |
             ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} \
-              "cd ~/streaming && gunzip -f streaming-web.tar.gz && docker load < streaming-web.tar"
+              "cd ~/streaming && \
+               echo 'DOCKER_USERNAME=${DOCKER_USERNAME}' > .env.deploy && \
+               echo 'IMAGE_TAG=${CIRCLE_SHA1}' >> .env.deploy"
+            
+            ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} \
+              "cd ~/streaming && \
+               export \$(cat .env.deploy | xargs) && \
+               docker-compose pull nextapp && \
+               docker-compose up -d --no-build --remove-orphans"
 
       - run:
-          name: Restart docker compose
+          name: Verify Deployment
           command: |
             ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} \
-              "cd ~/streaming && docker-compose down && docker-compose up -d --build --remove-orphans"
+              "docker ps --filter name=streaming_nextapp --format 'table {{.Names}}\t{{.Status}}\t{{.Image}}'"
 
       - run:
-          name: Verify containers
+          name: Cleanup Old Images
           command: |
-            ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} "docker ps"
+            ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} \
+              "docker image prune -af --filter 'until=48h'"
 
 workflows:
   build_and_deploy:
     jobs:
-      - build
+      - build:
+          filters:
+            branches:
+              only:
+                - main
+                - develop
       - deploy:
           requires:
             - build
+          filters:
+            branches:
+              only:
+                - main
