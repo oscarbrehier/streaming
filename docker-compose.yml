@@ -21,10 +21,13 @@ services:
     image: nginx:alpine
     container_name: nginx_reverse_proxy
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - /etc/letsencrypt/live/streaming.eggspank.cloud/fullchain.pem:/etc/ssl/certs/nginx.crt:ro
+      - /etc/letsencrypt/live/streaming.eggspank.cloud/privkey.pem:/etc/ssl/private/nginx.key:ro
     ports:
       - "80:80"
       - "443:443"
     depends_on:
       - nextapp
     restart: always
+
