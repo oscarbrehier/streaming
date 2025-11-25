@@ -68,20 +68,7 @@ jobs:
       - run:
           name: Create PM2 ecosystem config
           command: |
-            ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} "cd ~/streaming && cat > ecosystem.config.cjs << 'EOF'
-            module.exports = {
-              apps: [{
-                name: 'streaming',
-                script: './node_modules/next/dist/bin/next',
-                args: 'start',
-                cwd: '/home/deployer/streaming',
-                instances: 1,
-                exec_mode: 'cluster',
-                env_file: '.env.production'
-              }]
-            };
-            EOF
-            "
+            ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} "cd ~/streaming && printf '%s\n' 'module.exports = {' '  apps: [{' '    name: \"streaming\",' '    script: \"./node_modules/next/dist/bin/next\",' '    args: \"start\",' '    cwd: \"/home/deployer/streaming\",' '    instances: 1,' '    exec_mode: \"cluster\",' '    env_file: \".env.production\"' '  }]' '};' > ecosystem.config.cjs"
       - run:
           name: Restart application with PM2
           command: |
