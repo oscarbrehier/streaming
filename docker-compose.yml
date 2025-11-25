@@ -1,5 +1,3 @@
-version: '3.9'
-
 services:
   nextapp:
     image: ${DOCKER_USERNAME}/streaming-web:${IMAGE_TAG:-latest}
