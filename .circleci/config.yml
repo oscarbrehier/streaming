@@ -1,80 +1,80 @@
-version: 2.1
+# version: 2.1
 
-executors:
-  node-executor:
-    docker:
-      - image: cimg/node:22.14
-    working_directory: ~/repo
+# executors:
+#   node-executor:
+#     docker:
+#       - image: cimg/node:22.14
+#     working_directory: ~/repo
 
-jobs:
-  build:
-    executor: node-executor
-    steps:
-      - checkout
-      - run:
-          name: Install dependencies
-          command: npm install
-      - run:
-          name: Create production env file for build
-          command: |
-            echo "NEXT_PUBLIC_SUPABASE_URL=${SUPABASE_URL}" > .env.production
-            echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}" >> .env.production
-            echo "SUPABASE_SERVICE_ROLE_SECRET=${SUPABASE_SERVICE_ROLE_SECRET}" >> .env.production
-            echo "Created .env.production for build"
-      - run:
-          name: Build project
-          command: npm run build
-      - run:
-          name: Create deployment archive
-          command: |
-            tar -czf deploy.tar.gz .next public package.json package-lock.json $([ -f next.config.js ] && echo next.config.js || echo "")
-            ls -lh deploy.tar.gz
-      - persist_to_workspace:
-          root: .
-          paths:
-            - deploy.tar.gz
+# jobs:
+#   build:
+#     executor: node-executor
+#     steps:
+#       - checkout
+#       - run:
+#           name: Install dependencies
+#           command: npm install
+#       - run:
+#           name: Create production env file for build
+#           command: |
+#             echo "NEXT_PUBLIC_SUPABASE_URL=${SUPABASE_URL}" > .env.production
+#             echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}" >> .env.production
+#             echo "SUPABASE_SERVICE_ROLE_SECRET=${SUPABASE_SERVICE_ROLE_SECRET}" >> .env.production
+#             echo "Created .env.production for build"
+#       - run:
+#           name: Build project
+#           command: npm run build
+#       - run:
+#           name: Create deployment archive
+#           command: |
+#             tar -czf deploy.tar.gz .next public package.json package-lock.json $([ -f next.config.js ] && echo next.config.js || echo "")
+#             ls -lh deploy.tar.gz
+#       - persist_to_workspace:
+#           root: .
+#           paths:
+#             - deploy.tar.gz
 
-  deploy:
-    executor: node-executor
-    steps:
-      - attach_workspace:
-          at: ~/repo
-      - add_ssh_keys
-      - run:
-          name: Copy and extract deployment archive
-          command: |
-            echo "Copying deployment archive..."
-            scp -C deploy.tar.gz deployer@${SERVER_IP}:/tmp/deploy.tar.gz
-            echo "Extracting on server..."
-            ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} "mkdir -p ~/streaming && cd ~/streaming && tar -xzf /tmp/deploy.tar.gz && rm /tmp/deploy.tar.gz && echo 'Extraction complete'"
-      - run:
-          name: Setup environment on VPS
-          command: |
-            ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} "cd ~/streaming && PORT_STREAMING=\$(portly --min 3000 --max 9000 -a streaming) && echo \"PORT=\${PORT_STREAMING}\" > .env.production && echo \"NEXT_PUBLIC_SUPABASE_URL=${SUPABASE_URL}\" >> .env.production && echo \"NEXT_PUBLIC_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}\" >> .env.production && echo \"SUPABASE_SERVICE_ROLE_SECRET=${SUPABASE_SERVICE_ROLE_SECRET}\" >> .env.production && echo \"Created .env.production on VPS with PORT=\${PORT_STREAMING}\""
-      - run:
-          name: Install production dependencies
-          command: |
-            ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} "cd ~/streaming && npm ci --production"
-      - run:
-          name: Create PM2 ecosystem config
-          command: |
-            ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} "cd ~/streaming && printf '%s\n' 'module.exports = {' '  apps: [{' '    name: \"streaming\",' '    script: \"./node_modules/next/dist/bin/next\",' '    args: \"start\",' '    cwd: \"/home/deployer/streaming\",' '    instances: 1,' '    exec_mode: \"cluster\",' '    env_file: \".env.production\"' '  }]' '};' > ecosystem.config.cjs"
-      - run:
-          name: Restart application with PM2
-          command: |
-            ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} "cd ~/streaming && pm2 delete streaming 2>/dev/null || true && pm2 start ecosystem.config.cjs --env production && pm2 save && echo 'Deployment completed successfully' && pm2 list"
+#   deploy:
+#     executor: node-executor
+#     steps:
+#       - attach_workspace:
+#           at: ~/repo
+#       - add_ssh_keys
+#       - run:
+#           name: Copy and extract deployment archive
+#           command: |
+#             echo "Copying deployment archive..."
+#             scp -C deploy.tar.gz deployer@${SERVER_IP}:/tmp/deploy.tar.gz
+#             echo "Extracting on server..."
+#             ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} "mkdir -p ~/streaming && cd ~/streaming && tar -xzf /tmp/deploy.tar.gz && rm /tmp/deploy.tar.gz && echo 'Extraction complete'"
+#       - run:
+#           name: Setup environment on VPS
+#           command: |
+#             ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} "cd ~/streaming && PORT_STREAMING=\$(portly --min 3000 --max 9000 -a streaming) && echo \"PORT=\${PORT_STREAMING}\" > .env.production && echo \"NEXT_PUBLIC_SUPABASE_URL=${SUPABASE_URL}\" >> .env.production && echo \"NEXT_PUBLIC_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}\" >> .env.production && echo \"SUPABASE_SERVICE_ROLE_SECRET=${SUPABASE_SERVICE_ROLE_SECRET}\" >> .env.production && echo \"Created .env.production on VPS with PORT=\${PORT_STREAMING}\""
+#       - run:
+#           name: Install production dependencies
+#           command: |
+#             ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} "cd ~/streaming && npm ci --production"
+#       - run:
+#           name: Create PM2 ecosystem config
+#           command: |
+#             ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} "cd ~/streaming && printf '%s\n' 'module.exports = {' '  apps: [{' '    name: \"streaming\",' '    script: \"./node_modules/next/dist/bin/next\",' '    args: \"start\",' '    cwd: \"/home/deployer/streaming\",' '    instances: 1,' '    exec_mode: \"cluster\",' '    env_file: \".env.production\"' '  }]' '};' > ecosystem.config.cjs"
+#       - run:
+#           name: Restart application with PM2
+#           command: |
+#             ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} "cd ~/streaming && pm2 delete streaming 2>/dev/null || true && pm2 start ecosystem.config.cjs --env production && pm2 save && echo 'Deployment completed successfully' && pm2 list"
 
-workflows:
-  version: 2
-  build_and_deploy:
-    jobs:
-      - build:
-          filters:
-            branches:
-              only: main
-      - deploy:
-          requires:
-            - build
-          filters:
-            branches:
-              only: main
+# workflows:
+#   version: 2
+#   build_and_deploy:
+#     jobs:
+#       - build:
+#           filters:
+#             branches:
+#               only: main
+#       - deploy:
+#           requires:
+#             - build
+#           filters:
+#             branches:
+#               only: main
