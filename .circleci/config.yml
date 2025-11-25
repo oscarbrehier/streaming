@@ -40,7 +40,6 @@ jobs:
               -t ${IMAGE_LATEST} \
               .
 
-            # Push both tags
             docker push ${IMAGE_TAG}
             docker push ${IMAGE_LATEST}
 
@@ -59,8 +58,8 @@ jobs:
             ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} \
               "cd ~/streaming && \
                export \$(cat .env.deploy | xargs) && \
-               docker-compose pull nextapp && \
-               docker-compose up -d --no-build --remove-orphans --force-recreate nextapp"
+               docker compose pull nextapp && \
+               docker compose up -d --no-build --remove-orphans --force-recreate nextapp"
 
       - run:
           name: Verify Deployment
@@ -73,6 +72,13 @@ jobs:
           command: |
             ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} \
               "docker image prune -af --filter 'until=48h'"
+
+      - run:
+          name: Check Container Logs (if needed)
+          command: |
+            ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} \
+              "cd ~/streaming && docker compose logs --tail=50 nextapp"
+          when: on_fail
 
 workflows:
   build_and_deploy:
