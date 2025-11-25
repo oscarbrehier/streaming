@@ -26,27 +26,27 @@ jobs:
             - streaming-web.tar.gz
 
   deploy:
-  machine:
-    image: ubuntu-2204:2024.01.1
-  steps:
-    - attach_workspace:
-        at: .
+    machine:
+      image: ubuntu-2204:2024.01.1
+    steps:
+      - attach_workspace:
+          at: .
 
-    - run:
-        name: Copy Docker image to VPS
-        command: scp -o StrictHostKeyChecking=no streaming-web.tar.gz deployer@${SERVER_IP}:~/streaming/
+      - run:
+          name: Copy Docker image to VPS
+          command: scp -o StrictHostKeyChecking=no streaming-web.tar.gz deployer@${SERVER_IP}:~/streaming/
 
-    - run:
-        name: Deploy on VPS
-        command: |
-          ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} "
-            cd ~/streaming &&
-            gunzip -f streaming-web.tar.gz &&
-            docker load < streaming-web.tar &&
-            docker-compose down &&
-            docker-compose up -d --build --remove-orphans &&
-            docker ps
-          "
+      - run:
+          name: Deploy on VPS
+          command: |
+            ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} "
+              cd ~/streaming &&
+              gunzip -f streaming-web.tar.gz &&
+              docker load < streaming-web.tar &&
+              docker-compose down &&
+              docker-compose up -d --build --remove-orphans &&
+              docker ps
+            "
 
 workflows:
   build_and_deploy:
