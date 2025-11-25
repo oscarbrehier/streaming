@@ -28,36 +28,37 @@ jobs:
   deploy:
     machine:
       image: ubuntu-2204:2024.01.1
-
     steps:
       - attach_workspace:
           at: .
 
       - run:
-          name: Upload Docker image to VPS
+          name: Install Docker
+          command: |
+            if ! command -v docker >/dev/null 2>&1; then
+              curl -fsSL https://get.docker.com -o install-docker.sh
+              sudo sh install-docker.sh
+            fi
+
+      - run:
+          name: Upload image to server
           command: |
             scp -o StrictHostKeyChecking=no streaming-web.tar.gz deployer@${SERVER_IP}:~/streaming/
 
       - run:
-          name: Extract image
+          name: Load docker image
           command: |
             ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} \
-              "cd ~/streaming && gunzip -f streaming-web.tar.gz"
+              "cd ~/streaming && gunzip -f streaming-web.tar.gz && docker load < streaming-web.tar"
 
       - run:
-          name: Load Docker image
-          command: |
-            ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} \
-              "cd ~/streaming && docker load < streaming-web.tar"
-
-      - run:
-          name: Restart Docker Compose
+          name: Restart docker compose
           command: |
             ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} \
               "cd ~/streaming && docker-compose down && docker-compose up -d --build --remove-orphans"
 
       - run:
-          name: Verify running containers
+          name: Verify containers
           command: |
             ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} "docker ps"
 
