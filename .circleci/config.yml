@@ -32,24 +32,17 @@ jobs:
       - attach_workspace:
           at: .
 
-      - run: |
-          scp -o StrictHostKeyChecking=no streaming-web.tar.gz deployer@${SERVER_IP}:~/streaming/
+      - run: scp -o StrictHostKeyChecking=no streaming-web.tar.gz deployer@${SERVER_IP}:~/streaming/
 
-      - run: |
-          ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} << 'EOF'
-          cd ~/streaming
+      - run: ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} "cd ~/streaming && gunzip -f streaming-web.tar.gz"
 
-          # Unpack Docker image
-          gunzip -f streaming-web.tar.gz
-          docker load < streaming-web.tar
+      - run: ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} "cd ~/streaming && docker load < streaming-web.tar"
 
-          # Deploy with Docker Compose
-          docker-compose down
-          docker-compose up -d --build --remove-orphans
+      - run: ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} "cd ~/streaming && docker-compose down"
 
-          # Optional: verify containers
-          docker ps
-          EOF
+      - run: ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} "cd ~/streaming && docker-compose up -d --build --remove-orphans"
+
+      - run: ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} "docker ps"
 
 workflows:
   build_and_deploy:
