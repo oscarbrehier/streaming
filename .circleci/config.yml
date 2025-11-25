@@ -2,21 +2,34 @@ version: 2.1
 
 jobs:
   build:
-    docker:
-      - image: cimg/node:22.14
+    machine:
+      image: ubuntu-2204:2024.01.1
     steps:
       - checkout
 
+      - run:
+          name: Install Node & Docker
+          command: |
+            curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+            sudo apt-get install -y nodejs
+
+            if ! command -v docker >/dev/null 2>&1; then
+              curl -fsSL https://get.docker.com -o install-docker.sh
+              sudo sh install-docker.sh
+            fi
+
       - run: npm ci
 
-      - run: |
-          docker build \
-            --build-arg TMDB_READ_TOKEN="$TMDB_READ_TOKEN" \
-            --build-arg TMDB_API_KEY="$TMDB_API_KEY" \
-            --build-arg SUPABASE_URL="$SUPABASE_URL" \
-            --build-arg SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
-            --build-arg SUPABASE_SERVICE_ROLE_SECRET="$SUPABASE_SERVICE_ROLE_SECRET" \
-            -t streaming-web .
+      - run:
+          name: Build Docker image
+          command: |
+            docker build \
+              --build-arg TMDB_READ_TOKEN="$TMDB_READ_TOKEN" \
+              --build-arg TMDB_API_KEY="$TMDB_API_KEY" \
+              --build-arg SUPABASE_URL="$SUPABASE_URL" \
+              --build-arg SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
+              --build-arg SUPABASE_SERVICE_ROLE_SECRET="$SUPABASE_SERVICE_ROLE_SECRET" \
+              -t streaming-web .
 
       - run: docker save streaming-web | gzip > streaming-web.tar.gz
 
@@ -33,7 +46,7 @@ jobs:
           at: .
 
       - run:
-          name: Install Docker
+          name: Install Docker (if missing)
           command: |
             if ! command -v docker >/dev/null 2>&1; then
               curl -fsSL https://get.docker.com -o install-docker.sh
@@ -46,7 +59,7 @@ jobs:
             scp -o StrictHostKeyChecking=no streaming-web.tar.gz deployer@${SERVER_IP}:~/streaming/
 
       - run:
-          name: Load docker image
+          name: Load image on server
           command: |
             ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} \
               "cd ~/streaming && gunzip -f streaming-web.tar.gz && docker load < streaming-web.tar"
