@@ -40,51 +40,52 @@ jobs:
           at: ~/repo
       - add_ssh_keys
       - run:
-          name: Deploy Next.js app to VPS
+          name: Create deployment directory
           command: |
-            ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} "\
-              mkdir -p ~/streaming && rm -rf ~/streaming/.next \
-            "
+            ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} "mkdir -p ~/streaming && rm -rf ~/streaming/.next"
+      - run:
+          name: Copy build files
+          command: |
             scp -r .next deployer@${SERVER_IP}:~/streaming/
             scp -r public deployer@${SERVER_IP}:~/streaming/
             scp package.json package-lock.json deployer@${SERVER_IP}:~/streaming/
-            scp next.config.js deployer@${SERVER_IP}:~/streaming/ || echo 'No next.config.js found'
-
-            ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} "\
-              cd ~/streaming && \
-              # Assign port via Portly on VPS \
-              PORT_STREAMING=\$(portly port --min 3000 --max 9000 --a streaming) && \
-              echo \"PORT=\$PORT_STREAMING\" > .env.production && \
-              echo \"NEXT_PUBLIC_SUPABASE_URL=${SUPABASE_URL}\" >> .env.production && \
-              echo \"NEXT_PUBLIC_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}\" >> .env.production && \
-              echo \"SUPABASE_SERVICE_ROLE_SECRET=${SUPABASE_SERVICE_ROLE_SECRET}\" >> .env.production && \
-              echo 'Created .env.production on VPS' && \
-              npm ci --production && \
-              # Create PM2 ecosystem file \
-              echo 'module.exports = {' > ecosystem.config.cjs && \
-              echo '  apps: [{' >> ecosystem.config.cjs && \
-              echo '    name: \"streaming\",' >> ecosystem.config.cjs && \
-              echo '    script: \"./node_modules/next/dist/bin/next\",' >> ecosystem.config.cjs && \
-              echo '    args: \"start\",' >> ecosystem.config.cjs && \
-              echo '    cwd: \"/home/deployer/streaming\",' >> ecosystem.config.cjs && \
-              echo '    instances: 1,' >> ecosystem.config.cjs && \
-              echo '    exec_mode: \"cluster\",' >> ecosystem.config.cjs && \
-              echo '    env: {' >> ecosystem.config.cjs && \
-              echo '      NODE_ENV: \"production\",' >> ecosystem.config.cjs && \
-              echo '      PORT: process.env.PORT,' >> ecosystem.config.cjs && \
-              echo '      NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,' >> ecosystem.config.cjs && \
-              echo '      NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,' >> ecosystem.config.cjs && \
-              echo '      SUPABASE_SERVICE_ROLE_SECRET: process.env.SUPABASE_SERVICE_ROLE_SECRET' >> ecosystem.config.cjs && \
-              echo '    }' >> ecosystem.config.cjs && \
-              echo '  }]' >> ecosystem.config.cjs && \
-              echo '};' >> ecosystem.config.cjs && \
-              # Restart app \
-              pm2 delete streaming 2>/dev/null || true && \
-              pm2 start ecosystem.config.cjs --env production && \
-              pm2 save && \
-              echo 'Deployment completed successfully' && \
-              pm2 list \
+      - run:
+          name: Copy next config if exists
+          command: |
+            if [ -f next.config.js ]; then
+              scp next.config.js deployer@${SERVER_IP}:~/streaming/
+            else
+              echo "No next.config.js found, skipping"
+            fi
+      - run:
+          name: Setup environment on VPS
+          command: |
+            ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} "cd ~/streaming && PORT_STREAMING=\$(portly port --min 3000 --max 9000 --a streaming) && echo \"PORT=\${PORT_STREAMING}\" > .env.production && echo \"NEXT_PUBLIC_SUPABASE_URL=${SUPABASE_URL}\" >> .env.production && echo \"NEXT_PUBLIC_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}\" >> .env.production && echo \"SUPABASE_SERVICE_ROLE_SECRET=${SUPABASE_SERVICE_ROLE_SECRET}\" >> .env.production && echo \"Created .env.production on VPS with PORT=\${PORT_STREAMING}\""
+      - run:
+          name: Install production dependencies
+          command: |
+            ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} "cd ~/streaming && npm ci --production"
+      - run:
+          name: Create PM2 ecosystem config
+          command: |
+            ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} "cd ~/streaming && cat > ecosystem.config.cjs << 'EOF'
+            module.exports = {
+              apps: [{
+                name: 'streaming',
+                script: './node_modules/next/dist/bin/next',
+                args: 'start',
+                cwd: '/home/deployer/streaming',
+                instances: 1,
+                exec_mode: 'cluster',
+                env_file: '.env.production'
+              }]
+            };
+            EOF
             "
+      - run:
+          name: Restart application with PM2
+          command: |
+            ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} "cd ~/streaming && pm2 delete streaming 2>/dev/null || true && pm2 start ecosystem.config.cjs --env production && pm2 save && echo 'Deployment completed successfully' && pm2 list"
 
 workflows:
   version: 2
