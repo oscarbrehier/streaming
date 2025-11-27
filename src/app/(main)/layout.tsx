@@ -16,7 +16,7 @@ export default async function RootLayout({
 
 		<div className="min-h-screen flex flex-col bg-card">
 
-			<Navbar user={user} />
+			<Navbar user={{ email: user?.email, user_metadata: user?.user_metadata ?? {} }} />
 			{children}
 
 		</div>

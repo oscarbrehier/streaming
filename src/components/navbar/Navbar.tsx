@@ -3,38 +3,35 @@
 import { cn } from "@/lib/utils";
 import { Search } from "lucide-react";
 import Link from "next/link";
-import { redirect, usePathname, useRouter } from "next/navigation";
-import { ChangeEvent, useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { ChangeEvent, useRef } from "react";
 import { User } from "@supabase/supabase-js";
-import { createClient } from "@/utils/supabase/client";
 import { avatar } from "@/utils/getAvatar";
 
 interface NavbarProps {
-	user: User | null;
+	user: Pick<User, "user_metadata" | "email"> | null;
 };
 
-export function Navbar({
-	user
-}: NavbarProps) {
+export function Navbar({ user }: NavbarProps) {
 
 	const pathname = usePathname();
 	const router = useRouter();
+
+	const debounceRef = useRef<NodeJS.Timeout | null>(null)
 
 	function handleSearch(e: ChangeEvent<HTMLInputElement>) {
 
 		const query = e.target.value;
 
-		if (query.length > 3) {
-			router.push(`/search?query=${query}`);
+		if (debounceRef.current) {
+			clearTimeout(debounceRef.current);
 		};
 
-	};
-
-	async function signOut() {
-
-		const supabase = createClient();
-		await supabase.auth.signOut();
-		redirect("/login");
+		debounceRef.current = setTimeout(() => {
+			if (query.length > 3) {
+				router.push(`/search?query=${query}`);
+			};
+		}, 500);
 
 	};
 
@@ -79,20 +76,15 @@ export function Navbar({
 				{
 					user && (
 
-						<button
-							onClick={signOut}
-							className="bg-red-500 size-10 rounded-full">
-
-						</button>
-
-						// <div
-						// 	className="size-10 rounded-full overflow-hidden"
-						// >
-						// 	<img
-						// 		className="size-10"
-						// 		src={avatar("oscar")}
-						// 	/>
-						// </div>
+						<Link
+							href="/profile"
+							className="size-10 rounded-full overflow-hidden"
+						>
+							<img
+								className="size-10"
+								src={avatar(user.user_metadata.display_name)}
+							/>
+						</Link>
 
 					)
 				}
