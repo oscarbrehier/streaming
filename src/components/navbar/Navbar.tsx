@@ -46,7 +46,7 @@ export function Navbar({ user }: NavbarProps) {
 					href="/"
 					className={cn(
 						"rounded-full h-10 px-4 flex items-center justify-center text-neutral-100",
-						pathname === "/" ? glass(true) : glass(false)
+						pathname === "/" ? cn(glass(true), "bg-neutral-800/30") : cn(glass(true), "bg-neutral-800/30")
 					)}
 				>
 					<p>Home</p>

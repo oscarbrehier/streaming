@@ -4,7 +4,7 @@ import { constructImg } from "@/utils/tmdb/constructImg";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export function TopToday({
 	data
@@ -34,6 +34,33 @@ export function TopToday({
 			prev === 0 ? maxOffset : prev + 100
 		);
 	};
+
+	useEffect(() => {
+
+		const handleCarouselResize = () => {
+
+			const width = window.innerWidth;
+
+			if (width < 450) {
+				setItemsPerSlide(1);
+			} else if (width < 640) {
+				setItemsPerSlide(2);
+			} else if (width < 768) {
+				setItemsPerSlide(4);
+			} else {
+				setItemsPerSlide(6);
+			}
+
+		};
+
+		handleCarouselResize();
+
+		window.addEventListener("resize", handleCarouselResize);
+		return () => {
+			window.removeEventListener("resize", handleCarouselResize);
+		};
+
+	}, []);
 
 	return (
 
