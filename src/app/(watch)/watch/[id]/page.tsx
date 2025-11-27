@@ -51,7 +51,7 @@ async function updateUserMediaStatus(
 export default async function Page({ params }: PageProps) {
 
 	const { id } = await params;
-	const mediaPath = `http://localhost:3001/api/media/${id}/master.m3u8`;
+	const mediaPath = `${process.env.NEXT_PUBLIC_STREAMING_API_URL}/api/media/${id}/master.m3u8`;
 	
 	const res = await fetch(mediaPath, { cache: "no-store" });
 	

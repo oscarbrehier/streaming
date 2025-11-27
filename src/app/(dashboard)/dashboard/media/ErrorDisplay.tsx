@@ -22,7 +22,7 @@ export function ErrorDisplay() {
 			const { data: { session } } = await supabase.auth.getSession();
 			if (!session || !session.access_token) return null;
 
-			const res = await fetch("http://localhost:3001/api/health/media", {
+			const res = await fetch(`${process.env.NEXT_PUBLIC_STREAMING_API_URL}/api/health/media`, {
 				headers: {
 					"Authorization": `Bearer ${session.access_token}`
 				},

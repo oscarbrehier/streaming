@@ -8,7 +8,7 @@ export default async function Page() {
 
 	if (!session || !session.access_token) return null;
 
-	const res = await fetch("http://localhost:3001/api/media/queue/status", {
+	const res = await fetch(`${process.env.NEXT_PUBLIC_STREAMING_API_URL}/api/media/queue/status`, {
 		headers: {
 			"Authorization": `Bearer ${session.access_token}`
 		}

@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input";
 import { LoaderCircle } from "lucide-react";
+import Link from "next/link";
 import { useActionState } from "react";
 
 const initialState: LoginFormState = {};
@@ -101,6 +102,19 @@ export default function Page() {
 									</Button>
 
 								</Field>
+
+								<p
+									className="text-sm text-muted-foreground"
+								>
+									Don't have an account?
+									&nbsp;
+									<Link
+										href="/register"
+										className="text-foreground underline"
+									>
+										Create an account
+									</Link>
+								</p>
 
 							</FieldGroup>
 

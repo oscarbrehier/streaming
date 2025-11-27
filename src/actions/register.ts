@@ -11,6 +11,10 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 const formSchema = z.object({
+	name: z
+		.string()
+		.min(2, "Name must be at least 2 characters long")
+		.max(50, "Name must be 50 characters or less"),
 	email: z
 		.email("Invalid email"),
 	password: z
@@ -30,6 +34,7 @@ export type RegisterFormState = {
 	errors?: Record<string, string[]>;
 	error?: string;
 	values?: {
+		name: string;
 		email: string;
 		inviteCode: string;
 		password: string;
@@ -52,7 +57,12 @@ export async function registerHandler(
 
 	const { data, error } = await supabase.auth.signUp({
 		email: validatedData.email,
-		password: validatedData.password
+		password: validatedData.password,
+		options: {
+			data: {
+				display_name: validatedData.name
+			}
+		}
 	});
 
 	if (error || !data.session || !data.user) {
@@ -77,6 +87,7 @@ export async function registerHandler(
 export async function register(prevState: RegisterFormState, formData: FormData) {
 
 	const rawData = {
+		name: formData.get("name") as string,
 		email: formData.get("email") as string,
 		password: formData.get("password") as string,
 		confirmPassword: formData.get("confirm-password") as string,

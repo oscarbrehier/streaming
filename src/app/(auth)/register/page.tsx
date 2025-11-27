@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input";
 import { LoaderCircle } from "lucide-react";
+import Link from "next/link";
 import { useActionState } from "react";
 
 const initialState: RegisterFormState = {};
@@ -41,7 +42,6 @@ export default function Page() {
 
 							<FieldGroup>
 
-
 								<Field>
 
 									<FieldLabel htmlFor="invite-code">Invite code</FieldLabel>
@@ -62,6 +62,27 @@ export default function Page() {
 								</Field>
 
 								<FieldSeparator />
+
+								<Field>
+
+									<FieldLabel htmlFor="name">
+										Name
+									</FieldLabel>
+
+									<Input
+										id="name"
+										name="name"
+										defaultValue={state.values?.name || ""}
+										placeholder="Jane"
+										required
+										aria-invalid={!!state.errors?.name}
+									/>
+
+									<FieldError>
+										{state.errors?.name?.[0] ?? null}
+									</FieldError>
+
+								</Field>
 
 								<Field>
 
@@ -143,6 +164,19 @@ export default function Page() {
 									</Button>
 
 								</Field>
+
+								<p
+									className="text-sm text-muted-foreground"
+								>
+									Already have an account?
+									&nbsp;
+									<Link
+										href="/login"
+										className="text-foreground underline"
+									>
+										Login
+									</Link>
+								</p>
 
 							</FieldGroup>
 

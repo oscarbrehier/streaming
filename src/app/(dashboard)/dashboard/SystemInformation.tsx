@@ -25,7 +25,7 @@ export function SystemInformation() {
 			const { data: { session } } = await supabase.auth.getSession();
 			if (!session || !session.access_token) return null;
 
-			const res = await fetch("http://localhost:3001/api/health/system", {
+			const res = await fetch(`${process.env.NEXT_PUBLIC_STREAMING_API_URL}/api/health/system`, {
 				headers: {
 					"Authorization": `Bearer ${session.access_token}`
 				}
@@ -41,8 +41,6 @@ export function SystemInformation() {
 				const cpuData = { metric: cpu.total, timestamp };
 				const memData = { metric: mem.usedPercent, timestamp };
 				const netData = { metric: [network.rx, network.tx], timestamp };
-
-				console.log(netData);
 
 				setChartsData(prev => ({
 					cpu: { ...prev.cpu, chartData: [...prev.cpu.chartData, cpuData].slice(-20) },

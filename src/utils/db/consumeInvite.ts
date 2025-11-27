@@ -1,14 +1,21 @@
 "use server"
 
-import { createClient } from "../supabase/server";
+import { supabaseAdmin } from "../supabase/admin"
+import { createAuditLog } from "./createAuditLog";
 
 export async function consumeInvite(invite: InviteCode) {
 
-	const supabase = await createClient();
+	const { error } = await supabaseAdmin
+		.rpc("consume_invite", { invite_id: invite.id });
 
-	await supabase
-		.from("invites")
-		.update({ uses: invite.uses })
-		.eq("id", invite.id)
+	if (error) {
+		
+		createAuditLog({
+			action: "consume_invite",
+			resource: invite.id
+		});
+
+		throw new Error(error.message);
+	};
 
 };

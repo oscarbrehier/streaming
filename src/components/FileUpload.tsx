@@ -65,7 +65,7 @@ export default function FileUploadSection({ onFileSelect, selectedMedia, uploade
 
 	};
 
-	async function uploadChunk(uploadSessionId: string, chunk: Blob, totalChunks: number, chunkIndex: number, filename: string, accessToken: string) {
+	async function uploadChunk(uploadSessionId: string, chunk: Blob, totalChunks: number, chunkIndex: number, accessToken: string) {
 
 		if (!accessToken) throw new Error("Unauthorized");
 
@@ -76,9 +76,9 @@ export default function FileUploadSection({ onFileSelect, selectedMedia, uploade
 		formData.append("totalChunks", totalChunks.toString());
 		formData.append("currentChunk", chunkIndex.toString());
 
-		if (chunkIndex === 0) formData.append("originalFilename", filename);
+		if (chunkIndex === 0) formData.append("originalFilename", selectedMedia.id);
 
-		const res = await fetch("http://localhost:3001/api/media/upload/chunk", {
+		const res = await fetch(`${process.env.NEXT_PUBLIC_STREAMING_API_URL}/api/media/upload/chunk`, {
 			method: "POST",
 			headers: {
 				"Authorization": `Bearer ${accessToken}`
@@ -118,13 +118,14 @@ export default function FileUploadSection({ onFileSelect, selectedMedia, uploade
 				const endByte = Math.min(startByte + CHUNK_SIZE, file.size);
 				const chunk = file.slice(startByte, endByte);
 
-				await uploadChunk(uploadSessionId, chunk, totalChunks, chunkIndex, file.name, session.access_token);
+				await uploadChunk(uploadSessionId, chunk, totalChunks, chunkIndex, session.access_token);
 
 				startByte = endByte;
 
 			};
 
 			setIsComplete(true);
+			handleClearFile();
 
 		} catch (err) {
 
@@ -248,7 +249,7 @@ export default function FileUploadSection({ onFileSelect, selectedMedia, uploade
 				<Button
 					onClick={(e) => upload()}
 					className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
-					disabled={!selectedMedia || !file || isUploading || isComplete}
+					disabled={!selectedMedia || !file || isUploading}
 				>
 					{selectedMedia ? `Upload as: ${selectedMedia?.title || selectedMedia?.name} (${selectedMedia.id})` : "Complete Upload"}
 				</Button>

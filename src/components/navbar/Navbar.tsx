@@ -4,9 +4,10 @@ import { cn } from "@/lib/utils";
 import { Search } from "lucide-react";
 import Link from "next/link";
 import { redirect, usePathname, useRouter } from "next/navigation";
-import { ChangeEvent } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import { User } from "@supabase/supabase-js";
 import { createClient } from "@/utils/supabase/client";
+import { avatar } from "@/utils/getAvatar";
 
 interface NavbarProps {
 	user: User | null;
@@ -35,7 +36,7 @@ export function Navbar({
 		await supabase.auth.signOut();
 		redirect("/login");
 
-	}
+	};
 
 	return (
 
@@ -83,6 +84,15 @@ export function Navbar({
 							className="bg-red-500 size-10 rounded-full">
 
 						</button>
+
+						// <div
+						// 	className="size-10 rounded-full overflow-hidden"
+						// >
+						// 	<img
+						// 		className="size-10"
+						// 		src={avatar("oscar")}
+						// 	/>
+						// </div>
 
 					)
 				}
