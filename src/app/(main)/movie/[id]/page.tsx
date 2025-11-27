@@ -1,11 +1,8 @@
-import { MovieOverview } from "@/components/MovieDescription";
-import { TrailerPlayer } from "@/components/TrailerPlayer";
+import { MovieOverview } from "@/components/MovieOverview";
 import { createClient } from "@/utils/supabase/server";
 import { formatTimeHuman } from "@/utils/timeFormat";
 import { constructImg } from "@/utils/tmdb/constructImg";
-import { getImages } from "@/utils/tmdb/getImages";
 import { getMovie } from "@/utils/tmdb/getMovie";
-import { getTrailer } from "@/utils/tmdb/getTrailer";
 import { Play } from "lucide-react";
 import Link from "next/link";
 
@@ -65,8 +62,18 @@ export default async function Page({
 				style={{
 					backgroundImage: `linear-gradient(to top, rgba(0,0,0,0.5), rgba(0,0,0,0)), url('${constructImg(movie.backdrop_path!)}')`
 				}}
-				className="h-screen w-full absolute bg-cover bg-center top-0 left-0"
+				className="h-screen w-full absolute bg-cover bg-center top-0 left-0 md:block hidden"
 			/>
+
+			<div
+				style={{
+					backgroundImage: `linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0)), url('${constructImg(movie.poster_path!)}')`
+				}}
+				className="h-screen w-full absolute bg-cover bg-center top-0 left-0 md:hidden block"
+			/>
+			
+			
+			
 
 			<MovieOverview
 				movie={movie}
@@ -74,9 +81,9 @@ export default async function Page({
 
 				{userMediaStatus && (
 
-					<div className="flex items-center space-x-4">
+					<div className="w-full flex sm:flex-row flex-col-reverse sm:items-center space-x-4">
 
-						<div className="w-72 h-1 relative">
+						<div className="sm:w-72 w-full h-1 relative">
 
 							<div className="w-full h-full rounded-full bg-neutral-800 absolute" />
 							<div 
@@ -88,7 +95,7 @@ export default async function Page({
 
 						</div>
 
-						<p className="text-sm text-neutral-300 w">
+						<p className="text-sm text-neutral-300 sm:mb-0 mb-1">
 							<span>{formatTimeHuman(userMediaStatus.progress_sec)} watched</span>
 							&nbsp;of&nbsp;
 							<span>{formatTimeHuman(userMediaStatus.duration_sec)}</span>

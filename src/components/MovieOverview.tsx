@@ -14,25 +14,25 @@ export function MovieOverview({
 
 	return (
 
-		<div className="absolute bottom-10 left-10 space-y-6 flex flex-col items-start">
+		<div className="absolute left-0 bottom-0 sm:p-8 p-4 w-full space-y-6 flex flex-col items-start">
 
 			<GenreTags genres={movie.genres} />
 
 			{logo && (
 				<img
-					className="h-20"
+					className="h-20 md:block hidden"
 					src={constructImg(logo.file_path)}
 					alt=""
 				/>
 			)}
 
-			<p className="text-stone-100 w-1/3">
+			<p className="text-stone-100 w-full max-w-md">
 				{
 					movie.overview
 				}
 			</p>
 
-			<div className="flex flex-col items-start space-y-4">
+			<div className="w-full flex flex-col items-start space-y-4">
 				{children}
 			</div>
 

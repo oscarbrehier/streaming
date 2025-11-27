@@ -10,8 +10,6 @@ export async function fetchtTMDB<T = any>(endpoint: string, options: RequestInit
 
 	const url = `https://api.themoviedb.org/3${endpoint}`;
 
-	console.log(url)
-
 	const res = await fetch(url, {
 		...options,
 		headers,

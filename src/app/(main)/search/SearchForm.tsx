@@ -2,7 +2,9 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 import { constructImg } from "@/utils/tmdb/constructImg";
+import { Search } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -27,7 +29,7 @@ export interface TMDBSearchResponse {
 	total_results: number;
 }
 
-export function Search({
+export function SearchForm({
 	query,
 	type,
 	data
@@ -79,31 +81,48 @@ export function Search({
 
 	return (
 
-		<div className="flex-1 w-full flex flex-col items-center py-10 px-10">
+		<div className="flex-1 w-full flex flex-col items-center py-10 sm:px-10 px-4">
 
-			<div className="flex flex-col space-y-2 w-1/2">
+			<div className="flex flex-col space-y-2 w-full max-w-4xl">
 
-				<Input
+				{/* <Input
 					ref={searchInputRef}
 					className="w-full"
 					placeholder="Search for movies, TV shows..."
 					value={searchQuery ?? ""}
 					onChange={(e) => handleSearch(e.target.value)}
-				/>
+				/> */}
+
+				<div className="rounded-4xl bg-neutral-800 h-10 flex items-center justify-between px-4 space-x-4">
+
+					<input
+						type="text"
+						placeholder="Search"
+						className="outline-none w-full"
+						value={searchQuery ?? ""}
+						onChange={(e) => handleSearch(e.target.value)}
+					/>
+
+					<Search size={20} className="text-neutral-500" />
+
+				</div>
 
 				<div className="grid grid-cols-3 gap-2 flex-none max-w-fit">
 
 					{(["all", "movie", "tv"] as const).map((type) => (
 
-						<Button
+						<button
 							key={type}
-							size="sm"
-							className="capitalize"
-							variant={type == mediaType ? "secondary" : "outline"}
+							// size="sm"
+							className={cn(
+								"capitalize h-8 px-3 rounded-4xl text-sm cursor-pointer border",
+								type === mediaType ? "bg-neutral-800 border-transparent" : "bg-transparent text-accent-foreground border border-input"
+							)}
+							// variant={type == mediaType ? "secondary" : "outline"}
 							onClick={() => setMediaType(type)}
 						>
 							{type}
-						</Button>
+						</button>
 
 					))}
 
@@ -111,7 +130,7 @@ export function Search({
 
 			</div>
 
-			<div className="w-full mt-10 overflow-y-auto grid grid-cols-8 gap-4 auto-rows-min">
+			<div className="w-full mt-10 overflow-y-auto grid lg:grid-cols-8 md:grid-cols-4 sm:grid-cols-2 gap-4 auto-rows-min">
 
 				{data?.results?.map((item) => {
 

@@ -7,6 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { ChangeEvent, useRef } from "react";
 import { User } from "@supabase/supabase-js";
 import { avatar } from "@/utils/getAvatar";
+import { glass } from "@/styles";
 
 interface NavbarProps {
 	user: Pick<User, "user_metadata" | "email"> | null;
@@ -37,15 +38,15 @@ export function Navbar({ user }: NavbarProps) {
 
 	return (
 
-		<div className="w-full px-8 h-18 flex items-center justify-between z-10">
+		<div className="w-full sm:px-8 px-4 h-18 flex items-center justify-between z-10">
 
 			<div className="flex space-x-10 capitalize">
 
 				<Link
 					href="/"
 					className={cn(
-						"rounded-full h-10 px-4 space-x-2 flex items-center justify-center text-neutral-100",
-						pathname === "/" ? "bg-neutral-800" : "bg-neutral-800/40 hover:bg-neutral-800"
+						"rounded-full h-10 px-4 flex items-center justify-center text-neutral-100",
+						pathname === "/" ? glass(true) : glass(false)
 					)}
 				>
 					<p>Home</p>
@@ -58,18 +59,32 @@ export function Navbar({ user }: NavbarProps) {
 
 				{pathname !== "/search" && (
 
-					<div className="rounded-4xl bg-neutral-800 h-10 flex items-center justify-between px-4 space-x-4">
+					<>
 
-						<input
-							type="text"
-							placeholder="Search"
-							className="outline-none w-72"
-							onChange={handleSearch}
-						/>
+						<div className={cn(
+							"md:flex hidden rounded-4xl bg-neutral-800 h-10 items-center justify-between px-4 space-x-4 group",
+							glass(false)
+						)}>
 
-						<Search size={20} className="text-neutral-500" />
+							<input
+								type="text"
+								placeholder="Search"
+								className="outline-none"
+								onChange={handleSearch}
+							/>
 
-					</div>
+							<Search size={20} className="text-neutral-500" />
+
+						</div>
+
+						<Link
+							href="/search"
+							className="md:hidden flex rounded-full md:bg-neutral-800 bg-neutral-800/30 size-10 items-center justify-center"
+						>
+							<Search size={20} className="md:text-neutral-500 text-neutral-100" />
+						</Link>
+
+					</>
 
 				)}
 

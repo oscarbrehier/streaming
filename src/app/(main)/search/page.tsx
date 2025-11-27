@@ -1,4 +1,4 @@
-import { Search } from "./Search";
+import { SearchForm } from "./SearchForm";
 import { searchTMDB } from "@/utils/tmdb/search";
 
 export default async function Page({
@@ -34,7 +34,7 @@ export default async function Page({
 
 	return (
 
-		<Search
+		<SearchForm
 			query={query ?? null}
 			type={mediaType ?? null}
 			data={data}
