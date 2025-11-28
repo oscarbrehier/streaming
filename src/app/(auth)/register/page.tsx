@@ -13,19 +13,46 @@ import {
 	FieldSet,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
+import { avatar } from "@/utils/getAvatar";
 import { LoaderCircle } from "lucide-react";
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 
 const initialState: RegisterFormState = {};
 
 export default function Page() {
 
 	const [state, formAction, pending] = useActionState(register, initialState);
+	const [name, setName] = useState("");
 
 	return (
 
-		<div className="h-screen w-full flex items-center justify-center">
+		<div className={cn(
+			"h-screen w-full flex items-center justify-center",
+			name ? "space-x-18" : "space-x-0"
+		)}>
+
+
+
+			<div className={cn(
+				"h-full flex items-center justify-center transition-all duration-500 ease-in-out",
+				name ? "w-64 opacity-100 scale-100" : "w-0 opacity-0 scale-95"
+			)}>
+				<div className="size-42 rounded-full overflow-hidden">
+					<img
+						className="size-full"
+						src={avatar(name)}
+						alt=""
+					/>
+				</div>
+
+			</div>
+
+
+
+			{/* <Separator orientation="vertical" /> */}
 
 			<div className="w-full max-w-md">
 
@@ -73,6 +100,7 @@ export default function Page() {
 										id="name"
 										name="name"
 										defaultValue={state.values?.name || ""}
+										onChange={(e) => setName(e.target.value)}
 										placeholder="Jane"
 										required
 										aria-invalid={!!state.errors?.name}
