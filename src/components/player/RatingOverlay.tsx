@@ -1,3 +1,5 @@
+import { cn } from "@/lib/utils";
+import { glass } from "@/styles";
 import { motion } from "framer-motion";
 
 export function RatingOverlay({
@@ -18,7 +20,10 @@ export function RatingOverlay({
 				initial={{ scale: 0.5 }}
 				animate={{ scale: 1 }}
 				transition={{ type: "spring", stiffness: 260, damping: 20 }}
-				className="flex items-center justify-center h-14 px-4 rounded-2xl space-x-2 bg-neutral-800 cursor-pointer">
+				className={cn(
+					"flex items-center justify-center h-14 px-4 rounded-4xl space-x-2 cursor-pointer",
+					glass(true),
+				)}>
 
 				{ratings.map(({ value, title, emoji }) => (
 

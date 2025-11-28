@@ -1,5 +1,22 @@
 import { createServerClient } from '@supabase/ssr'
-import { NextResponse, type NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
+
+async function check2FAStatus(access_token: string | undefined) {
+
+	if (!access_token) return true;
+
+	const res = await fetch(`${process.env.NEXT_PUBLIC_STREAMING_API_URL}/api/2fa/status`, {
+		headers: {
+			"Authorization": `Bearer ${access_token}`
+		}
+	});
+
+	if (!res.ok) return true;
+
+	const data = await res.json();
+	return data.required ?? true;
+
+};
 
 export async function updateSession(request: NextRequest) {
 
@@ -45,6 +62,15 @@ export async function updateSession(request: NextRequest) {
 		url.pathname = '/login';
 		return NextResponse.redirect(url);
 
+	};
+
+	const { data: { session } } = await supabase.auth.getSession();
+
+	const access_token = session?.access_token;
+	const is2FARequired = await check2FAStatus(access_token);
+
+	if (user && is2FARequired && !pathname.startsWith("/2fa")) {
+		return NextResponse.redirect(new URL("/2fa", request.url))
 	};
 
 	const isAdminRoute = pathname.startsWith("/dashboard");

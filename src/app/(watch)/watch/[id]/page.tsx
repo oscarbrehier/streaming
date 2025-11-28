@@ -2,6 +2,7 @@ import VideoPlayer from "@/components/player/Player";
 import { MediaNotFound } from "./NotFound";
 import { createClient } from "@/utils/supabase/server";
 import { getMovie } from "@/utils/tmdb/getMovie";
+import { connection } from "next/server";
 
 interface PageProps {
 	params: Promise<{ id: string }>;
@@ -14,10 +15,13 @@ async function updateUserMediaStatus(
 	mediaId: string
 ): Promise<UserMediaStatus | null> {
 
+	await connection();
+
 	let { data, error } = await supabase
 		.from("user_media_status")
 		.select(`*`)
 		.limit(1)
+		.eq("media_id", mediaId)
 		.maybeSingle();
 
 	if (error) return null;
@@ -53,12 +57,6 @@ export default async function Page({ params }: PageProps) {
 	const { id } = await params;
 	const mediaPath = `${process.env.NEXT_PUBLIC_STREAMING_API_URL}/api/media/${id}/master.m3u8`;
 	
-	const res = await fetch(mediaPath, { cache: "no-store" });
-	
-	if (res.status !== 200) {
-		return <MediaNotFound />;
-	};
-	
 	const supabase = await createClient();
 	const { data: { user } } = await supabase.auth.getUser();
 
@@ -69,7 +67,13 @@ export default async function Page({ params }: PageProps) {
 		return <MediaNotFound />;
 	};
 
-	const movie = await getMovie(id);
+	let movie: MovieDetailsWithImages;
+
+	try {
+		movie = await getMovie(id);
+	} catch (err) {
+		return <MediaNotFound />
+	};
 
 	return (
 

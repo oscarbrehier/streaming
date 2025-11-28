@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { notFound, useRouter } from "next/navigation";
 import { IoChevronBack } from "react-icons/io5";
 import Hls from "hls.js";
 import { createClient } from "@/utils/supabase/client";
@@ -16,6 +16,8 @@ import { ProgressBar } from "./ProgressBar";
 import { useMediaState } from "@/hooks/player/useMediaState";
 import { ControlButtons } from "./ControlButtons";
 import { useVideoQuality } from "@/hooks/player/useVideoQuality";
+import { cn } from "@/lib/utils";
+import { glass } from "@/styles";
 
 interface VideoPlayerProps {
 	userId: string;
@@ -94,6 +96,15 @@ export default function VideoPlayer({
 				setupQualityListener(hls);
 
 				hls.loadSource(videoUrl);
+				
+				hls.on(Hls.Events.ERROR, (event, data) => {
+					if (data.fatal) {
+						if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+							notFound();
+						};
+					};
+				});
+				
 				hls.attachMedia(video);
 
 				return () => {
@@ -275,7 +286,11 @@ export default function VideoPlayer({
 					<button
 						onClick={() => router.back()}
 						title="Back"
-						className='text-2xl cursor-pointer hover:bg-neutral-500/30 size-10 rounded-full flex items-center justify-center transition-colors'>
+						className={cn(
+							// "text-2xl cursor-pointer hover:bg-neutral-500/30 size-10 rounded-full flex items-center justify-center transition-colors",
+							"size-10 rounded-full text-2xl flex items-center justify-center cursor-pointer",
+							glass(false)
+						)}>
 						<IoChevronBack className="text-neutral-100" size={20} />
 					</button>
 
