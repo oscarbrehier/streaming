@@ -16,7 +16,6 @@ export async function fetchtTMDB<T = any>(endpoint: string, options: RequestInit
 	});
 
 	if (!res.ok) {
-		console.log(res.status, res.statusText)
 		throw new Error(`HTTP Error ${res.status}:${res.statusText}`);
 	};
 

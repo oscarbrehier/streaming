@@ -9,7 +9,7 @@ import { glass } from "@/styles";
 export async function HeroBanner() {
 
 	const mediaType = "movie";
-	const mediaId = `17961`;
+	const mediaId = `21135`;
 	const data = await fetchtTMDB(`/${mediaType}/${mediaId}?language=en-US&append_to_response=images`);
 
 	return (
@@ -24,7 +24,7 @@ export async function HeroBanner() {
 			/>
 
 			<div
-				className="absolute top-0 left-0 h-[85vh] w-full bg-cover bg-center md:hidden block"
+				className="absolute top-0 left-0 h-[85vh] w-full bg-cover bg-top md:hidden block"
 				style={{
 					backgroundImage: `url(https://image.tmdb.org/t/p/original${data.poster_path})`
 				}}

@@ -18,12 +18,14 @@ export function MovieOverview({
 
 			<GenreTags genres={movie.genres} />
 
-			{logo && (
+			{logo ? (
 				<img
 					className="h-20 md:block hidden"
 					src={constructImg(logo.file_path)}
 					alt=""
 				/>
+			) : (
+				<h1 className="text-neutral-100 text-6xl font-extrabold tracking-tight text-balance">{movie.title}</h1>
 			)}
 
 			<p className="text-stone-100 w-full max-w-md">
