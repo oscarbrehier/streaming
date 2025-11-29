@@ -40,16 +40,26 @@ export function Navbar({ user }: NavbarProps) {
 
 		<div className="w-full sm:px-8 px-4 h-18 flex items-center justify-between z-10">
 
-			<div className="flex space-x-10 capitalize">
+			<div className="flex space-x-4 capitalize">
 
 				<Link
 					href="/"
 					className={cn(
 						"rounded-full h-10 px-4 flex items-center justify-center text-neutral-100",
-						pathname === "/" ? cn(glass(true), "bg-neutral-800/30") : cn(glass(true), "bg-neutral-800/30")
+						pathname === "/" ? cn(glass("active"), "bg-neutral-800/30") : `hover:${glass("on-hover")}`
 					)}
 				>
 					<p>Home</p>
+				</Link>
+
+				<Link
+					href="/recently-watched"
+					className={cn(
+						"rounded-full h-10 px-4 flex items-center justify-center text-neutral-100",
+						pathname === "/recently-watched" ? cn(glass("active"), "bg-neutral-800/30") : `${glass("on-hover")}`
+					)}
+				>
+					<p>Recently Watched</p>
 				</Link>
 
 			</div>
@@ -63,7 +73,7 @@ export function Navbar({ user }: NavbarProps) {
 
 						<div className={cn(
 							"md:flex hidden rounded-4xl bg-neutral-800 h-10 items-center justify-between px-4 space-x-4 group",
-							glass(false)
+							glass("on-focus")
 						)}>
 
 							<input
