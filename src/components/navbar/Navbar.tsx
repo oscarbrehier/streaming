@@ -40,27 +40,29 @@ export function Navbar({ user }: NavbarProps) {
 
 		<div className="w-full sm:px-8 px-4 h-18 flex items-center justify-between z-10">
 
-			<div className="flex space-x-4 capitalize">
+			{/* <div className="flex space-x-4 capitalize"> */}
 
-				<Link
-					href="/"
-					className={cn(
-						"rounded-full h-10 px-4 flex items-center justify-center text-neutral-100",
-						pathname === "/" ? cn(glass("active"), "bg-neutral-800/30") : `hover:${glass("on-hover")}`
-					)}
-				>
-					<p>Home</p>
-				</Link>
+				<div className={cn(
+					"rounded-full h-10 px-6 flex items-center space-x-10",
+					glass("active"),
+					"bg-neutral-800/30"
+				)}>
 
-				<Link
-					href="/recently-watched"
-					className={cn(
-						"rounded-full h-10 px-4 flex items-center justify-center text-neutral-100",
-						pathname === "/recently-watched" ? cn(glass("active"), "bg-neutral-800/30") : `${glass("on-hover")}`
-					)}
-				>
-					<p>Recently Watched</p>
-				</Link>
+					<Link
+						href="/"
+						className={cn(pathname === "/" ? "text-neutral-100" : "text-neutral-300 hover:text-neutral-100")}
+					>
+						Home
+					</Link>
+
+					<Link
+						href="/recently-watched"
+						className={cn(pathname === "/recently-watched" ? "text-neutral-100" : "text-neutral-300 hover:text-neutral-100")}
+					>
+						Recently-Watched
+					</Link>
+
+				{/* </div> */}
 
 			</div>
 

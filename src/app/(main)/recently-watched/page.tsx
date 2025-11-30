@@ -23,6 +23,7 @@ export default async function Page() {
 						key={movie.id}
 						movie={movie}
 						action={`/watch/${movie.id}`}
+						hoverable
 					/>
 
 				))}

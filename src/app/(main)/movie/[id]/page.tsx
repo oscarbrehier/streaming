@@ -60,7 +60,7 @@ export default async function Page({
 
 			<div
 				style={{
-					backgroundImage: `linear-gradient(to top, rgba(0,0,0,0.5), rgba(0,0,0,0)), url('${constructImg(movie.backdrop_path!)}')`
+					backgroundImage: `linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0)), url('${constructImg(movie.backdrop_path!)}')`
 				}}
 				className="h-screen w-full absolute bg-cover bg-center top-0 left-0 md:block hidden"
 			/>
@@ -109,7 +109,7 @@ export default async function Page({
 
 					<Link
 						href={`/watch/${movie.id}`}
-						className="capitalize bg-white text-black text-lg py-2 px-6 rounded-3xl cursor-pointer flex items-center space-x-4"
+						className="capitalize bg-white text-black text-lg h-10 px-6 rounded-3xl cursor-pointer flex items-center space-x-4"
 					>
 						<Play className="text-black mt-0.5" fill="#000" size={16} />
 						<span>{userMediaStatus ? "Resume" : "Watch Now"}</span>
