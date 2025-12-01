@@ -48,7 +48,7 @@ export async function HeroBanner() {
 						href={`/movie/${data.id}`}
 						className={cn(
 							"capitalize text-lg h-10 px-6 rounded-3xl cursor-pointer flex items-center sm:space-x-4",
-							glass()
+							glass("active")
 						)}
 					>
 						<Info className="text-neutral-200 mt-0.5" size={16} />

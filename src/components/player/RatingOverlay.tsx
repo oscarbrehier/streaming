@@ -22,7 +22,7 @@ export function RatingOverlay({
 				transition={{ type: "spring", stiffness: 260, damping: 20 }}
 				className={cn(
 					"flex items-center justify-center h-14 px-4 rounded-4xl space-x-2 cursor-pointer",
-					glass(true),
+					glass("active"),
 				)}>
 
 				{ratings.map(({ value, title, emoji }) => (

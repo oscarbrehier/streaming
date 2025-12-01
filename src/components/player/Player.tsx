@@ -289,7 +289,7 @@ export default function VideoPlayer({
 						className={cn(
 							// "text-2xl cursor-pointer hover:bg-neutral-500/30 size-10 rounded-full flex items-center justify-center transition-colors",
 							"size-10 rounded-full text-2xl flex items-center justify-center cursor-pointer",
-							glass(false)
+							glass("on-focus")
 						)}>
 						<IoChevronBack className="text-neutral-100" size={20} />
 					</button>
