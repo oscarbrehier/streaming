@@ -1,10 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuItem } from "@/components/ui/dropdown-menu";
-import { Popover } from "@/components/ui/popover";
-import { PopoverContent, PopoverTrigger } from "@radix-ui/react-popover";
 import { ColumnDef } from "@tanstack/react-table";
 import { MoreHorizontal } from "lucide-react";
+import { EncodingProgressDialog } from "./EncodingProgressDialog";
 
 export type Job = {
 	id: string;
@@ -26,7 +25,19 @@ export type Job = {
 
 export const columns: ColumnDef<Job>[] = [
 	{
-		accessorKey: "name",
+		accessorKey: "id",
+		header: "Id"
+	},
+	{
+		accessorFn: (row) => {
+
+			const name = typeof row.data === "object" && row.data !== null
+				? row.data.originalFilename ?? "—"
+				: "—";
+
+			return name;
+
+		},
 		header: "Name",
 	},
 	{
@@ -38,7 +49,7 @@ export const columns: ColumnDef<Job>[] = [
 		header: "Attemps",
 	},
 	{
-		accessorFn: row => {
+		accessorFn: (row) => {
 			const start = row.processedOn;
 			const end = row.finishedOn;
 
@@ -58,6 +69,12 @@ export const columns: ColumnDef<Job>[] = [
 		cell: ({ row }) => {
 
 			const job = row.original;
+			const isActive = row.getValue("status") === "active";
+
+			const data = job.data;
+			const mediaId = typeof data === "object" && data !== null && data.originalFilename
+				? data.originalFilename
+				: null;
 
 			return (
 
@@ -75,7 +92,6 @@ export const columns: ColumnDef<Job>[] = [
 
 							<DropdownMenuLabel>Actions</DropdownMenuLabel>
 
-
 							<Dialog>
 
 								<DialogTrigger asChild disabled={!job.stacktrace || job.stacktrace.length === 0}>
@@ -91,6 +107,11 @@ export const columns: ColumnDef<Job>[] = [
 								</DialogContent>
 
 							</Dialog>
+
+							<EncodingProgressDialog
+								mediaId={mediaId}
+								disabled={!isActive}
+							/>
 
 						</DropdownMenuContent>
 

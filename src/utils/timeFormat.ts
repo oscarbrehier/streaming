@@ -14,7 +14,9 @@ export const formatTime = (time: number): string => {
 
 };
 
-export const formatTimeHuman = (time: number): string => {
+export const formatTimeHuman = (time: number | null): string => {
+
+	if (time == null || isNaN(time)) return "-";
 
 	const totalSeconds = Math.floor(time);
 	const hours = Math.floor(totalSeconds / 3600);
@@ -24,7 +26,7 @@ export const formatTimeHuman = (time: number): string => {
 	if (hours > 0) {
 		return `${hours}h${minutes.toString().padStart(2, '0')}`;
 	} else if (minutes > 0) {
-		return `${minutes}m${seconds.toString()}s`;
+		return `${minutes}m${seconds.toString().padStart(2,'0')}s`;
 	} else {
 		return `${seconds}s`;
 	};

@@ -18,6 +18,9 @@ export default async function Page() {
 
 	const { result: queueStatus } = await res.json();
 
+	console.log(queueStatus);
+	// console.log(queueStatus.filter(status => status.conversionProgress));
+
 	return (
 
 		<div className="pt-24 flex justify-center">

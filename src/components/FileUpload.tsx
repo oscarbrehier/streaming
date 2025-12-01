@@ -90,6 +90,9 @@ export default function FileUploadSection({ onFileSelect, selectedMedia, uploade
 			throw new Error("Chunk upload failed");
 		};
 
+		const data = await res.json();
+		setProgress(data.percent);
+
 	};
 
 	async function upload() {

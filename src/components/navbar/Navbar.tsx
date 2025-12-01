@@ -40,29 +40,32 @@ export function Navbar({ user }: NavbarProps) {
 
 		<div className="w-full sm:px-8 px-4 h-18 flex items-center justify-between z-10">
 
-			{/* <div className="flex space-x-4 capitalize"> */}
+			<div className={cn(
+				"rounded-full h-10 px-6 flex items-center space-x-10",
+				glass("active"),
+				"bg-neutral-800/30"
+			)}>
 
-				<div className={cn(
-					"rounded-full h-10 px-6 flex items-center space-x-10",
-					glass("active"),
-					"bg-neutral-800/30"
-				)}>
+				<Link
+					href="/"
+					className={cn(pathname === "/" ? "text-neutral-100" : "text-neutral-300 hover:text-neutral-100")}
+				>
+					Home
+				</Link>
 
-					<Link
-						href="/"
-						className={cn(pathname === "/" ? "text-neutral-100" : "text-neutral-300 hover:text-neutral-100")}
-					>
-						Home
-					</Link>
+				<Link
+					href="/recently-watched"
+					className={cn(pathname === "/recently-watched" ? "text-neutral-100" : "text-neutral-300 hover:text-neutral-100")}
+				>
+					Recently-Watched
+				</Link>
 
-					<Link
-						href="/recently-watched"
-						className={cn(pathname === "/recently-watched" ? "text-neutral-100" : "text-neutral-300 hover:text-neutral-100")}
-					>
-						Recently-Watched
-					</Link>
-
-				{/* </div> */}
+				<Link
+					href="/network"
+					className={cn(pathname === "/network" ? "text-neutral-100" : "text-neutral-300 hover:text-neutral-100")}
+				>
+					Network
+				</Link>
 
 			</div>
 

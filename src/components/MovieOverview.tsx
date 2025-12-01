@@ -20,7 +20,7 @@ export function MovieOverview({
 
 			{logo ? (
 				<img
-					className="h-20 md:block hidden"
+					className="md:h-20 h-12 block"
 					src={constructImg(logo.file_path)}
 					alt=""
 				/>

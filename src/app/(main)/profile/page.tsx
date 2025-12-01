@@ -4,6 +4,7 @@ import { createClient } from "@/utils/supabase/server";
 import { ProfileForm } from "./ProfileForm";
 import { LogoutButton } from "./LogoutButton";
 import { Button } from "@/components/ui/button";
+import { ProfileCard } from "@/components/ProfileCard";
 
 export default async function Page() {
 
@@ -18,29 +19,12 @@ export default async function Page() {
 
 			<div className="flex flex-col w-full max-w-xl space-y-2">
 
-				<Card className="w-full">
-
-					<CardContent className="flex justify-between space-x-8">
-
-						<div className="overflow-hidden size-44 rounded-full">
-
-							<img
-								className="size-full"
-								src={avatar(user.user_metadata.display_name)}
-							/>
-
-						</div>
-
-						<ProfileForm
-							user={{
-								email: user.email,
-								user_metadata: user.user_metadata
-							}}
-						/>
-
-					</CardContent>
-
-				</Card>
+				<ProfileCard
+					display_name={user.user_metadata.display_name}
+					email={user.email}
+					metadata={user.user_metadata}
+					editable
+				/>
 
 				<div className="w-full flex justify-end space-x-2">
 
