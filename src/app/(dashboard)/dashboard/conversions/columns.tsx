@@ -69,7 +69,7 @@ export const columns: ColumnDef<Job>[] = [
 		cell: ({ row }) => {
 
 			const job = row.original;
-			const isActive = row.getValue("status") === "active";
+			const jobStatus = row.getValue("status");
 
 			const data = job.data;
 			const mediaId = typeof data === "object" && data !== null && data.originalFilename
@@ -110,13 +110,23 @@ export const columns: ColumnDef<Job>[] = [
 
 							<EncodingProgressDialog
 								mediaId={mediaId}
-								disabled={!isActive}
+								disabled={jobStatus !== "active"}
 							/>
+
+							{jobStatus === "failed" && (
+
+								<DropdownMenuItem
+									onClick={() => console.log("hello")}
+								>
+									Retry job
+								</DropdownMenuItem>
+
+							)}
 
 						</DropdownMenuContent>
 
-
 					</DropdownMenu >
+
 				</div>
 
 			)
