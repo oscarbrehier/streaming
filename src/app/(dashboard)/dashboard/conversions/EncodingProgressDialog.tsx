@@ -24,7 +24,9 @@ export function EncodingProgressDialog({
 
 		if (!isOpen) return ;
 
-		const source = new EventSource(`${process.env.NEXT_PUBLIC_STREAMING_API_URL}/api/media/${mediaId}/progress`);
+		const source = new EventSource(`${process.env.NEXT_PUBLIC_STREAMING_API_URL}/api/media/${mediaId}/progress`, {
+			withCredentials: true
+		});
 
 		source.onmessage = (e) => {
 
