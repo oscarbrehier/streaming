@@ -15,7 +15,7 @@ async function checkAvailability(id: string): Promise<boolean> {
 
 	try {
 
-		const res = await fetch(`http://localhost:3000/api/media/${id}/index.m3u8`);
+		const res = await fetch(`http://localhost:3000/api/media/${id}/master.m3u8`);
 		return !!res.ok;
 
 	} catch (err) {

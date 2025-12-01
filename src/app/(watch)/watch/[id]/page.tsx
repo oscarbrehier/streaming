@@ -55,7 +55,7 @@ async function updateUserMediaStatus(
 export default async function Page({ params }: PageProps) {
 
 	const { id } = await params;
-	const mediaPath = `${process.env.NEXT_PUBLIC_STREAMING_API_URL}/api/media/${id}/master.m3u8`;
+	const mediaPath = `${process.env.NEXT_PUBLIC_STREAMING_API_URL}/api/watch/${id}/master.m3u8`;
 	
 	const supabase = await createClient();
 	const { data: { user } } = await supabase.auth.getUser();

@@ -4,6 +4,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger, DropdownMenuLab
 import { ColumnDef } from "@tanstack/react-table";
 import { MoreHorizontal } from "lucide-react";
 import { EncodingProgressDialog } from "./EncodingProgressDialog";
+import { retryTranscodeJob } from "@/actions/retryTranscodeJob";
 
 export type Job = {
 	id: string;
@@ -69,6 +70,7 @@ export const columns: ColumnDef<Job>[] = [
 		cell: ({ row }) => {
 
 			const job = row.original;
+			const jobId = row.getValue("id");
 			const jobStatus = row.getValue("status");
 
 			const data = job.data;
@@ -113,10 +115,10 @@ export const columns: ColumnDef<Job>[] = [
 								disabled={jobStatus !== "active"}
 							/>
 
-							{jobStatus === "failed" && (
+							{jobStatus === "completed" && (
 
 								<DropdownMenuItem
-									onClick={() => console.log("hello")}
+									onClick={() => retryTranscodeJob(jobId as string)}
 								>
 									Retry job
 								</DropdownMenuItem>
