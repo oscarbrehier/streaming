@@ -115,7 +115,7 @@ export const columns: ColumnDef<Job>[] = [
 								disabled={jobStatus !== "active"}
 							/>
 
-							{jobStatus === "completed" && (
+							{jobStatus === "failed" && (
 
 								<DropdownMenuItem
 									onClick={() => retryTranscodeJob(jobId as string)}
