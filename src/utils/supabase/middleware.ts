@@ -1,3 +1,4 @@
+import { requestOTPCodeHandler } from '@/actions/requestOTPCode';
 import { createServerClient } from '@supabase/ssr'
 import { NextRequest, NextResponse } from 'next/server'
 
@@ -70,7 +71,10 @@ export async function updateSession(request: NextRequest) {
 	const is2FARequired = await check2FAStatus(access_token);
 
 	if (user && is2FARequired && !pathname.startsWith("/2fa")) {
-		return NextResponse.redirect(new URL("/2fa", request.url))
+
+		await requestOTPCodeHandler(supabase);
+		return NextResponse.redirect(new URL("/2fa", request.url));
+		
 	};
 
 	const isAdminRoute = pathname.startsWith("/dashboard");

@@ -3,7 +3,7 @@
 import { useRateLimit } from "@/lib/rateLimit"
 import { createClient } from "@/utils/supabase/server";
 
-async function handler(
+export async function requestOTPCodeHandler(
 	supabase: Awaited<ReturnType<typeof createClient>>,
 ): Promise<void> {
 
@@ -21,7 +21,7 @@ async function handler(
 
 export async function requestOTPCode(): Promise<{ error: string | null }> {
 
-	const rateLimitedRequest = await useRateLimit(handler, "request-code", {
+	const rateLimitedRequest = await useRateLimit(requestOTPCodeHandler, "request-code", {
 		maxRequests: 1,
 		windowSize: 1 * 60 * 1000
 	});
