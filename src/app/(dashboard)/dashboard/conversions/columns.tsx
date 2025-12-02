@@ -127,7 +127,7 @@ export const columns: ColumnDef<Job>[] = [
 
 							<EncodingProgressDialog
 								mediaId={mediaId}
-								disabled={jobStatus !== "active"}
+								disabled={jobStatus !== "completed"}
 							/>
 
 							{jobStatus === "failed" && (

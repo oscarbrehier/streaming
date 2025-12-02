@@ -18,23 +18,18 @@ export function EncodingProgressDialog({
 		durationSeconds: null,
 		elapsedSeconds: null,
 		percent: null,
+		resolution: null,
 	});
 
 	useEffect(() => {
 
 		if (!isOpen) return ;
 
-		const source = new EventSource(`${process.env.NEXT_PUBLIC_STREAMING_API_URL}/api/media/${mediaId}/progress`, {
-			withCredentials: true
-		});
+		const source = new EventSource(`http://localhost:3000/api/media/${mediaId}/progress`);
 
 		source.onmessage = (e) => {
-
 			const data = JSON.parse(e.data);
-			console.log(data);
-
 			setProgress(data);
-
 		};
 
 		source.onerror = (err) => {
@@ -64,7 +59,7 @@ export function EncodingProgressDialog({
 					<DialogTitle>Encoding Progress</DialogTitle>
 				</DialogHeader>
 
-				<div className="grid grid-cols-3 gap-3 mt-4">
+				<div className="grid grid-cols-4 gap-4 mt-4">
 
 					<div>
 
@@ -72,6 +67,16 @@ export function EncodingProgressDialog({
 
 						<h1 className="text-center text-4xl font-extrabold tracking-tight text-balance">
 							{mediaId}
+						</h1>
+
+					</div>
+
+					<div>
+
+						<p className="text-muted-foreground text-sm text-center">Media ID</p>
+
+						<h1 className="text-center text-4xl font-extrabold tracking-tight text-balance">
+							{progress.resolution ?? "-"}
 						</h1>
 
 					</div>
