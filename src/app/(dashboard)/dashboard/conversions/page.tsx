@@ -1,5 +1,16 @@
 import { createClient } from "@/utils/supabase/server";
 import { DataTable } from "./DataTable";
+import { Job } from "./columns";
+
+const parseIdNumber = (id: string): number => {
+
+	const firstPart = id.split("_")[0];
+	const n = Number(firstPart);
+
+	return Number.isFinite(n) ? n : -Infinity;
+
+};
+
 
 export default async function Page() {
 
@@ -16,12 +27,15 @@ export default async function Page() {
 
 	if (!res.ok) return null;
 
-	const { result: queueStatus } = await res.json();
+	const { result: queueStatus }: { result: Job[] } = await res.json();
+	const sortedQueue = [...queueStatus].sort((a, b) =>
+		parseIdNumber(b.id) - parseIdNumber(a.id)
+	);
 
 	return (
 
 		<div className="pt-24 flex justify-center">
-			<DataTable data={queueStatus} />
+			<DataTable data={sortedQueue} />
 		</div>
 
 	);

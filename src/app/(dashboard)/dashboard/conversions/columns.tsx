@@ -27,7 +27,12 @@ export type Job = {
 export const columns: ColumnDef<Job>[] = [
 	{
 		accessorKey: "id",
-		header: "Id"
+		header: "Id",
+		cell: row => {
+
+			return <p className="w-32">{row.getValue<string>()}</p>
+
+		}
 	},
 	{
 		accessorFn: (row) => {
@@ -40,6 +45,12 @@ export const columns: ColumnDef<Job>[] = [
 
 		},
 		header: "Name",
+		cell: row => {
+
+			const name = row.getValue<string>();
+			return <p className="w-60">{name}</p>;
+
+		}
 	},
 	{
 		accessorKey: "status",
@@ -105,7 +116,11 @@ export const columns: ColumnDef<Job>[] = [
 									<DialogHeader>
 										<DialogTitle>Stack Trace</DialogTitle>
 									</DialogHeader>
-									{job.stacktrace ?? ""}
+
+									<div className="max-h-96 overflow-y-scroll">
+										{job.stacktrace ?? ""}
+									</div>
+
 								</DialogContent>
 
 							</Dialog>

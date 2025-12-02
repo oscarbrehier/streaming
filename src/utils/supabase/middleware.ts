@@ -50,10 +50,11 @@ export async function updateSession(request: NextRequest) {
 		}
 	);
 
-	const { data: { user } } = await supabase.auth.getUser();
+	const { data, error } = await supabase.auth.getClaims();
+	const user = data?.claims;
 
 	if (
-		!user &&
+		(!user || error) &&
 		!pathname.startsWith('/login') &&
 		!pathname.startsWith('/register')
 	) {
@@ -65,21 +66,26 @@ export async function updateSession(request: NextRequest) {
 
 	};
 
-	const { data: { session } } = await supabase.auth.getSession();
+	if (user) {
 
-	const access_token = session?.access_token;
-	const is2FARequired = await check2FAStatus(access_token);
+		const { data: { session } } = await supabase.auth.getSession();
+		const access_token = session?.access_token;
 
-	if (user && is2FARequired && !pathname.startsWith("/2fa")) {
+		const is2FARequired = await check2FAStatus(access_token);
 
-		await requestOTPCodeHandler(supabase);
-		return NextResponse.redirect(new URL("/2fa", request.url));
-		
+		if (is2FARequired && !pathname.startsWith("/2fa")) {
+
+			await requestOTPCodeHandler(supabase);
+			return NextResponse.redirect(new URL("/2fa", request.url));
+
+		};
+
+
 	};
 
 	const isAdminRoute = pathname.startsWith("/dashboard");
 
-	if (isAdminRoute) {
+	if (isAdminRoute && user) {
 
 		const supabaseAdmin = createServerClient(
 			process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -101,7 +107,7 @@ export async function updateSession(request: NextRequest) {
 		const { data: profile, error } = await supabaseAdmin
 			.from("profiles")
 			.select("role")
-			.eq("id", user?.id)
+			.eq("id", user.sub)
 			.single();
 
 		if (error || !profile || profile.role !== "admin") {
