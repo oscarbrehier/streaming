@@ -1,3 +1,5 @@
+import { Job } from "@/app/(dashboard)/dashboard/transcoding/columns";
+
 declare global {
 
 	interface APIResponse {
@@ -290,6 +292,32 @@ declare global {
 		errors: string[];
 		code: number;
 	};
+
+	type Job = {
+		id: string;
+		name: string;
+		data: Record<string, any> | string;
+		opts: { attempts: number; delay: number; timestamp: number };
+		progress: number;
+		delay: number;
+		timestamp: number;
+		attemptsMade: number;
+		failedReason: string;
+		stacktrace: string[];
+		returnvalue: string;
+		debounceId: string;
+		finishedOn: number;
+		processedOn: number;
+		status: 'waiting' | 'active' | 'completed' | 'failed' | 'delayed';
+	};
+
+	type QueueState = "active" | "paused";
+
+	type Queue = {
+		state: QueueState;
+		counts: number;
+		jobs: Job[];
+	}
 
 
 };

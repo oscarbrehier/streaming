@@ -1,6 +1,4 @@
 import { createClient } from "@/utils/supabase/server";
-import { DataTable } from "./DataTable";
-import { Job } from "./columns";
 
 const parseIdNumber = (id: string): number => {
 
@@ -11,15 +9,14 @@ const parseIdNumber = (id: string): number => {
 
 };
 
-
-export default async function Page() {
+export async function getQueue(): Promise<Queue | null> {
 
 	const supabase = await createClient();
 	const { data: { session } } = await supabase.auth.getSession();
 
 	if (!session || !session.access_token) return null;
 
-	const res = await fetch(`${process.env.NEXT_PUBLIC_STREAMING_API_URL}/api/media/queue/status`, {
+	const res = await fetch(`${process.env.NEXT_PUBLIC_STREAMING_API_URL}/api/media/transcoding/queue`, {
 		headers: {
 			"Authorization": `Bearer ${session.access_token}`
 		}
@@ -27,17 +24,15 @@ export default async function Page() {
 
 	if (!res.ok) return null;
 
-	const { result: queueStatus }: { result: Job[] } = await res.json();
-	const sortedQueue = [...queueStatus].sort((a, b) =>
+	const { result: queueStatus }: { result: Queue } = await res.json();
+
+	const sortedJobs = [...queueStatus.jobs].sort((a, b) =>
 		parseIdNumber(b.id) - parseIdNumber(a.id)
 	);
 
-	return (
-
-		<div className="pt-24 flex justify-center">
-			<DataTable data={sortedQueue} />
-		</div>
-
-	);
+	return {
+		...queueStatus,
+		jobs: sortedJobs
+	};
 
 };

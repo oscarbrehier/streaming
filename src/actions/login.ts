@@ -77,8 +77,6 @@ export async function login(prevState: LoginFormState, formData: FormData) {
 		
 	} catch (err) {
 		
-		console.log(err)
-		
 		return {
 			error: err instanceof Error ? err.message : "An error occurred. Please try again later.",
 			values: rawData
