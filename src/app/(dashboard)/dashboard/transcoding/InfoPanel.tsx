@@ -2,7 +2,6 @@ import { Item, ItemContent, ItemHeader, ItemTitle } from "@/components/ui/item";
 import { Button } from "@/components/ui/button";
 import { CircleCheck, CircleDashed, CircleX, Logs, X } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Job } from "./columns";
 import { MouseEvent, useEffect, useState } from "react";
 import { formatTimeHuman } from "@/utils/timeFormat";
 import { removeTranscodingJob } from "@/actions/transcoding/removeJob";
