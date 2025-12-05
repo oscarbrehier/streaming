@@ -1,6 +1,8 @@
+import { Button } from "@/components/ui/button";
 import { ColumnDef } from "@tanstack/react-table";
+import { ArrowRight } from "lucide-react";
 
-export const columns: ColumnDef<Job>[] = [
+export const getColumns = (onOpenInfo: (job: Job) => void): ColumnDef<Job>[] => [
 	{
 		accessorKey: "id",
 		header: "Id",
@@ -51,5 +53,22 @@ export const columns: ColumnDef<Job>[] = [
 			const durationMs = info.getValue<number>();
 			return durationMs != null ? `${(durationMs / 1000).toFixed(2)}s` : "—";
 		}
+	},
+	{
+		id: "info-panel",
+		header: () => null,
+		cell: ({ row }) => (
+
+			<div className="">
+				<Button
+					onClick={() => onOpenInfo(row.original)}
+					variant="secondary"
+					size="icon-sm"
+				>
+					<ArrowRight />
+				</Button>
+			</div>
+
+		)
 	}
 ];

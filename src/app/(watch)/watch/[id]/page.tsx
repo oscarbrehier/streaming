@@ -1,7 +1,7 @@
 import VideoPlayer from "@/components/player/Player";
 import { MediaNotFound } from "./NotFound";
 import { createClient } from "@/utils/supabase/server";
-import { getMovie } from "@/utils/tmdb/getMovie";
+import { getMovie } from "@/lib/tmdb/movie";
 import { connection } from "next/server";
 
 interface PageProps {

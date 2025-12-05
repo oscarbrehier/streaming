@@ -1,4 +1,4 @@
-import { getMovie } from "@/utils/tmdb/getMovie";
+import { getMovie } from "@/lib/tmdb/movie";
 import { createClient } from "../server";
 
 export async function getRecentlyWatched(supabase: Awaited<ReturnType<typeof createClient>>, userId: string): Promise<MovieSummary[] | null> {

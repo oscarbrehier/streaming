@@ -108,6 +108,7 @@ declare global {
 		cast_id?: number;
 		character: string;
 		credit_id: string;
+		known_for_department: string;
 		gender: number | null;
 		id: number;
 		name: string;
@@ -285,6 +286,15 @@ declare global {
 		chartData: SysMetric[];
 		max?: number;
 		labels?: string[];
+	};
+
+	interface AtlasQueueItem {
+		id: string;
+		media_id: string;
+		status: "pending" | "processing" | "completed";
+		user_id: string;
+		created_at: Date;
+		updated_at: Date;
 	};
 
 	type MediaHealth = {

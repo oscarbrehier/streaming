@@ -6,13 +6,14 @@ const links = [
 	{ name: "Upload Media", path: "/upload" },
 	{ name: "Media Health", path: "/media" },
 	{ name: "Transcoding Queue", path: "/transcoding" },
+	{ name: "Atlas", path: "/atlas" },
 ];
 
 export function DashboardNavbar() {
 
 	return (
 
-		<div className="w-full h-16 flex items-center px-8 z-50 fixed border-b border-border">
+		<div className="w-full h-16 flex items-center px-8 z-50 fixed border-b border-border bg-background">
 
 			<NavigationMenu>
 

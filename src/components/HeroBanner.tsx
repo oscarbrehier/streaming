@@ -1,4 +1,4 @@
-import { fetchtTMDB } from "@/utils/tmdb/fetchTMDB";
+import { fetchtTMDB } from "@/lib/tmdb/fetchTMDB";
 
 import { Info, Play } from "lucide-react";
 import Link from "next/link";

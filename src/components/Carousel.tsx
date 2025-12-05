@@ -1,6 +1,6 @@
 "use client";
 
-import { constructImg } from "@/utils/tmdb/constructImg";
+import { constructImg } from "@/lib/tmdb/constructImg";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";

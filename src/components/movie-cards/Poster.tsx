@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { glass } from "@/styles";
-import { constructImg } from "@/utils/tmdb/constructImg";
+import { constructImg } from "@/lib/tmdb/constructImg";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -31,7 +31,7 @@ export function MoviePosterCard({
 
 		hoverTimer.current = setTimeout(() => {
 			setIsCardVisible(true);
-		}, 600);
+		}, 300);
 
 	};
 

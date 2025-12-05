@@ -57,7 +57,7 @@ export function Navbar({ user }: NavbarProps) {
 					href="/recently-watched"
 					className={cn(pathname === "/recently-watched" ? "text-neutral-100" : "text-neutral-300 hover:text-neutral-100")}
 				>
-					Recently-Watched
+					Recently Watched
 				</Link>
 
 				<Link

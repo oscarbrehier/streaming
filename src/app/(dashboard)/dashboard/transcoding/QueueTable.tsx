@@ -16,7 +16,6 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table"
-import { columns } from "./columns"
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { InfoPanel } from "./InfoPanel";
@@ -24,6 +23,7 @@ import { MouseEvent, useState } from "react";
 import { ArrowRight, CircleAlert, Pause, Play, X } from "lucide-react";
 import { updateTranscodingQueue } from "@/actions/transcoding/updateQueue";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { getColumns } from "./columns";
 
 export function QueueTable({
 	queueState,
@@ -39,7 +39,10 @@ export function QueueTable({
 
 	const table = useReactTable({
 		data,
-		columns: columns,
+		columns: getColumns((job: Job) => {
+			setInfoPanelData(job);
+			setInfoPanel(true);
+		}),
 		getCoreRowModel: getCoreRowModel(),
 		getPaginationRowModel: getPaginationRowModel()
 	})
@@ -132,28 +135,13 @@ export function QueueTable({
 											</TableCell>
 										))}
 
-										<td className="h-12 flex items-center">
-											<Button
-												onClick={() => {
-
-													setInfoPanelData(row.original);
-													setInfoPanel(true);
-
-												}}
-												variant="secondary"
-												size="icon-sm"
-											>
-												<ArrowRight />
-											</Button>
-										</td>
-
 									</TableRow>
 								))
 							) : (
 								<TableRow>
-									<TableCell colSpan={columns.length} className="h-24 px-8 text-center">
+									{/* <TableCell colSpan={table.columns.length} className="h-24 px-8 text-center">
 										No results.
-									</TableCell>
+									</TableCell> */}
 								</TableRow>
 							)}
 						</TableBody>
@@ -161,7 +149,12 @@ export function QueueTable({
 
 				</div>
 
-				<div className="flex items-center justify-end space-x-2 py-4">
+				<div className="flex items-center justify-end space-x-2">
+
+					<div className="flex w-fit items-center justify-center text-sm font-medium">
+						Page {table.getState().pagination.pageIndex + 1} of{" "}
+						{table.getPageCount()}
+					</div>
 
 					<Button
 						variant="outline"

@@ -1,4 +1,4 @@
-import { constructImg } from "@/utils/tmdb/constructImg";
+import { constructImg } from "@/lib/tmdb/constructImg";
 import { GenreTags } from "./GenreTags";
 import React from "react";
 

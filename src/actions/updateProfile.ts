@@ -20,8 +20,6 @@ export async function updateProfile(data: ProfileUpdateFields) {
 		}
 	});
 
-	console.log(error)
-
 	if (error) {
 
 		createAuditLog({

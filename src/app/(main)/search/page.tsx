@@ -1,5 +1,5 @@
 import { SearchForm } from "./SearchForm";
-import { searchTMDB } from "@/utils/tmdb/search";
+import { searchTMDB } from "@/lib/tmdb/search";
 
 export default async function Page({
 	searchParams

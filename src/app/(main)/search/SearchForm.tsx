@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { constructImg } from "@/utils/tmdb/constructImg";
+import { constructImg } from "@/lib/tmdb/constructImg";
 import { Search } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";

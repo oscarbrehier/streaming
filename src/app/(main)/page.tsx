@@ -3,7 +3,7 @@ import { HeroBanner } from "@/components/HeroBanner";
 import { MoviePosterCard } from "@/components/movie-cards/Poster";
 import { getRecentlyWatched } from "@/utils/supabase/queries/userMedia";
 import { createClient } from "@/utils/supabase/server";
-import { fetchtTMDB } from "@/utils/tmdb/fetchTMDB";
+import { fetchtTMDB } from "@/lib/tmdb/fetchTMDB";
 import { redirect } from "next/navigation";
 
 export default async function Page() {
