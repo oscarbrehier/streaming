@@ -1,5 +1,5 @@
 import { getAtlasEntries } from "@/lib/api/atlas";
-import { AtlasTable } from "./AtlasTable";
+import { AtlasViewer } from "./AtlasViewer";
 
 export default async function Page() {
 
@@ -7,9 +7,11 @@ export default async function Page() {
 
 	return (
 
-		<div>
-			<AtlasTable data={atlas} />
-		</div>
+
+		<AtlasViewer
+			initialData={atlas.data}
+			totalEntries={atlas.count}
+		/>
 
 	);
 

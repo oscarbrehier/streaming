@@ -8,7 +8,7 @@ export default async function Page() {
 	return (
 
 		<AuditLogsViewer
-			initialLogs={logs.data}
+			initialData={logs.data}
 			totalEntries={logs.count}
 		/>
 

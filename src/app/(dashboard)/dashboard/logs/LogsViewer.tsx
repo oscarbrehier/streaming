@@ -5,75 +5,48 @@ import { Search, ChevronDown, Copy, Clock, User, FileText } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useLogsPagination } from "@/hooks/useLogsPagination"
+import { usePagination } from "@/hooks/usePagination"
+import { getLogEntries } from "@/lib/api/logs"
+import { getLabelBgColor, getLabelColor } from "@/utils/colors"
+import { formatRelativeTime } from "@/utils/timeFormat"
 
 export function AuditLogsViewer({
-	initialLogs,
+	initialData,
 	totalEntries,
 }: {
-	initialLogs: AuditLogs[];
+	initialData: AuditLogs[];
 	totalEntries: number;
 }) {
-	
-	const pagination = useLogsPagination({
-		initialLogs,
-		totalEntries
+
+	const pagination = usePagination({
+		initialData,
+		totalEntries,
+		fetchDataFn: getLogEntries
 	});
 
+	const [search, setSearch] = useState("");
+	const [actionFilter, setActionFilter] = useState<string>("all");
 	const [expandedId, setExpandedId] = useState<string | null>(null);
 
-	const actions = Array.from(new Set(pagination.logs.map((log) => log.action)));
+	const filteredLogs = useMemo(() => {
 
-	const getActionColor = (action: string) => {
+		return pagination.data.filter((log) => {
 
-		const hash = action.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
-		const colors = [
-			"text-blue-400",
-			"text-green-400",
-			"text-purple-400",
-			"text-orange-400",
-			"text-pink-400",
-			"text-cyan-400",
-			"text-yellow-400",
-		];
+			const matchesSearch =
+				search.toLowerCase() === "" ||
+				log.user_id.toLowerCase().includes(search.toLowerCase()) ||
+				log.resource.toLowerCase().includes(search.toLowerCase()) ||
+				log.action.toLowerCase().includes(search.toLowerCase())
 
-		return colors[hash % colors.length];
+			const matchesFilter = actionFilter === "all" || log.action === actionFilter;
 
-	};
+			return matchesSearch && matchesFilter;
 
-	const getActionBgColor = (action: string) => {
+		});
 
-		const hash = action.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
-		const colors = [
-			"bg-blue-950",
-			"bg-green-950",
-			"bg-purple-950",
-			"bg-orange-950",
-			"bg-pink-950",
-			"bg-cyan-950",
-			"bg-yellow-950",
-		];
+	}, [search, actionFilter, pagination.data]);
 
-		return colors[hash % colors.length];
-
-	};
-
-	const formatTime = (date: Date) => {
-
-		const now = new Date();
-		const diffMs = now.getTime() - date.getTime();
-		const diffMins = Math.floor(diffMs / 60000);
-		const diffHours = Math.floor(diffMs / 3600000);
-		const diffDays = Math.floor(diffMs / 86400000);
-
-		if (diffMins < 1) return "just now";
-		if (diffMins < 60) return `${diffMins}m ago`;
-		if (diffHours < 24) return `${diffHours}h ago`;
-		if (diffDays < 7) return `${diffDays}d ago`;
-
-		return date.toLocaleDateString();
-
-	};
+	const actions = Array.from(new Set(pagination.data.map((log) => log.action)));
 
 	return (
 
@@ -84,7 +57,7 @@ export function AuditLogsViewer({
 				<div>
 					<h2 className="text-xl font-semibold text-foreground">Audit Logs</h2>
 					<p className="text-sm text-muted-foreground">
-						{pagination.filteredLogs.length} on this page - {totalEntries} total
+						{filteredLogs.length} on this page - {totalEntries} total
 					</p>
 				</div>
 
@@ -94,16 +67,16 @@ export function AuditLogsViewer({
 						<Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
 						<Input
 							placeholder="Search by user, resource, or action..."
-							value={pagination.search}
-							onChange={(e) => pagination.setSearch(e.target.value)
+							value={search}
+							onChange={(e) => setSearch(e.target.value)
 							}
 							className="pl-9 bg-muted border-border"
 						/>
 					</div>
 
 					<Select
-						value={pagination.actionFilter}
-						onValueChange={(e) => pagination.setActionFilter(e)}
+						value={actionFilter}
+						onValueChange={(e) => setActionFilter(e)}
 					>
 						<SelectTrigger className="w-[180px]">
 							<SelectValue placeholder="Select a fruit" />
@@ -160,7 +133,7 @@ export function AuditLogsViewer({
 			<div className="space-y-1 border border-border rounded-lg bg-card overflow-hidden">
 
 				{
-					pagination.filteredLogs.length === 0 ? (
+					filteredLogs.length === 0 ? (
 
 						<div className="p-8 text-center" >
 							<FileText className="w-10 h-10 text-muted-foreground mx-auto mb-2 opacity-50" />
@@ -169,7 +142,7 @@ export function AuditLogsViewer({
 
 					) : (
 
-						pagination.filteredLogs.map((log, idx) => (
+						filteredLogs.map((log, idx) => (
 							<div
 								key={log.id}
 								className={`border-b border-border last:border-b-0 transition-colors hover:bg-muted/30 ${expandedId === log.id ? "bg-muted/50" : ""
@@ -183,11 +156,11 @@ export function AuditLogsViewer({
 
 									<div className="shrink-0 w-24 text-xs text-muted-foreground font-mono flex items-center gap-1">
 										<Clock className="w-3 h-3 opacity-50" />
-										{formatTime(new Date(log.created_at))}
+										{formatRelativeTime(new Date(log.created_at))}
 									</div>
 
 									<div
-										className={`shrink-0 px-2 py-1 rounded font-mono text-xs font-semibold ${getActionBgColor(log.action)} ${getActionColor(log.action)}`}
+										className={`shrink-0 px-2 py-1 rounded font-mono text-xs font-semibold ${getLabelBgColor(log.action)} ${getLabelColor(log.action)}`}
 									>
 										{log.action}
 									</div>
@@ -258,7 +231,7 @@ export function AuditLogsViewer({
 			{/* {
 				totalEntries > 0 && (
 					<div className="text-xs text-muted-foreground text-center py-8 border-t border-border" >
-						Showing {pagination.filteredLogs.length} of {totalEntries} initialLogs
+						Showing {pagination.filteredLogs.length} of {totalEntries} initialData
 					</div>
 				)
 			} */}

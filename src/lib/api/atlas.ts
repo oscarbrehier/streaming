@@ -34,16 +34,23 @@ export async function addToAtlas(mediaId: string): Promise<{ success: boolean }>
 
 };
 
-export async function getAtlasEntries(): Promise<AtlasQueueItem[]> {
+export async function getAtlasEntries(pageIndex?: number, pageSize?: number): Promise<{ data: AtlasQueueItem[], count: number }> {
+
+	if (!pageSize) pageSize = 10;
+
+	const from = ((pageIndex ?? 1) - 1) * pageSize;
+	const to = from + pageSize - 1;
 
 	const supabase = await createClient();
-	const { data, error } = await supabase
+	const { data, count, error } = await supabase
 		.from("atlas_queue")
-		.select("*");
+		.select("*", { count: "exact" })
+		.range(from, to)
+		.order("created_at", { ascending: false });
 
-	if (error || data.length === 0) return [];
+	if (error || data.length === 0) return { data: [], count: count ?? 0 };
 
-	return data;
+	return { data, count: count ?? data.length };
 
 };
 
