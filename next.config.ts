@@ -18,6 +18,10 @@ const nextConfig: NextConfig = {
         hostname: "image.tmdb.org",
         port: "",
         pathname: "/t/p/**"
+      },
+      {
+        protocol: "https",
+        hostname: "api.dicebear.com"
       }
     ]
   }

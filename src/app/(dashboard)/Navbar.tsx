@@ -1,19 +1,21 @@
 import { NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuList } from "@/components/ui/navigation-menu";
 import Link from "next/link";
+import { DashboardUser } from "./User";
 
 const links = [
-	{ name: "Home", path: "" },
+	{ name: "Overview", path: "" },
 	{ name: "Upload Media", path: "/upload" },
 	{ name: "Media Health", path: "/media" },
 	{ name: "Transcoding Queue", path: "/transcoding" },
 	{ name: "Atlas", path: "/atlas" },
+	{ name: "Logs", path: "/logs" },
 ];
 
 export function DashboardNavbar() {
 
 	return (
 
-		<div className="w-full h-16 flex items-center px-8 z-50 fixed border-b border-border bg-background">
+		<div className="w-full h-16 flex justify-between items-center px-8 z-50 fixed border-b border-border bg-background">
 
 			<NavigationMenu>
 
@@ -32,6 +34,8 @@ export function DashboardNavbar() {
 				</NavigationMenuList>
 
 			</NavigationMenu>
+
+			<DashboardUser />
 
 		</div>
 

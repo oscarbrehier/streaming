@@ -13,7 +13,8 @@ export async function getLogEntries(pageIndex?: number, pageSize?: number): Prom
 	const { data, count, error } = await supabase
 		.from("audit_logs")
 		.select("*", { count: "exact" })
-		.range(from, to);
+		.range(from, to)
+		.order("created_at", { ascending: false });
 
 	if (error || data.length === 0) return { count: count ?? 0, data: [] };
 
