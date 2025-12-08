@@ -5,7 +5,7 @@ import { constructImg } from "@/lib/tmdb/constructImg";
 import { getMainCast, getMovie } from "@/lib/tmdb/movie";
 import { Download, Play } from "lucide-react";
 import Link from "next/link";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { SuggestContentButton } from "./SuggestContentButton";
 
 interface PageProps {
@@ -42,6 +42,10 @@ export default async function Page({
 	const { id: mediaId } = await params;
 
 	const movieDetails = await getMovie(mediaId);
+	if (!movieDetails) {
+		notFound();
+	}
+
 	const mainCast = await getMainCast(mediaId, 3);
 
 	let userMediaStatus: UserMediaStatus | null = null;
@@ -83,7 +87,7 @@ export default async function Page({
 				style={{
 					backgroundImage: `linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0)), url('${constructImg(movieDetails.poster_path!)}')`
 				}}
-				className="h-screen w-full absolute bg-cover bg-center top-0 left-0 md:hidden block"
+				className="h-screen w-full absolute bg-cover bg-center top-0 left-0  md:hidden block"
 			/>
 
 

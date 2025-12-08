@@ -1,7 +1,7 @@
 "use client"
 
 import { cn } from "@/lib/utils";
-import { Search } from "lucide-react";
+import { Home, Search } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ChangeEvent, useRef } from "react";
@@ -38,90 +38,112 @@ export function Navbar({ user }: NavbarProps) {
 
 	return (
 
-		<div className="w-full sm:px-8 px-4 h-18 flex items-center justify-between z-10">
+		<div className={cn(
+			"h-screen w-16 bg-card fixed top-0 left-0 z-10 flex flex-col items-center justify-between py-4 border-r border-border"
+		)}>
 
-			<div className={cn(
-				"rounded-full h-10 px-6 flex items-center space-x-10",
-				glass("active"),
-				"bg-neutral-800/30"
-			)}>
-
-				<Link
-					href="/"
-					className={cn(pathname === "/" ? "text-neutral-100" : "text-neutral-300 hover:text-neutral-100")}
-				>
-					Home
-				</Link>
-
-				<Link
-					href="/recently-watched"
-					className={cn(pathname === "/recently-watched" ? "text-neutral-100" : "text-neutral-300 hover:text-neutral-100")}
-				>
-					Recently Watched
-				</Link>
-
-				<Link
-					href="/network"
-					className={cn(pathname === "/network" ? "text-neutral-100" : "text-neutral-300 hover:text-neutral-100")}
-				>
-					Network
-				</Link>
+			<div className="flex flex-col space-y-6 pt-4">
+				<Home />
+				<Search />
 
 			</div>
 
-
-			<div className="flex space-x-4">
-
-				{pathname !== "/search" && (
-
-					<>
-
-						<div className={cn(
-							"md:flex hidden rounded-4xl bg-neutral-800 h-10 items-center justify-between px-4 space-x-4 group",
-							glass("on-focus")
-						)}>
-
-							<input
-								type="text"
-								placeholder="Search"
-								className="outline-none"
-								onChange={handleSearch}
-							/>
-
-							<Search size={20} className="text-neutral-500" />
-
-						</div>
-
-						<Link
-							href="/search"
-							className="md:hidden flex rounded-full md:bg-neutral-800 bg-neutral-800/30 size-10 items-center justify-center"
-						>
-							<Search size={20} className="md:text-neutral-500 text-neutral-100" />
-						</Link>
-
-					</>
-
-				)}
+			<div>
 
 				{
 					user && (
-
 						<Link
 							href="/profile"
 							className="size-10 rounded-full overflow-hidden"
 						>
 							<img
-								className="size-10"
+								className="size-10 rounded-full"
 								src={avatar(user.user_metadata.display_name)}
 							/>
 						</Link>
-
 					)
 				}
 
 			</div>
 
-		</div>
+		</div >
+
+		// <div className="w-full sm:px-8 px-4 h-18 flex items-center justify-end z-10">
+
+		// 	<div className={cn(
+		// 		"rounded-full h-10 px-6 flex items-center space-x-10",
+		// 		glass("on-focus"),
+		// 	)}>
+
+		// 		<Link
+		// 			href="/"
+		// 			className={cn(pathname === "/" ? "text-neutral-100" : "text-neutral-300 hover:text-neutral-100")}
+		// 		>
+		// 			Home
+		// 		</Link>
+
+		// 		<Link
+		// 			href="/recently-watched"
+		// 			className={cn(pathname === "/recently-watched" ? "text-neutral-100" : "text-neutral-100 hover:text-neutral-100")}
+		// 		>
+		// 			Watched
+		// 		</Link>
+
+		// 	</div>
+
+
+		// 	<div className="flex space-x-4">
+
+		// 		{pathname !== "/search" && (
+
+		// 			<>
+
+		// 				<div className={cn(
+		// 					"md:flex hidden rounded-4xl bg-neutral-800 h-10 items-center justify-between px-4 space-x-4 group",
+		// 					glass("on-focus")
+		// 				)}>
+
+		// 					<input
+		// 						type="text"
+		// 						placeholder="Search"
+		// 						className="outline-none"
+		// 						onChange={handleSearch}
+		// 					/>
+
+		// 					<Search size={20} className="text-neutral-500" />
+
+		// 				</div>
+
+		// 				<Link
+		// 					href="/search"
+		// 					className="md:hidden flex rounded-full md:bg-neutral-800 bg-neutral-800/30 size-10 items-center justify-center"
+		// 				>
+		// 					<Search size={20} className="md:text-neutral-500 text-neutral-100" />
+		// 				</Link>
+
+		// 			</>
+
+		// 		)}
+
+		// 		{
+		// 			user && (
+
+		// 				<Link
+		// 					href="/profile"
+		// 					className="size-10 rounded-full overflow-hidden"
+		// 				>
+		// 					<img
+		// 						className="size-10"
+		// 						src={avatar(user.user_metadata.display_name)}
+		// 					/>
+		// 				</Link>
+
+		// 			)
+		// 		}
+
+		// 	</div>
+
+		// </div>
 
 	);
 

@@ -67,13 +67,8 @@ export default async function Page({ params }: PageProps) {
 		return <MediaNotFound />;
 	};
 
-	let movie: MovieDetailsWithImages;
-
-	try {
-		movie = await getMovie(id);
-	} catch (err) {
-		return <MediaNotFound />
-	};
+	const movie = await getMovie<MovieDetailsWithImages>(id);
+	if (!movie) return <MediaNotFound />
 
 	return (
 

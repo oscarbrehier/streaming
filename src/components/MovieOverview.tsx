@@ -14,7 +14,7 @@ export function MovieOverview({
 
 	return (
 
-		<div className="absolute left-0 bottom-0 sm:p-8 p-4 w-full space-y-6 flex flex-col items-start">
+		<div className="absolute left-16 w-[calc(100%-64px)] bottom-0 sm:p-8 p-4 space-y-6 flex flex-col items-start">
 
 			<GenreTags genres={movie.genres} />
 

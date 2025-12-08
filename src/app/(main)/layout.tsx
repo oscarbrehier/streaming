@@ -14,10 +14,15 @@ export default async function RootLayout({
 
 	return (
 
-		<div className="min-h-screen flex flex-col bg-card">
+		<div className="min-h-screen flex bg-card">
 
-			<Navbar user={{ email: user?.email, user_metadata: user?.user_metadata ?? {} }} />
-			{children}
+			<div>
+				<Navbar user={{ email: user?.email, user_metadata: user?.user_metadata ?? {} }} />
+			</div>
+			
+			<div className="min-h-screen pl-16 flex-1 overflow-hidden">
+				{children}
+			</div>
 
 		</div>
 

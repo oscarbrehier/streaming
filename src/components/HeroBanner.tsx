@@ -14,7 +14,7 @@ export async function HeroBanner() {
 
 	return (
 
-		<div className="absolute top-0 left-0 h-[85vh] w-full overflow-hidden">
+		<div className="absolute top-0 left-0 w-full h-[85vh] overflow-hidden">
 
 			<div
 				className="absolute top-0 left-0 h-[85vh] w-full bg-cover bg-center md:block hidden"
