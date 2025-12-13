@@ -11,8 +11,8 @@ export async function searchTMDB(query: string, type: "all" | "movie" | "tv" | n
 
 		if (type === "all") {
 
-			const movies = await fetchtTMDB(baseEndpoint("movie"));
-			const tv = await fetchtTMDB(baseEndpoint("tv"));
+			const movies = await fetchtTMDB(baseEndpoint("movie"), { next: { revalidate: 120 } });
+			const tv = await fetchtTMDB(baseEndpoint("tv"), { next: { revalidate: 120 } });
 
 			const combined = {
 				...movies,
@@ -28,7 +28,7 @@ export async function searchTMDB(query: string, type: "all" | "movie" | "tv" | n
 
 		};
 
-		const data = await fetchtTMDB(baseEndpoint(type));
+		const data = await fetchtTMDB(baseEndpoint(type), { next: { revalidate: 120 } });
 		return data;
 
 	} catch (err) {

@@ -15,7 +15,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { avatar } from "@/utils/getAvatar";
+import { avatar } from "@/utils/avatar";
 import { LoaderCircle } from "lucide-react";
 import Link from "next/link";
 import { useActionState, useState } from "react";

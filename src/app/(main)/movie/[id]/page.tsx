@@ -3,10 +3,12 @@ import { createClient } from "@/utils/supabase/server";
 import { formatTimeHuman } from "@/utils/timeFormat";
 import { constructImg } from "@/lib/tmdb/constructImg";
 import { getMainCast, getMovie } from "@/lib/tmdb/movie";
-import { Download, Play } from "lucide-react";
+import { Play } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { SuggestContentButton } from "./SuggestContentButton";
+import { isInWatchlist } from "@/utils/db/watchlist";
+import { AddToWatchlist } from "./AddToWatchlist";
 
 interface PageProps {
 	params: Promise<{ id: string }>;
@@ -43,6 +45,7 @@ export default async function Page({
 
 	const movieDetails = await getMovie(mediaId);
 	const mainCast = await getMainCast(mediaId, 3);
+	const isMovieInWatchlist = await isInWatchlist(mediaId);
 
 	let userMediaStatus: UserMediaStatus | null = null;
 
@@ -74,7 +77,7 @@ export default async function Page({
 
 			<div
 				style={{
-					backgroundImage: `linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0)), url('${constructImg(movieDetails.backdrop_path!)}')`
+					backgroundImage: `linear-gradient(to top, rgba(0,0,0,0.6), rgba(0,0,0,0)), url('${constructImg(movieDetails.backdrop_path!)}')`
 				}}
 				className="h-screen w-full absolute bg-cover bg-center top-0 left-0 md:block hidden"
 			/>
@@ -86,14 +89,19 @@ export default async function Page({
 				className="h-screen w-full absolute bg-cover bg-center top-0 left-0 md:hidden block"
 			/>
 
-
-
-
 			<MovieOverview
 				movie={movieDetails}
 			>
 
 				<div className="py-4 text-neutral-300">
+
+					<div>
+						<p>
+							{movieDetails.vote_average.toFixed(1)} {" "}
+							<span className="text-neutral-300 text-sm">/ 10</span>
+						</p>
+					</div>
+
 					{mainCast && (
 						<p>
 							<span className="font-medium">Starring:</span> {mainCast.map((member) => member.name).join(", ")}
@@ -131,21 +139,30 @@ export default async function Page({
 
 				)}
 
-				{isStreamAvailable ? (
+				<div className="flex space-x-4">
 
-					<Link
-						href={`/watch/${movieDetails.id}`}
-						className="capitalize bg-white text-black text-lg h-10 px-6 rounded-3xl cursor-pointer flex items-center space-x-4"
-					>
-						<Play className="text-black mt-0.5" fill="#000" size={16} />
-						<span>{userMediaStatus ? "Resume" : "Watch Now"}</span>
-					</Link>
+					{isStreamAvailable ? (
 
-				) : (
+						<Link
+							href={`/watch/${movieDetails.id}`}
+							className="capitalize bg-white text-black text-md h-10 px-6 rounded-3xl cursor-pointer flex items-center space-x-4"
+						>
+							<Play className="text-black mt-0.5" fill="#000" size={16} />
+							<span>{userMediaStatus ? "Resume" : "Watch Now"}</span>
+						</Link>
 
-					<SuggestContentButton mediaId={mediaId} />
+					) : (
 
-				)}
+						<SuggestContentButton mediaId={mediaId} />
+
+					)}
+
+					<AddToWatchlist
+						isAdded={isMovieInWatchlist}
+						mediaId={mediaId}
+					/>
+
+				</div>
 
 			</MovieOverview>
 

@@ -9,7 +9,7 @@ import { glass } from "@/styles";
 export async function HeroBanner() {
 
 	const mediaType = "movie";
-	const mediaId = process.env.HERO_ID ?? 1052;
+	const mediaId = process.env.HERO_ID ?? 649;
 	const data = await fetchtTMDB(`/${mediaType}/${mediaId}?language=en-US&append_to_response=images`);
 
 	return (
@@ -38,7 +38,7 @@ export async function HeroBanner() {
 
 					<Link
 						href={`/watch/${data.id}`}
-						className="capitalize bg-neutral-200 text-black text-lg h-10 px-6 rounded-3xl cursor-pointer flex items-center sm:space-x-4"
+						className="capitalize bg-neutral-200 text-black text-md h-10 px-6 rounded-3xl cursor-pointer flex items-center sm:space-x-4"
 					>
 						<Play className="text-black mt-0.5" fill="#000" size={16} />
 						<span className="sm:block hidden">Watch now</span>
@@ -47,7 +47,7 @@ export async function HeroBanner() {
 					<Link
 						href={`/movie/${data.id}`}
 						className={cn(
-							"capitalize text-lg h-10 px-6 rounded-3xl cursor-pointer flex items-center sm:space-x-4",
+							"capitalize text-md h-10 px-6 rounded-3xl cursor-pointer flex items-center sm:space-x-4",
 							glass("active")
 						)}
 					>

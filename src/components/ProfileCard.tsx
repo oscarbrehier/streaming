@@ -1,6 +1,6 @@
 import { ProfileForm } from "@/app/(main)/profile/ProfileForm";
 import { Card, CardContent } from "@/components/ui/card";
-import { avatar } from "@/utils/getAvatar";
+import { avatar } from "@/utils/avatar";
 import { UserMetadata } from "@supabase/supabase-js";
 
 export function ProfileCard({

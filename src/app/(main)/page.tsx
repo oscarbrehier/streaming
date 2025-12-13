@@ -24,7 +24,7 @@ export default async function Page() {
 
 			<div className="h-[85vh] w-full"></div>
 
-			<div className="w-full flex flex-col items-center space-y-10">
+			<div className="w-full flex flex-col items-center space-y-10 mt-10">
 
 				<Carousel
 					data={topToday.results.slice(0, 12)}

@@ -1,7 +1,8 @@
 import { getImages } from "./getImages";
 
-export function constructImg(path: string) {
+export function constructImg(path: string | null) {
 
+	if (!path) return "" ;
 	return `https://image.tmdb.org/t/p/original${path}`;
 
 };

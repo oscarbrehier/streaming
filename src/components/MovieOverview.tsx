@@ -28,7 +28,7 @@ export function MovieOverview({
 				<h1 className="text-neutral-100 text-6xl font-extrabold tracking-tight text-balance">{movie.title}</h1>
 			)}
 
-			<p className="text-stone-100 w-full max-w-md">
+			<p className="text-stone-100 w-full max-w-2xl">
 				{
 					movie.overview
 				}

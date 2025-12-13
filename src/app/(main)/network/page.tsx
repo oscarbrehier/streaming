@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { avatar } from "@/utils/getAvatar";
+import { avatar } from "@/utils/avatar";
 import { createClient } from "@/utils/supabase/server";
 
 async function getPublicProfiles() {

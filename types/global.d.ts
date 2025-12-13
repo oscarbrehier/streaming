@@ -329,6 +329,14 @@ declare global {
 		jobs: Job[];
 	}
 
+	type Wishlist = {
+		id: string;
+		user_id: string;
+		movie_id: string;
+		media_type: "movie" | "tv";
+		created_at: Date;
+	}
+
 
 };
 

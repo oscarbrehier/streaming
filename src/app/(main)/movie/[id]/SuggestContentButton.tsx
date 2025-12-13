@@ -33,7 +33,7 @@ export function SuggestContentButton({
 		<button
 			onClick={handleOnClick}
 			disabled={btnState === "success" || btnState === "loading"}
-			className="group capitalize bg-white disabled:bg-muted text-black disabled:text-muted-foreground disabled:cursor-not-allowed text-lg h-10 px-6 rounded-3xl cursor-pointer flex items-center space-x-4"
+			className="group capitalize bg-white disabled:bg-muted text-black disabled:text-muted-foreground disabled:cursor-not-allowed text-md h-10 px-6 rounded-3xl cursor-pointer flex items-center space-x-4"
 		>
 
 			{

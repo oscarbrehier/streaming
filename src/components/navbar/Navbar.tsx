@@ -1,13 +1,12 @@
 "use client"
 
 import { cn } from "@/lib/utils";
-import { Home, Search } from "lucide-react";
+import { Bookmark, Home, Search } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ChangeEvent, useRef } from "react";
 import { User } from "@supabase/supabase-js";
-import { avatar } from "@/utils/getAvatar";
-import { glass } from "@/styles";
+import { avatar } from "@/utils/avatar";
 
 interface NavbarProps {
 	user: Pick<User, "user_metadata" | "email"> | null;
@@ -16,6 +15,7 @@ interface NavbarProps {
 const links = [
 	{ icon: Home, path: "/" },
 	{ icon: Search, path: "/search" },
+	{ icon: Bookmark, path: "/watchlist" }
 ];
 
 export function Navbar({ user }: NavbarProps) {
@@ -43,7 +43,7 @@ export function Navbar({ user }: NavbarProps) {
 
 	return (
 
-		<div className="fixed bottom-4 right-4 h-auto w-16 z-40 bg-card border border-border rounded-full flex flex-col items-center justify-between p-4 space-y-20">
+		<div className="fixed bottom-4 right-4 h-auto w-16 z-40 bg-card border border-border rounded-full flex flex-col items-center justify-between p-4 space-y-14">
 
 			<div className="flex flex-col space-y-4">
 

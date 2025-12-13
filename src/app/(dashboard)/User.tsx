@@ -1,4 +1,4 @@
-import { avatar } from "@/utils/getAvatar";
+import { avatar } from "@/utils/avatar";
 import { createClient } from "@/utils/supabase/server"
 import Image from "next/image";
 import { redirect } from "next/navigation";
