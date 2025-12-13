@@ -8,12 +8,19 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useRef } from "react";
 
+export type MovieCardItem = {
+	id: number;
+	title: string;
+	poster_path: string | null;
+	overview: string;
+};
+
 export function MoviePosterCard({
 	movie,
 	action,
 	hoverable
 }: {
-	movie: MovieSummary;
+	movie: MovieCardItem;
 	action?: string;
 	hoverable?: boolean;
 }) {
@@ -77,7 +84,7 @@ function HoverCard({
 	alignRight,
 	visible
 }: {
-	movie: MovieSummary;
+	movie: MovieCardItem;
 	alignRight: boolean;
 	visible: boolean;
 }) {

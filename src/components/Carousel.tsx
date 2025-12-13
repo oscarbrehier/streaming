@@ -1,18 +1,15 @@
 "use client";
 
-import { constructImg } from "@/lib/tmdb/constructImg";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
-export function Carousel({
+export function Carousel<T extends { id: number }>({
 	data,
 	card,
 	title,
 }: {
-	data: MovieSummary[];
-	card: ({ movie }: { movie: MovieSummary; }) => React.ReactNode;
+	data: T[];
+	card: (props: { movie: T }) => React.ReactNode;
 	title: string;
 }) {
 

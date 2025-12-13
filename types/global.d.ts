@@ -69,7 +69,7 @@ declare global {
 		imdb_id: string | null;
 		original_language: string;
 		original_title: string;
-		overview: string | null;
+		overview: string;
 		popularity: number;
 		poster_path: string | null;
 		production_companies: ProductionCompany[];

@@ -1,6 +1,6 @@
 import { constructImg } from "@/lib/tmdb/constructImg";
 import { getMovie } from "@/lib/tmdb/movie";
-import { getWatchlist } from "@/utils/db/watchlist";
+import { getWatchlist, getWatchlistEntries } from "@/utils/db/watchlist";
 import { createClient } from "@/utils/supabase/server";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -12,17 +12,7 @@ export default async function Page() {
 
 	if (!session?.access_token) redirect("/login");
 
-	const { data: watchlist, error } = await getWatchlist(session);
-	if (error) notFound();
-
-	const movies = (await Promise.all(
-		watchlist.map(async (item) => {
-
-			const movie = await getMovie<MovieDetails>(item.movie_id);
-			return movie;
-
-		})
-	)).filter(Boolean);
+	const watchlist = await getWatchlist(session);
 
 	return (
 
@@ -33,7 +23,7 @@ export default async function Page() {
 			<div className="flex flex-col space-y-4">
 
 				{
-					movies.map((movie) => (
+					watchlist.map((movie) => (
 
 						<Link
 							key={movie.id}

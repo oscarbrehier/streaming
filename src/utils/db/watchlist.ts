@@ -1,9 +1,7 @@
 "use server"
 
 import { createClient } from "../supabase/server"
-import { Session } from "@supabase/supabase-js";
-import { cacheTag, revalidateTag } from "next/cache";
-import { createClientWithSession } from "../supabase/createClientWithSession";
+import { getMovie } from "@/lib/tmdb/movie";
 
 export async function addToWatchlist(mediaId: string, mediaType?: "movie" | "tv"): Promise<{ success?: boolean, error?: string }> {
 
@@ -21,20 +19,17 @@ export async function addToWatchlist(mediaId: string, mediaType?: "movie" | "tv"
 		});
 
 	if (error) return { error: error.message };
-	
-	revalidateTag(`watchlist-${user.id}`, "max");
+
 	return { success: true };
 
 };
 
-export async function getWatchlist(session: Session, mediaId?: string): Promise<{ data: Wishlist[], error?: string }> {
+export async function getWatchlistEntries(mediaId?: string): Promise<{ data: Wishlist[], error?: string }> {
 
-	"use cache"
-if (!session) return { data: [], error: "User not authenticated" };
+	const supabase = await createClient();
+	const { data: { user } } = await supabase.auth.getUser();
 	
-	cacheTag(`watchlist-${session.user.id}`);
-
-	const supabase = createClientWithSession(session);
+	if (!user) return { data: [], error: "User not authenticated" };
 
 	const query = supabase
 		.from("watchlists")
@@ -48,6 +43,24 @@ if (!session) return { data: [], error: "User not authenticated" };
 
 	if (error) return { data: [], error: error.message };
 	return { data };
+
+};
+
+export async function getWatchlist(): Promise<MovieDetails[]> {
+
+	const { data: watchlistEntries, error } = await getWatchlistEntries();
+	if (error || watchlistEntries.length == 0) return [];
+
+	const watchlist = (await Promise.all(
+		watchlistEntries.map(async (item) => {
+
+			const movie = await getMovie<MovieDetails>(item.movie_id);
+			return movie;
+
+		})
+	)).filter(Boolean);
+
+	return watchlist;
 
 };
 
