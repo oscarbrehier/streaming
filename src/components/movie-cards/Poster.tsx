@@ -17,12 +17,12 @@ export type MovieCardItem = {
 
 export function MoviePosterCard({
 	movie,
-	loading,
+	loading = "lazy",
 	action,
 	hoverable
 }: {
 	movie: MovieCardItem;
-	loading: "eager" | "lazy",
+	loading?: "eager" | "lazy",
 	action?: string;
 	hoverable?: boolean;
 }) {

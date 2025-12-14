@@ -1,7 +1,7 @@
 "use client"
 
 import { MediaSelector } from "@/components/dashboard/MediaSelector";
-import FileUploadSection from "@/components/FileUpload";
+import FileUploadSection from "@/app/(dashboard)/dashboard/upload/FileUpload";
 import { useState } from "react";
 
 export default function Page() {

@@ -1,4 +1,4 @@
-import { MediaPreview } from "@/app/(dashboard)/dashboard/upload/MediaPreview"
+import { MediaPreview } from "@/components/dashboard/MediaPreview"
 import { Input } from "../ui/input"
 import { Button } from "../ui/button"
 import { constructImg } from "@/lib/tmdb/constructImg"
