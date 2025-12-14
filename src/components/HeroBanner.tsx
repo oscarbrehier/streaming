@@ -1,7 +1,5 @@
 "use client"
 
-import { fetchtTMDB } from "@/lib/tmdb/fetchTMDB";
-
 import { Info, Play } from "lucide-react";
 import Link from "next/link";
 import { MovieOverview } from "./MovieOverview";
@@ -9,56 +7,28 @@ import { cn } from "@/lib/utils";
 import { glass } from "@/styles";
 import { useEffect, useState } from "react";
 
-export function HeroBanner() {
+export function HeroBanner({
+	items
+}: {
+	items: MovieDetailsWithImages[];
+}) {
 
-	const itemIds = [649];
-
-	const [items, setItems] = useState<(MovieDetailsWithImages | null)[]>(Array(itemIds.length).fill(null));
 	const [visibleIdx, setVisibleIdx] = useState(0);
 
-	const mediaType = "movie";
-
 	useEffect(() => {
 
-		async function fetchSlide(idx: number) {
-
-			if (!items[idx]) {
-
-				const mediaId = itemIds[idx];
-				const data = await fetchtTMDB(`/${mediaType}/${mediaId}?language=en-US&append_to_response=images`);
-
-				setItems(prev => {
-					const copy = [...prev];
-					copy[idx] = data;
-					return copy;
-				});
-
-			}
-
-		};
-
-		fetchSlide(visibleIdx);
-
-		if (itemIds.length > 1) {
-			fetchSlide((visibleIdx + 1) % itemIds.length);
-		};
-
-	}, [visibleIdx]);
-
-	useEffect(() => {
-
-		if (itemIds.length <= 1) return;
+		if (items.length <= 1) return;
 
 		const interval = setInterval(() => {
-			setVisibleIdx((prev) => (prev + 1) % itemIds.length);
+			setVisibleIdx((prev) => (prev + 1) % items.length);
 		}, 5000);
 
 		return () => clearInterval(interval);
 
 	}, []);
 
-	const renderIndices = itemIds.length > 1
-		? [visibleIdx, (visibleIdx + 1) % itemIds.length]
+	const renderIndices = items.length > 1
+		? [visibleIdx, (visibleIdx + 1) % items.length]
 		: [visibleIdx];
 
 	return (
@@ -134,7 +104,7 @@ export function HeroBanner() {
 				</div>
 
 			)}
-			
+
 		</div>
 
 	);

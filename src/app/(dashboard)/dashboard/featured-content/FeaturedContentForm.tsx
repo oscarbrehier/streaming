@@ -9,9 +9,6 @@ import { Textarea } from "@/components/ui/textarea"
 import { FormEvent, useState } from "react"
 import { addFeaturedContent } from "@/utils/db/featuredContent"
 
-const FEATURE_TYPES = ["hero", "banner", "spotlight", "trending"] as const;
-type FeatureType = (typeof FEATURE_TYPES)[number];
-
 type FeaturedContentFormState = {
 	headline: string;
 	subheadline: string;
@@ -149,11 +146,12 @@ export function FeaturedContentForm({
 
 							<SelectContent>
 
-								{FEATURE_TYPES.map((type) => (
+								{["hero" , "banner" , "spotlight" , "trending"].map((type) => (
 									<SelectItem key={type} value={type}>
 										{type[0].toUpperCase() + type.slice(1)}
 									</SelectItem>
 								))}
+
 							</SelectContent>
 
 						</Select>

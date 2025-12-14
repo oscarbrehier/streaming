@@ -335,7 +335,23 @@ declare global {
 		movie_id: string;
 		media_type: "movie" | "tv";
 		created_at: Date;
-	}
+	};
+
+	type FeatureType = "hero" | "banner" | "spotlight" | "trending";
+
+	type FeaturedContent = {
+		id: string;
+		movie_id: string;
+		headline?: string;
+		subheadling?: string;
+		feature_type: FeatureType;
+		is_active: boolean;
+		active_from?: Date;
+		active_to?: Date;
+		priority: number;
+		created_at: Date;
+		updated_at: Date;
+	};
 
 
 };

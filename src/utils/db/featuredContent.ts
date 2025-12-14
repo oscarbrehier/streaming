@@ -1,21 +1,8 @@
 "use server"
 
+import { getMovie } from "@/lib/tmdb/movie";
 import { createClient } from "../supabase/server";
-import { createAuditLog } from "./createAuditLog";
-
-type FeaturedContent = {
-	id: string;
-	movie_id: string;
-	headline?: string;
-	subheadling?: string;
-	feature_type: string;
-	is_active: boolean;
-	active_from?: Date;
-	active_to?: Date;
-	priority: number;
-	created_at: Date;
-	updated_at: Date;
-};
+import { createAuditLog } from "./createAuditLog"
 
 export async function addFeaturedContent(options: Partial<FeaturedContent>): Promise<{ success: boolean, error?: string }> {
 
@@ -36,7 +23,7 @@ export async function addFeaturedContent(options: Partial<FeaturedContent>): Pro
 
 		return {
 			success: false,
-			error: error.message 
+			error: error.message
 		};
 
 	}
@@ -45,20 +32,38 @@ export async function addFeaturedContent(options: Partial<FeaturedContent>): Pro
 
 };
 
-export async function getFeaturedContent(options: Partial<FeaturedContent>): Promise<FeaturedContent[]> {
+export async function getFeaturedContent(options: Partial<FeaturedContent> & { select?: string, limit?: number }): Promise<Partial<FeaturedContent>[]> {
 
 	const supabase = await createClient();
 	let query = supabase
 		.from("featured_content")
-		.select("*");
+		.select(options.select ?? "*");
 
 	for (const [option, value] of Object.entries(options)) {
-		if (value !== undefined) query = query.eq(option, value);
+
+		if (value === undefined || option === "select" || option === "limit") continue;
+
+		const v = value instanceof Date ? value.toISOString() : value;
+
+		if (option === "active_from") {
+			query = query.lte("active_from", v).or("active_from.is.null");
+		} else if (option === "active_to") {
+			query = query.gte("active_to", v).or("active_to.is.null");
+		} else {
+			query = query.eq(option, value);
+		};
+
 	};
+
+	if (options.limit) {
+		query = query.limit(options.limit);
+	}
 
 	const { data, error } = await query;
 
 	if (error) {
+
+		console.log(error)
 
 		createAuditLog({
 			action: "fetch_failed",
@@ -72,6 +77,36 @@ export async function getFeaturedContent(options: Partial<FeaturedContent>): Pro
 
 	};
 
-	return data;
+	console.log(data);
+
+	return (data ?? []) as Partial<FeaturedContent>[];
+
+};
+
+export async function getHeroBannerItems(): Promise<MovieDetailsWithImages[]> {
+
+
+	const data = await getFeaturedContent({
+		feature_type: "hero",
+		is_active: true,
+		select: "movie_id, priority",
+		limit: 5
+	});
+
+	const sortedByPriority = data.sort((a, b) => a.priority! - b.priority!);
+	let items = await Promise.all(sortedByPriority
+		.map(async (item) => {
+			const res = await getMovie(item.movie_id!);
+			return res;
+		})
+		.filter(Boolean)
+	);
+
+	if (!items.length) {
+		const defaultMovieIds = [649, 456, 789];
+		items = await Promise.all(defaultMovieIds.map(id => getMovie(id.toString())));
+	}
+
+	return items;
 
 };

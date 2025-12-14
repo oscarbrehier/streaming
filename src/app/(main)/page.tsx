@@ -6,6 +6,7 @@ import { createClient } from "@/utils/supabase/server";
 import { fetchtTMDB } from "@/lib/tmdb/fetchTMDB";
 import { redirect } from "next/navigation";
 import { getWatchlist } from "@/utils/db/watchlist";
+import { getHeroBannerItems } from "@/utils/db/featuredContent";
 
 type CarouselItem<T extends { id: number }> = {
 	data: T[],
@@ -19,6 +20,10 @@ export default async function Page() {
 	const { data: { user } } = await supabase.auth.getUser();
 
 	if (!user) redirect("/login");
+
+	const heroBannerItems = await getHeroBannerItems();
+
+	console.log(heroBannerItems)
 
 	const topToday = await fetchtTMDB<MovieSearchResponse>("/discover/movie?include_adult=false&include_video=false&language=en-US&page=1&sort_by=popularity.desc");
 	const recentlyWatched = await getRecentlyWatched(supabase, user.id);
@@ -34,7 +39,7 @@ export default async function Page() {
 
 		<div className="h-auto w-full pb-8 dark flex flex-col items-center">
 
-			<HeroBanner />
+			<HeroBanner items={heroBannerItems} />
 
 			<div className="w-full flex flex-col items-center space-y-10 mt-10">
 
