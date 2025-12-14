@@ -1,12 +1,11 @@
 "use client"
 
-import { MediaSelector } from "@/components/dashboard/MediaSelector";
-import FileUploadSection from "@/components/FileUpload";
 import { useState } from "react";
+import { MediaSelector } from "@/components/dashboard/MediaSelector";
+import { FeaturedContentForm } from "./FeaturedContentForm";
 
 export default function Page() {
 
-	const [file, setFile] = useState<File | null>(null);
 	const [selectedMedia, setSelectedMedia] = useState<null | MovieSummary>(null);
 
 	return (
@@ -14,11 +13,9 @@ export default function Page() {
 		<div className="absolute top-0 left-0 h-screen w-full flex border-t border-border pt-14">
 
 			<div className="h-full w-1/2">
-				<FileUploadSection
-					file={file}
-					onFileSelect={setFile}
+				<FeaturedContentForm
 					selectedMedia={selectedMedia}
-					uploadedFile={file}
+					onSelectMedia={(media) => setSelectedMedia(media)}
 				/>
 			</div>
 
@@ -28,7 +25,7 @@ export default function Page() {
 					onSelectMedia={(media) => setSelectedMedia(media)}
 				/>
 			</div>
-
+			
 		</div>
 
 	);

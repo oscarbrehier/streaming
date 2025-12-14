@@ -8,16 +8,16 @@ import { v4 as uuid } from "uuid";
 import { createClient } from "@/utils/supabase/client";
 
 interface FileUploadSectionProps {
-	onFileSelect: (file: File | null) => void
-	selectedMedia: any | null
-	uploadedFile: File | null
+	file: null | File;
+	onFileSelect: (file: File | null) => void;
+	selectedMedia: MovieSummary | null;
+	uploadedFile: File | null;
 };
 
 const supabase = createClient();
 
-export default function FileUploadSection({ onFileSelect, selectedMedia, uploadedFile }: FileUploadSectionProps) {
+export default function FileUploadSection({ file, onFileSelect, selectedMedia, uploadedFile }: FileUploadSectionProps) {
 
-	const [file, setFile] = useState<File | null>(null);
 	const [isDragging, setIsDragging] = useState(false);
 	const [progress, setProgress] = useState(0);
 	const [isUploading, setIsUploading] = useState(false);
@@ -59,13 +59,10 @@ export default function FileUploadSection({ onFileSelect, selectedMedia, uploade
 	};
 
 	const processFile = async (file: File) => {
-
 		onFileSelect(file);
-		setFile(file);
-
 	};
 
-	async function uploadChunk(uploadSessionId: string, chunk: Blob, totalChunks: number, chunkIndex: number, accessToken: string) {
+	async function uploadChunk(uploadSessionId: string, chunk: Blob, totalChunks: number, chunkIndex: number, accessToken: string, mediaId: string) {
 
 		if (!accessToken) throw new Error("Unauthorized");
 
@@ -76,7 +73,7 @@ export default function FileUploadSection({ onFileSelect, selectedMedia, uploade
 		formData.append("totalChunks", totalChunks.toString());
 		formData.append("currentChunk", chunkIndex.toString());
 
-		if (chunkIndex === 0) formData.append("originalFilename", selectedMedia.id);
+		if (chunkIndex === 0) formData.append("originalFilename", mediaId );
 
 		const res = await fetch(`${process.env.NEXT_PUBLIC_STREAMING_API_URL}/api/media/upload/chunk`, {
 			method: "POST",
@@ -97,7 +94,9 @@ export default function FileUploadSection({ onFileSelect, selectedMedia, uploade
 
 	async function upload() {
 
-		if (!file) return;
+		if (!file || !selectedMedia) return;
+
+		const mediaId = selectedMedia.id.toString()
 
 		setError(null);
 
@@ -121,7 +120,7 @@ export default function FileUploadSection({ onFileSelect, selectedMedia, uploade
 				const endByte = Math.min(startByte + CHUNK_SIZE, file.size);
 				const chunk = file.slice(startByte, endByte);
 
-				await uploadChunk(uploadSessionId, chunk, totalChunks, chunkIndex, session.access_token);
+				await uploadChunk(uploadSessionId, chunk, totalChunks, chunkIndex, session.access_token, mediaId);
 
 				startByte = endByte;
 
@@ -254,7 +253,7 @@ export default function FileUploadSection({ onFileSelect, selectedMedia, uploade
 					className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
 					disabled={!selectedMedia || !file || isUploading}
 				>
-					{selectedMedia ? `Upload as: ${selectedMedia?.title || selectedMedia?.name} (${selectedMedia.id})` : "Complete Upload"}
+					{selectedMedia ? `Upload as: ${selectedMedia?.title} (${selectedMedia.id})` : "Complete Upload"}
 				</Button>
 
 				{error ? (

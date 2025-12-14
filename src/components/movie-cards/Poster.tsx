@@ -17,10 +17,12 @@ export type MovieCardItem = {
 
 export function MoviePosterCard({
 	movie,
+	loading,
 	action,
 	hoverable
 }: {
 	movie: MovieCardItem;
+	loading: "eager" | "lazy",
 	action?: string;
 	hoverable?: boolean;
 }) {
@@ -71,6 +73,7 @@ export function MoviePosterCard({
 				alt={movie.title}
 				fill
 				className="object-cover rounded-4xl shadow"
+				loading={loading}
 			/>
 
 		</Link>

@@ -9,6 +9,7 @@ const links = [
 	{ name: "Transcoding Queue", path: "/transcoding" },
 	{ name: "Atlas", path: "/atlas" },
 	{ name: "Logs", path: "/logs" },
+	{ name: "Featured Content", path: "/featured-content" },
 ];
 
 export function DashboardNavbar() {

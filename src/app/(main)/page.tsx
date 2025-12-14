@@ -32,11 +32,9 @@ export default async function Page() {
 
 	return (
 
-		<div className="h-auto w-full px-8 pb-8 dark flex flex-col items-center">
+		<div className="h-auto w-full pb-8 dark flex flex-col items-center">
 
 			<HeroBanner />
-
-			<div className="h-[85vh] w-full"></div>
 
 			<div className="w-full flex flex-col items-center space-y-10 mt-10">
 

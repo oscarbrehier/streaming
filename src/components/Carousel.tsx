@@ -9,7 +9,7 @@ export function Carousel<T extends { id: number }>({
 	title,
 }: {
 	data: T[];
-	card: (props: { movie: T }) => React.ReactNode;
+	card: (props: { movie: T, loading: "eager" | "lazy" }) => React.ReactNode;
 	title: string;
 }) {
 
@@ -87,10 +87,10 @@ export function Carousel<T extends { id: number }>({
 						className="w-full grid gap-4 shrink-0 basis-full"
 					>
 
-						{chunk.map((movie) => (
+						{chunk.map((movie, idx) => (
 
 							<React.Fragment key={movie.id}>
-								{card({ movie })}
+								{card({ movie, loading: idx <= itemsPerSlide ? "eager" : "lazy" })}
 							</React.Fragment>
 
 						))}
