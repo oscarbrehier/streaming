@@ -1,3 +1,4 @@
+import { BASE_PATH } from '@/lib/basePath';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
@@ -35,7 +36,12 @@ export async function createClient() {
 				},
 				setAll(cookiesToSet) {
 					try {
-						cookiesToSet.forEach(({ name, value }) => cookieStore.set(name, value))
+						cookiesToSet.forEach(({ name, value, options }) => cookieStore.set({
+							name,
+							value,
+							...options,
+							path: BASE_PATH
+						}))
 					} catch {
 					}
 				},
