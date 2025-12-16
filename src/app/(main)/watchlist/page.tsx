@@ -1,9 +1,8 @@
 import { constructImg } from "@/lib/tmdb/constructImg";
-import { getMovie } from "@/lib/tmdb/movie";
-import { getWatchlist, getWatchlistEntries } from "@/utils/db/watchlist";
+import { getWatchlist } from "@/utils/db/watchlist";
 import { createClient } from "@/utils/supabase/server";
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 
 export default async function Page() {
 
@@ -12,7 +11,7 @@ export default async function Page() {
 
 	if (!session?.access_token) redirect("/login");
 
-	const watchlist = await getWatchlist(session);
+	const watchlist = await getWatchlist();
 
 	return (
 
