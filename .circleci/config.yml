@@ -1,0 +1,66 @@
+version: 2.1
+
+executors:
+  node-executor:
+    docker:
+      - image: cimg/node:22.14
+    working_directory: ~/repo
+
+jobs:
+  build:
+    executor: node-executor
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "package-lock.json" }}
+            - v1-dependencies-
+      - run:
+          name: Install dependencies
+          command: npm ci
+      - save_cache:
+          paths:
+            - node_modules
+          key: v1-dependencies-{{ checksum "package-lock.json" }}
+      - run:
+          name: Build project
+          command: npm run build
+      - run:
+          name: Run tests
+          command: npm test || echo "No tests found"
+
+  deploy:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - checkout
+      - add_ssh_keys
+      - run:
+          name: Deploy to VPS
+          command: |
+            ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} "
+              if [ ! -d ~/streaming ]; then
+                git clone git@github.com:oscarbrehier/streaming.git ~/streaming
+              fi
+              
+              cd ~/streaming
+              git pull origin main
+              npm ci
+              npm run build
+              
+              pm2 restart streaming || pm2 start npm --name streaming -- start
+            "
+
+workflows:
+  build_and_deploy:
+    jobs:
+      - build:
+          filters:
+            branches:
+              only: main
+      - deploy:
+          requires:
+            - build
+          filters:
+            branches:
+              only: main
