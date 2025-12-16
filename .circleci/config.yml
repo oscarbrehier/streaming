@@ -28,27 +28,46 @@ jobs:
       - run:
           name: Run tests
           command: npm test || echo "No tests found"
+      - persist_to_workspace:
+          root: ~/repo
+          paths:
+            - .next
+            - node_modules
+            - package.json
+            - package-lock.json
+            - public
+            - next.config.ts
+            - components.json
+            - tsconfig.json
 
   deploy:
     docker:
       - image: cimg/base:stable
     steps:
       - checkout
+      - attach_workspace:
+          at: ~/repo
       - add_ssh_keys
       - run:
           name: Deploy to VPS
           command: |
+            ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} "mkdir -p ~/streaming"
+
+            rsync -avz --delete \
+              -e "ssh -o StrictHostKeyChecking=no" \
+              ~/repo/.next \
+              ~/repo/node_modules \
+              ~/repo/package.json \
+              ~/repo/package-lock.json \
+              ~/repo/public \
+              ~/repo/next.config.ts \
+              ~/repo/components.json \
+              ~/repo/tsconfig.json \
+              deployer@${SERVER_IP}:~/streaming/
+
             ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} "
-              if [ ! -d ~/streaming ]; then
-                git clone git@github.com:oscarbrehier/streaming.git ~/streaming
-              fi
-              
               cd ~/streaming
-              git pull origin main
-              npm install
-              npm run build
-              
-              pm2 restart streaming || pm2 start npm --name streaming -- start
+              pm2 restart streaming || pm2 start npm --name streaming --cwd ~/streaming -- start
             "
 
 workflows:
