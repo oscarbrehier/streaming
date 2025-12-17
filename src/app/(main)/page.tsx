@@ -23,8 +23,6 @@ export default async function Page() {
 
 	const heroBannerItems = await getHeroBannerItems();
 
-	console.log(heroBannerItems)
-
 	const topToday = await fetchtTMDB<MovieSearchResponse>("/discover/movie?include_adult=false&include_video=false&language=en-US&page=1&sort_by=popularity.desc");
 	const recentlyWatched = await getRecentlyWatched(supabase, user.id);
 	const watchlist = await getWatchlist();

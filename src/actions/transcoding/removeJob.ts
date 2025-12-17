@@ -10,7 +10,7 @@ export async function removeTranscodingJob(jobId: string) {
 
 	if (!session) redirect("/login");
 
-	const res = await fetch(`${process.env.NEXT_PUBLIC_STREAMING_API_URL}/api/media/transcoding/${jobId}`, {
+	const res = await fetch(`${process.env.NEXT_PUBLIC_STREAMING_API_URL}/media/transcoding/${jobId}`, {
 		method: "DELETE",
 		headers: {
 			"Authorization": `Bearer ${session.access_token}`

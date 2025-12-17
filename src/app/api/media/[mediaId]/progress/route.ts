@@ -14,7 +14,7 @@ export async function GET(req: Request,
 	}
 
 	const response = await fetch(
-		`${process.env.NEXT_PUBLIC_STREAMING_API_URL}/api/media/transcoding/${mediaId}/progress`,
+		`${process.env.NEXT_PUBLIC_STREAMING_API_URL}/media/transcoding/${mediaId}/progress`,
 		{ headers: { Authorization: `Bearer ${session.access_token}` } }
 	);
 

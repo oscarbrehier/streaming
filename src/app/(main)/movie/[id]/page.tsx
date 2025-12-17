@@ -19,7 +19,7 @@ async function checkAvailability(mediaId: string, accessToken: string): Promise<
 
 	try {
 
-		const res = await fetch(`${process.env.NEXT_PUBLIC_STREAMING_API_URL}/api/media/${mediaId}/availability`, {
+		const res = await fetch(`${process.env.NEXT_PUBLIC_STREAMING_API_URL}/media/${mediaId}/availability`, {
 			headers: {
 				"Authorization": `Bearer ${accessToken}`
 			}

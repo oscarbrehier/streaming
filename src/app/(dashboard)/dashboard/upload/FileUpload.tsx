@@ -75,7 +75,7 @@ export default function FileUploadSection({ file, onFileSelect, selectedMedia, u
 
 		if (chunkIndex === 0) formData.append("originalFilename", mediaId );
 
-		const res = await fetch(`${process.env.NEXT_PUBLIC_STREAMING_API_URL}/api/media/upload/chunk`, {
+		const res = await fetch(`${process.env.NEXT_PUBLIC_STREAMING_API_URL}/media/upload/chunk`, {
 			method: "POST",
 			headers: {
 				"Authorization": `Bearer ${accessToken}`

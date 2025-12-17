@@ -16,7 +16,7 @@ export async function getQueue(): Promise<Queue | null> {
 
 	if (!session || !session.access_token) return null;
 
-	const res = await fetch(`${process.env.NEXT_PUBLIC_STREAMING_API_URL}/api/media/transcoding/queue`, {
+	const res = await fetch(`${process.env.NEXT_PUBLIC_STREAMING_API_URL}/media/transcoding/queue`, {
 		headers: {
 			"Authorization": `Bearer ${session.access_token}`
 		}

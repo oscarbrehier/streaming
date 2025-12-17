@@ -24,7 +24,7 @@ export default function Page() {
 
 	const [error, setError] = useState("");
 	const [loading, setLoading] = useState(false);
-	const [newRequestTimer, setNewRequestTimer] = useState(60);
+	const [newRequestTimer, setNewRequestTimer] = useState(0);
 
 	async function handleSubmit(formData: FormData) {
 
@@ -64,7 +64,7 @@ export default function Page() {
 		
 		if (newRequestTimer > 0) return ;
 		
-		setNewRequestTimer(60);
+		setNewRequestTimer(0);
 
 		const { error } = await requestOTPCode();
 		if (error) setError(error);

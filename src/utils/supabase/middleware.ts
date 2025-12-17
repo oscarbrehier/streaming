@@ -7,7 +7,7 @@ async function check2FAStatus(access_token: string | undefined) {
 
 	if (!access_token) return true;
 
-	const res = await fetch(`${process.env.NEXT_PUBLIC_STREAMING_API_URL}/api/2fa/status`, {
+	const res = await fetch(`${process.env.NEXT_PUBLIC_STREAMING_API_URL}/2fa/status`, {
 		headers: {
 			"Authorization": `Bearer ${access_token}`
 		}

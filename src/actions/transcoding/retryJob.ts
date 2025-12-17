@@ -10,7 +10,7 @@ export async function retryTranscodingJob(jobId: string) {
 
 	if (!session?.access_token) redirect("/login");
 	
-	const res = await fetch(`${process.env.NEXT_PUBLIC_STREAMING_API_URL}/api/media/transcoding/${jobId}/retry`, {
+	const res = await fetch(`${process.env.NEXT_PUBLIC_STREAMING_API_URL}/media/transcoding/${jobId}/retry`, {
 		method: "POST",
 		headers: {
 			"Authorization": `Bearer ${session?.access_token}`

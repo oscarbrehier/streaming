@@ -10,7 +10,7 @@ export async function updateTranscodingQueue(action: "pause" | "resume") {
 
 	if (!session) redirect("/login");
 
-	const res = await fetch(`${process.env.NEXT_PUBLIC_STREAMING_API_URL}/api/media/transcoding`, {
+	const res = await fetch(`${process.env.NEXT_PUBLIC_STREAMING_API_URL}/media/transcoding`, {
 		method: "PATCH",
 		headers: {
 			"Authorization": `Bearer ${session.access_token}`,

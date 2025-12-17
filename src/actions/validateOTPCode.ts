@@ -13,7 +13,7 @@ export async function validateOTPCode(code: string): Promise<{ success: boolean;
 	const { data: { session } } = await supabase.auth.getSession();
 	if (!session?.access_token) redirect("/login");
 
-	const res = await fetch(`${process.env.NEXT_PUBLIC_STREAMING_API_URL}/api/2fa/verify`, {
+	const res = await fetch(`${process.env.NEXT_PUBLIC_STREAMING_API_URL}/2fa/verify`, {
 		method: "POST",
 		headers: {
 			"Authorization": `Bearer ${session.access_token}`,

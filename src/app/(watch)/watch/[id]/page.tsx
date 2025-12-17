@@ -3,6 +3,7 @@ import { MediaNotFound } from "./NotFound";
 import { createClient } from "@/utils/supabase/server";
 import { getMovie } from "@/lib/tmdb/movie";
 import { connection } from "next/server";
+import { getStreamingSources } from "@/lib/api/streaming";
 
 interface PageProps {
 	params: Promise<{ id: string }>;
@@ -55,7 +56,16 @@ async function updateUserMediaStatus(
 export default async function Page({ params }: PageProps) {
 
 	const { id } = await params;
-	const mediaPath = `${process.env.NEXT_PUBLIC_STREAMING_API_URL}/api/watch/${id}/master.m3u8`;
+
+	const { result } = await getStreamingSources(id, "movie");
+
+	if (!result?.files || result?.files.length === 0) return <MediaNotFound />
+
+	const mediaPath = result?.files[1].file;
+
+	console.log(mediaPath)
+
+	// const mediaPath = `${process.env.NEXT_PUBLIC_STREAMING_API_URL}/watch/${id}/master.m3u8`;
 	
 	const supabase = await createClient();
 	const { data: { user } } = await supabase.auth.getUser();
