@@ -353,6 +353,13 @@ declare global {
 		updated_at: Date;
 	};
 
+	type MediaSourceFile = { id: string, file: string, type: string, lang: string };
+	type SubtitleSource = { id: string, url: string, lang: string, type: string };
+
+	type MediaSources = {
+		files: MediaSourceFile[];
+		subtitles: SubtitleSource[];
+	};
 
 };
 

@@ -18,16 +18,17 @@ import { ControlButtons } from "./ControlButtons";
 import { useVideoQuality } from "@/hooks/player/useVideoQuality";
 import { cn } from "@/lib/utils";
 import { glass } from "@/styles";
+import { useMediaSources } from "@/hooks/player/useMediaSources";
 
 interface VideoPlayerProps {
 	userId: string;
 	mediaId: string;
 	title?: string;
-	videoUrl: string;
 	subtitleUrl?: string;
 	onRating?: (rating: number) => void;
 	showRating?: boolean;
 	mediaStatus: UserMediaStatus;
+	sources: MediaSources;
 };
 
 const supabase = createClient();
@@ -42,11 +43,11 @@ export default function VideoPlayer({
 	userId,
 	mediaId,
 	title,
-	videoUrl,
 	subtitleUrl,
 	onRating,
 	showRating = true,
-	mediaStatus
+	mediaStatus,
+	sources
 }: VideoPlayerProps) {
 
 	const { updateRating, setMediaDuration } = new MediaService(supabase, mediaId, userId);
@@ -72,58 +73,55 @@ export default function VideoPlayer({
 
 	const { controls } = useVideoControls(videoRef, isPlaying);
 	const { handleProgressUpdate } = useVideoProgress(videoRef, mediaId, userId, mediaStatus.completed);
-	const { qualities, changeQuality, currentQuality, setupQualityListener } = useVideoQuality(hlsRef); 
+	const { qualities, changeQuality, currentQuality, setupQualityListener } = useVideoQuality(hlsRef);
+	const { currentSource, changeSource } = useMediaSources(sources);
 
 	// HLS support
 	useEffect(() => {
 
-		if (!videoUrl || !videoRef.current) return;
+		if (!currentSource || !currentSource.file || !videoRef.current) return;
+
+		const videoUrl = currentSource.file;
 
 		const video = videoRef.current;
 
-		if (videoUrl.endsWith(".m3u8")) {
+		if (Hls.isSupported()) {
 
-			if (video.canPlayType("application/vnd.apple.mpegurl")) {
+			const hls = new Hls();
 
-				video.src = videoUrl;
+			hlsRef.current = hls;
 
-			} else if (Hls.isSupported()) {
+			setupQualityListener(hls);
 
-				const hls = new Hls();
+			hls.loadSource(videoUrl);
 
-				hlsRef.current = hls;
-
-				setupQualityListener(hls);
-
-				hls.loadSource(videoUrl);
-				
-				hls.on(Hls.Events.ERROR, (event, data) => {
-					if (data.fatal) {
-						if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
-							notFound();
-						};
+			hls.on(Hls.Events.ERROR, (event, data) => {
+				if (data.fatal) {
+					if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+						notFound();
 					};
-				});
-				
-				hls.attachMedia(video);
-
-				return () => {
-					hls.destroy();
 				};
+			});
 
+			hls.attachMedia(video);
+
+			return () => {
+				hls.destroy();
 			};
-
-		} else {
-
-			video.src = videoUrl;
 
 		};
 
-	}, [videoUrl]);
+		if (video.canPlayType("application/vnd.apple.mpegurl")) {
+			video.src = videoUrl;
+		} else {
+			video.src = videoUrl;
+		}
+
+	}, [currentSource]);
 
 	useEffect(() => {
 
-		if (!videoRef || !videoRef.current) return ;
+		if (!videoRef || !videoRef.current) return;
 
 		if (!mediaStatus.duration_sec) {
 			console.log(videoRef.current.duration)
@@ -341,6 +339,9 @@ export default function VideoPlayer({
 							currentQuality={currentQuality}
 							qualities={qualities}
 							onQualityChange={changeQuality}
+							sources={sources}
+							currentSource={currentSource}
+							onSourceChange={(source) => changeSource(source)}
 						/>
 
 					</div>

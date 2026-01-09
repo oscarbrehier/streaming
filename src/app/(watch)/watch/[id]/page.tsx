@@ -57,15 +57,11 @@ export default async function Page({ params }: PageProps) {
 
 	const { id } = await params;
 
-	const { result } = await getStreamingSources(id, "movie");
+	const { sources } = await getStreamingSources(id, "movie");
+	
+	if (!sources?.files || sources?.files.length === 0) return <MediaNotFound />
 
-	if (!result?.files || result?.files.length === 0) return <MediaNotFound />
-
-	const mediaPath = result?.files[1].file;
-
-	console.log(mediaPath)
-
-	// const mediaPath = `${process.env.NEXT_PUBLIC_STREAMING_API_URL}/watch/${id}/master.m3u8`;
+	console.log(sources.files[0])
 	
 	const supabase = await createClient();
 	const { data: { user } } = await supabase.auth.getUser();
@@ -92,7 +88,7 @@ export default async function Page({ params }: PageProps) {
 			mediaId={id}
 			userId={user.id}
 			mediaStatus={mediaStatus}
-			videoUrl={mediaPath}
+			sources={sources}
 		/>
 
 	);

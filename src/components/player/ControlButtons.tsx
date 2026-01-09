@@ -1,11 +1,13 @@
 "use client"
 
 import { QualityLevel } from "@/hooks/player/useVideoQuality";
-import { TvMinimal } from "lucide-react";
+import { Cloud, TvMinimal } from "lucide-react";
 import { BiFullscreen } from "react-icons/bi";
 import { MdOutlineSubtitles, MdSubtitles } from "react-icons/md";
 import { cn } from "@/lib/utils";
 import { useEffect, useRef, useState } from "react";
+import { SettingsPanel, SettingsView } from "./SettingsPanel";
+import { MediaSourceSelector } from "./SourceSelector";
 
 function QualitySelector({
 	qualities,
@@ -82,29 +84,56 @@ function QualitySelector({
 
 };
 
+const panels = [
+	{ title: "sources", },
+	{ title: "subtitles", },
+	{ title: "quality", },
+];
+
 export function ControlButtons({
 	subtitleUrl,
 	captions,
+	sources,
+	currentSource,
 	onCaptionChange,
 	onFullscreenChange,
 	currentQuality,
 	qualities,
-	onQualityChange
+	onQualityChange,
+	onSourceChange,
 }: {
 	subtitleUrl: string | undefined,
 	captions: boolean;
-	onCaptionChange: (e: React.MouseEvent) => void;
-	onFullscreenChange: () => void;
 	currentQuality: number | "auto";
 	qualities: QualityLevel[];
+	sources: MediaSources;
+	currentSource: MediaSourceFile;
+	onCaptionChange: (e: React.MouseEvent) => void;
+	onFullscreenChange: () => void;
 	onQualityChange: (idx: number | "auto") => void;
+	onSourceChange: (source: MediaSourceFile) => void;
 }) {
 
 	const [qualitSelector, setQualitySelector] = useState(false);
 
+	const [settingsOpen, setSettingsOpen] = useState(false);
+	const [settingsView, setSettingsView] = useState<SettingsView>("sources");
+
 	return (
 
 		<div className="flex items-center space-x-4">
+
+			<SettingsPanel
+				open={settingsOpen}
+				view={settingsView}
+				panels={panels}
+			>
+				<MediaSourceSelector
+					sources={sources.files}
+					currentSource={currentSource}
+					onSourceChange={onSourceChange}
+				/>
+			</SettingsPanel>
 
 			{qualitSelector && (
 
@@ -116,6 +145,13 @@ export function ControlButtons({
 				/>
 
 			)}
+
+			<button
+				onClick={onCaptionChange}
+				title="Subtitles"
+				className="hover:bg-neutral-700 transition-all ease-in-out duration-200 w-8 h-8 flex items-center justify-center rounded-md text-2xl">
+				<Cloud className="text-white" />
+			</button>
 
 			<button
 				onPointerDown={(e) => e.stopPropagation()}

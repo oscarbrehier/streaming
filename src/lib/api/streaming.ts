@@ -1,32 +1,23 @@
 "use server"
 
 import { createAuditLog } from "@/utils/db/createAuditLog";
-import { createClient } from "@/utils/supabase/server";
-import { redirect } from "next/navigation";
+import { cacheLife } from "next/cache";
 
-type SourceAPIResponse = {
-	files: { file: string, type: string, lang: string }[];
-	subtitles: { url: string, lang: string, type: string }[];
-};
+export async function getStreamingSources(mediaId: string, type: "movie" | "tv"): Promise<{ sources: MediaSources | null }> {
 
-export async function getStreamingSources(mediaId: string, type: "movie" | "tv"): Promise<{ result: SourceAPIResponse | null }> {
+	"use cache"
+	cacheLife("hours");
 
-	const supabase = await createClient();
-	const { data: { session } } = await supabase.auth.getSession();
-
-	if (!session?.access_token) redirect("/login");
-
-	const endpoint = `${process.env.NEXT_PUBLIC_STREAMING_API_URL}/streaming/sources`;
+	const endpoint = `${process.env.NEXT_PUBLIC_LIBRARY_URL}/movie/${mediaId}`;
 
 	try {
 
 		const res = await fetch(endpoint, {
-			method: "POST",
+			method: "GET",
 			headers: {
-				"Authorization": `Bearer ${session.access_token}`,
+				"Authorization": `Bearer ${process.env.LIBRARY_SECRET}`,
 				"Content-Type": "application/json"
-			},
-			body: JSON.stringify({ mediaId, type })
+			}
 		});
 
 		if (!res.ok) {
@@ -40,17 +31,16 @@ export async function getStreamingSources(mediaId: string, type: "movie" | "tv")
 					endpoint,
 					statusCode: res.status,
 					statusText: res.statusText,
-					userId: session.user.id,
 				}
 			});
 
-			return { result: null };
+			return { sources: null };
 
 		}
 
 		const data = await res.json();
 
-		return { result: data?.result ?? null };
+		return { sources: data ?? null };
 
 	} catch (err) {
 
@@ -61,7 +51,6 @@ export async function getStreamingSources(mediaId: string, type: "movie" | "tv")
 				mediaId,
 				mediaType: type,
 				endpoint,
-				userId: session.user.id,
 				error:
 					err instanceof Error
 						? {
@@ -73,7 +62,7 @@ export async function getStreamingSources(mediaId: string, type: "movie" | "tv")
 			}
 		});
 
-		return { result: null };
+		return { sources: null };
 
 	};
 
