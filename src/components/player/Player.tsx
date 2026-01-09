@@ -14,7 +14,7 @@ import { RatingOverlay } from "./RatingOverlay";
 import { MediaService } from "@/services/media";
 import { ProgressBar } from "./ProgressBar";
 import { useMediaState } from "@/hooks/player/useMediaState";
-import { ControlButtons } from "./ControlButtons";
+import { ViewControls } from "./ViewControls";
 import { useVideoQuality } from "@/hooks/player/useVideoQuality";
 import { cn } from "@/lib/utils";
 import { glass } from "@/styles";
@@ -331,7 +331,7 @@ export default function VideoPlayer({
 							formattedDuration={formattedDuration}
 						/>
 
-						<ControlButtons
+						<ViewControls
 							subtitleUrl={subtitleUrl}
 							captions={captions}
 							onCaptionChange={handleCaptions}

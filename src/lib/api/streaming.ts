@@ -6,7 +6,7 @@ import { cacheLife } from "next/cache";
 export async function getStreamingSources(mediaId: string, type: "movie" | "tv"): Promise<{ sources: MediaSources | null }> {
 
 	"use cache"
-	cacheLife("hours");
+	cacheLife("minutes");
 
 	const endpoint = `${process.env.NEXT_PUBLIC_LIBRARY_URL}/movie/${mediaId}`;
 

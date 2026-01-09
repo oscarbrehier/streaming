@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
+import { SettingsOptionButton } from "./SettingsPanel";
 
 const names = [
 	"Norman", "Lisa", "Madeleine", "Mackie",
@@ -22,7 +23,7 @@ function shuffle(array: string[]) {
 
 };
 
-export function MediaSourceSelector({
+export default function MediaSourceSelector({
 	sources,
 	currentSource,
 	onSourceChange,
@@ -50,21 +51,14 @@ export function MediaSourceSelector({
 
 			{sources.map((source, idx) => (
 
-				<button
+				<SettingsOptionButton
 					key={source.file}
 					onClick={() => onSourceChange(source)}
-					className={cn(
-						"w-full py-3 px-4 rounded-md text-sm capitalize text-start border",
-						"transition-all ease-in-out duration-300",
-						currentSource.id === source.id
-								? "bg-neutral-800/50 text-neutral-200 border-neutral-700/80"
-								: "bg-neutral-800/30 text-neutral-400 hover:text-neutral-200 border-transparent hover:border-neutral-700/80"
-					)}
+					active={currentSource.id === source.id}
+					className="py-3 px-4 text-start"
 				>
-					<p>
-						{serverNames[idx]} (<span className="uppercase">{source.lang}</span>)
-					</p>
-				</button>
+					{serverNames[idx]} (<span className="uppercase">{source.lang}</span>)
+				</SettingsOptionButton>
 
 			))}
 
