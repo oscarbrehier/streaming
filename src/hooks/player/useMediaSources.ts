@@ -2,15 +2,10 @@ import { useState } from "react";
 
 export function useMediaSources(sources: MediaSources) {
 
-	const [currentSource, setCurrentSource] = useState<MediaSourceFile>(sources.files[0]);
-
-	function changeSource(source: MediaSourceFile) {
-		setCurrentSource(source);
-	};
+	const [currentSource, changeSource] = useState<MediaSourceFile>(sources.files[0]);
 
 	return {
 		currentSource,
-		setCurrentSource,
 		changeSource
 	};
 

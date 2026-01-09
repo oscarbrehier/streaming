@@ -139,7 +139,15 @@ export default async function Page({
 
 				)}
 
-				<div className="flex space-x-4">
+				<Link
+					href={`/watch/${movieDetails.id}`}
+					className="capitalize bg-white text-black text-md h-10 px-6 rounded-3xl cursor-pointer flex items-center space-x-4"
+				>
+					<Play className="text-black mt-0.5" fill="#000" size={16} />
+					<span>{userMediaStatus ? "Resume" : "Watch Now"}</span>
+				</Link>
+
+				{/* <div className="flex space-x-4">
 
 					{isStreamAvailable ? (
 
@@ -162,7 +170,7 @@ export default async function Page({
 						mediaId={mediaId}
 					/>
 
-				</div>
+				</div> */}
 
 			</MovieOverview>
 

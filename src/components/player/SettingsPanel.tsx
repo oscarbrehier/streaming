@@ -56,7 +56,7 @@ export function SettingsPanel({
 			className={cn(
 				open ? "flex" : "hidden",
 				glass("active"),
-				"absolute w-120 h-140 bg-card/20 rounded-2xl bottom-12 right-0 p-4 flex-col space-y-4"
+				"absolute w-120 h-auto bg-card/20 rounded-2xl bottom-14 right-0 p-4 flex-col space-y-4"
 			)}
 		>
 
@@ -74,7 +74,7 @@ export function SettingsPanel({
 
 			</div>
 
-			<div className="flex-1">
+			<div className="h-96 w-full">
 				{children}
 			</div>
 

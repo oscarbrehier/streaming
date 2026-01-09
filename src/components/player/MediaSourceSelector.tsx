@@ -47,7 +47,7 @@ export default function MediaSourceSelector({
 
 	return (
 
-		<div className="h-full w-full space-y-2">
+		<div className="h-96 w-full space-y-2 overflow-y-scroll">
 
 			{sources.map((source, idx) => (
 

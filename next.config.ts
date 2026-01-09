@@ -3,7 +3,14 @@ import type { NextConfig } from "next";
 const isProd = process.env.NODE_ENV === "production";
 
 const nextConfig: NextConfig = {
-	/* config options here */
+	async rewrites() {
+		return [
+			{
+				source: '/api/sub-proxy',
+				destination: 'http://localhost:3002/sub-proxy',
+			},
+		];
+	},
 
 	basePath: isProd ? "/streaming" : "",
 

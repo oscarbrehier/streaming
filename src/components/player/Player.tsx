@@ -19,6 +19,7 @@ import { useVideoQuality } from "@/hooks/player/useVideoQuality";
 import { cn } from "@/lib/utils";
 import { glass } from "@/styles";
 import { useMediaSources } from "@/hooks/player/useMediaSources";
+import { useSubtitles } from "@/hooks/player/useSubtitles";
 
 interface VideoPlayerProps {
 	userId: string;
@@ -71,10 +72,12 @@ export default function VideoPlayer({
 	const [captions, setCaptions] = useState(true);
 	const [rating, setRating] = useState(mediaStatus.rating ?? 0);
 
+	const { currentSource, changeSource } = useMediaSources(sources);
+	const { currentTrack, changeSubtitleTrack } = useSubtitles(sources.subtitles);
+	const { qualities, changeQuality, currentQuality, setupQualityListener } = useVideoQuality(hlsRef);
+
 	const { controls } = useVideoControls(videoRef, isPlaying);
 	const { handleProgressUpdate } = useVideoProgress(videoRef, mediaId, userId, mediaStatus.completed);
-	const { qualities, changeQuality, currentQuality, setupQualityListener } = useVideoQuality(hlsRef);
-	const { currentSource, changeSource } = useMediaSources(sources);
 
 	// HLS support
 	useEffect(() => {
@@ -203,13 +206,13 @@ export default function VideoPlayer({
 
 	const handleCaptions = (e: React.MouseEvent) => {
 
-		e.preventDefault();
-		setCaptions(!captions);
+		// e.preventDefault();
+		// setCaptions(!captions);
 
-		if (videoRef.current && videoRef.current.textTracks[0]) {
-			const track = videoRef.current.textTracks[0];
-			track.mode = captions ? 'hidden' : 'showing';
-		};
+		// if (videoRef.current && videoRef.current.textTracks[0]) {
+		// 	const track = videoRef.current.textTracks[0];
+		// 	track.mode = captions ? 'hidden' : 'showing';
+		// };
 
 	};
 
@@ -251,6 +254,16 @@ export default function VideoPlayer({
 		skipBackward
 	);
 
+	useEffect(() => {
+		const video = videoRef.current;
+		if (!video) return;
+
+		const [track] = video.textTracks;
+		if (!track) return;
+
+		track.mode = captions ? "showing" : "hidden";
+	}, [currentTrack, captions]);
+
 	return (
 		<div className="h-auto w-auto relative bg-black" ref={playerRef}>
 
@@ -266,17 +279,20 @@ export default function VideoPlayer({
 
 				}}
 			>
-				{subtitleUrl && (
+
+				{currentTrack && (
 					<track
-						label="English"
-						kind="captions"
-						src={subtitleUrl}
+						kind="subtitles"
+						label={currentTrack.lang}
+						src={`/api/${currentTrack.url}`}
+						srcLang={currentTrack.lang}
 						default
 					/>
 				)}
+
 			</video>
 
-			<div className={`h-screen w-full absolute flex flex-col justify-between z-[2147483647] transition-opacity duration-300 ${controls ? 'opacity-100' : 'opacity-0'}`}>
+			<div className={`h-screen w-full absolute flex flex-col justify-between z-2147483647 transition-opacity duration-300 ${controls ? 'opacity-100' : 'opacity-0'}`}>
 
 				{/* Top Bar - Back Button */}
 				<div className='h-12 w-full flex items-center px-5 pt-5 space-x-8'>
@@ -332,16 +348,18 @@ export default function VideoPlayer({
 						/>
 
 						<ViewControls
-							subtitleUrl={subtitleUrl}
+							subtitles={sources.subtitles}
+							currentSubtitleTrack={currentTrack}
 							captions={captions}
-							onCaptionChange={handleCaptions}
-							onFullscreenChange={handleFullscreen}
+							onCaptionToggle={handleCaptions}
+							onFullscreenToggle={handleFullscreen}
 							currentQuality={currentQuality}
 							qualities={qualities}
 							onQualityChange={changeQuality}
 							sources={sources}
 							currentSource={currentSource}
 							onSourceChange={(source) => changeSource(source)}
+							onSubtitleChange={changeSubtitleTrack}
 						/>
 
 					</div>

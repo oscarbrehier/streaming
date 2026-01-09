@@ -4,12 +4,32 @@ import { QualityLevel } from "@/hooks/player/useVideoQuality";
 import { Cloud, TvMinimal } from "lucide-react";
 import { BiFullscreen } from "react-icons/bi";
 import { MdOutlineSubtitles, MdSubtitles } from "react-icons/md";
-import { MouseEvent, useState } from "react";
+import { PointerEvent, useMemo } from "react";
 import { SettingsPanel, SettingsView } from "./SettingsPanel";
 import dynamic from "next/dynamic";
+import { SubtitleSelector } from "./SubtitleSelector";
+import { useSettingsController } from "@/hooks/player/useSettingsController";
 
 const MediaSourceSelector = dynamic(() => import("./MediaSourceSelector"));
 const QualitySelector = dynamic(() => import("./QualitySelector"));
+
+interface ViewControlsProps {
+	subtitles: SubtitleSource[];
+	currentSubtitleTrack: SubtitleSource | null;
+	captions: boolean;
+
+	sources: MediaSources;
+	currentSource: MediaSourceFile;
+
+	currentQuality: number | "auto";
+	qualities: QualityLevel[];
+
+	onCaptionToggle: (e: React.MouseEvent) => void;
+	onFullscreenToggle: () => void;
+	onQualityChange: (quality: number | "auto") => void;
+	onSourceChange: (source: MediaSourceFile) => void;
+	onSubtitleChange: (track: SubtitleSource) => void;
+}
 
 const panels: { title: SettingsView }[] = [
 	{ title: "sources", },
@@ -17,103 +37,116 @@ const panels: { title: SettingsView }[] = [
 	{ title: "quality", },
 ];
 
+type SettingsPanelConfig = {
+	id: SettingsView;
+	title: string;
+	trigger: {
+		icon: React.ComponentType<{ className?: string; }>;
+		isVisible?: () => boolean;
+	};
+	render: () => React.ReactNode;
+}
+
 export function ViewControls({
-	subtitleUrl,
+	subtitles,
+	currentSubtitleTrack,
 	captions,
 	sources,
 	currentSource,
-	onCaptionChange,
-	onFullscreenChange,
+	onCaptionToggle,
+	onFullscreenToggle,
 	currentQuality,
 	qualities,
 	onQualityChange,
 	onSourceChange,
-}: {
-	subtitleUrl: string | undefined,
-	captions: boolean;
-	currentQuality: number | "auto";
-	qualities: QualityLevel[];
-	sources: MediaSources;
-	currentSource: MediaSourceFile;
-	onCaptionChange: (e: React.MouseEvent) => void;
-	onFullscreenChange: () => void;
-	onQualityChange: (idx: number | "auto") => void;
-	onSourceChange: (source: MediaSourceFile) => void;
-}) {
+	onSubtitleChange,
+}: ViewControlsProps) {
 
-	const [settingsOpen, setSettingsOpen] = useState(false);
-	const [settingsView, setSettingsView] = useState<SettingsView>("sources");
+	const settings = useSettingsController("sources");
 
-	function openSettings(e: MouseEvent<HTMLButtonElement>, view: SettingsView) {
+	const panelConfigs = useMemo<SettingsPanelConfig[]>(() => [
+		{
+			id: "sources",
+			title: "Sources",
+			trigger: { icon: Cloud },
+			render: () => (
+				<MediaSourceSelector
+					sources={sources.files}
+					currentSource={currentSource}
+					onSourceChange={onSourceChange}
+				/>
+			),
+		},
+		{
+			id: "quality",
+			title: "Quality",
+			trigger: { icon: TvMinimal },
+			render: () => (
+				<QualitySelector
+					qualities={qualities}
+					currentQuality={currentQuality}
+					onQualityChange={onQualityChange}
+				/>
+			),
+		},
+		{
+			id: "subtitles",
+			title: "Subtitles",
+			trigger: {
+				icon: captions ? MdSubtitles : MdOutlineSubtitles,
+				isVisible: () => sources.subtitles.length > 0,
+			},
+			render: () => (
+				<SubtitleSelector
+					currentTrack={currentSubtitleTrack}
+					subtitles={subtitles}
+					onTrackChange={onSubtitleChange}
+				/>
+			),
+		},
+	], [
+		sources,
+		currentSource,
+		qualities,
+		currentQuality,
+		captions,
+		currentSubtitleTrack,
+		subtitles,
+	]);
 
-		e.stopPropagation();
-		e.preventDefault();
-
-		if (settingsOpen && settingsView === view) {
-			setSettingsOpen(false);
-			return;
-		};
-
-		setSettingsView(view);
-		setSettingsOpen(true);
-
-	};
+	const activePanel = panelConfigs.find(p => p.id === settings.view);
 
 	return (
 
 		<div className="flex items-center space-x-4">
 
 			<SettingsPanel
-				open={settingsOpen}
-				panels={panels}
-				view={settingsView}
-				onViewChange={(v) => setSettingsView(v)}
-				onClose={() => setSettingsOpen(false)}
+				open={settings.open}
+				panels={panelConfigs.map(p => ({ title: p.id }))}
+				view={settings.view}
+				onViewChange={settings.setView}
+				onClose={settings.close}
 			>
-
-				{settingsView === "sources" && (
-					<MediaSourceSelector
-						sources={sources.files}
-						currentSource={currentSource}
-						onSourceChange={onSourceChange}
-					/>
-				)}
-
-				{settingsView === "quality" && (
-					<QualitySelector
-						onQualityChange={onQualityChange}
-						qualities={qualities}
-						currentQuality={currentQuality}
-					/>
-				)}
-
+				{activePanel ? activePanel.render() : null}
 			</SettingsPanel>
 
-			<button
-				onPointerDown={(e) => openSettings(e, "sources")}
-				title="Sources"
-				className="hover:bg-neutral-700 transition-all ease-in-out duration-200 w-8 h-8 flex items-center justify-center rounded-md text-2xl">
-				<Cloud className="text-white" />
-			</button>
+			{panelConfigs.map(panel => {
+				if (panel.trigger.isVisible && !panel.trigger.isVisible()) return null;
+
+				const Icon = panel.trigger.icon;
+
+				return (
+					<PanelTriggerItem
+						key={panel.id}
+						title={panel.title}
+						Icon={Icon}
+						onClick={(e) => settings.toggleView(e, panel.id)}
+					/>
+				);
+			})}
 
 			<button
-				onPointerDown={(e) => openSettings(e, "quality")}
-				title="Quality"
-				className="hover:bg-neutral-700 transition-all ease-in-out duration-200 w-8 h-8 flex items-center justify-center rounded-md text-2xl">
-				<TvMinimal className="text-white" />
-			</button>
-
-			{sources.subtitles.length >= 1 && (
-				<button
-					onPointerDown={(e) => openSettings(e, "subtitles")}
-					title="Subtitles"
-					className="hover:bg-neutral-700 transition-all ease-in-out duration-200 w-8 h-8 flex items-center justify-center rounded-md text-2xl">
-					{captions ? <MdSubtitles className="text-white" /> : <MdOutlineSubtitles className="text-white" />}
-				</button>
-			)}
-
-			<button
-				onClick={onFullscreenChange}
+				onClick={onFullscreenToggle}
 				title="Fullscreen (F)"
 				className="hover:bg-neutral-700 transition-all ease-in-out duration-200 w-8 h-8 flex items-center justify-center rounded-md text-2xl">
 				<BiFullscreen className="text-white" />
@@ -121,6 +154,27 @@ export function ViewControls({
 
 		</div>
 
+	);
+
+};
+
+function PanelTriggerItem({
+	onClick,
+	title,
+	Icon,
+}: {
+	onClick: (e: PointerEvent<HTMLButtonElement>) => void;
+	title: string;
+	Icon: React.ComponentType<{ className?: string }>;
+}) {
+
+	return (
+		<button
+			onPointerDown={onClick}
+			title={title}
+			className="hover:bg-neutral-700 transition-all ease-in-out duration-200 w-8 h-8 flex items-center justify-center rounded-md text-2xl">
+			{<Icon className="text-white" />}
+		</button>
 	);
 
 };
