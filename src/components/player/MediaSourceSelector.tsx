@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { SettingsOptionButton } from "./SettingsPanel";
+import SHA256 from "crypto-js/sha256";
 
 const names = [
 	"Norman", "Lisa", "Madeleine", "Mackie",
@@ -10,16 +11,14 @@ const names = [
 	"Roy", "Joseph", "Bill", "Johnny", "NoHo", "Abby",
 ];
 
-function shuffle(array: string[]) {
-	
-	const arr = [...array];
-	
-	for (let i = arr.length - 1; i > 0; i--) {
-		const j = Math.floor(Math.random() * (i + 1));
-		[arr[i], arr[j]] = [arr[j], arr[i]];
-	};
+function getServerName(url: string): string {
 
-	return arr;
+	const hash = SHA256(url).toString();
+	const hashInt = parseInt(hash.slice(0,8), 16);
+
+	const index = hashInt % names.length;
+
+	return names[index];
 
 };
 
@@ -32,18 +31,10 @@ export default function MediaSourceSelector({
 	currentSource: MediaSourceFile;
 	onSourceChange: (source: MediaSourceFile) => void;
 }) {
-	const [serverNames, setServerNames] = useState<string[]>([]);
 
-	useEffect(() => {
-
-		let serverQueue = shuffle(names);
-		const assigned = sources.map(() => serverQueue.pop() ?? "Server");
-
-		setServerNames(assigned);
-
+	const serverNames = useMemo(() => {
+		return sources.map((source) => getServerName(source.file));
 	}, [sources]);
-
-	if (serverNames.length === 0) return null; 
 
 	return (
 

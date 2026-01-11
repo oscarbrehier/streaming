@@ -69,7 +69,7 @@ export default function VideoPlayer({
 	} = useMediaState(videoRef)
 
 	const [fullscreen, setFullscreen] = useState(false);
-	const [captions, setCaptions] = useState(true);
+	// const [captions, setCaptions] = useState(true);
 	const [rating, setRating] = useState(mediaStatus.rating ?? 0);
 
 	const { currentSource, changeSource } = useMediaSources(sources);
@@ -258,11 +258,50 @@ export default function VideoPlayer({
 		const video = videoRef.current;
 		if (!video) return;
 
-		const [track] = video.textTracks;
-		if (!track) return;
+		// Remove all existing tracks from DOM
+		const existingTracks = video.querySelectorAll('track');
+		existingTracks.forEach(track => track.remove());
 
-		track.mode = captions ? "showing" : "hidden";
-	}, [currentTrack, captions]);
+		// Disable all text tracks
+		Array.from(video.textTracks).forEach(track => {
+			track.mode = 'disabled';
+		});
+
+		if (!currentTrack) {
+			return;
+		}
+
+		// Create and add new track with cache-busting timestamp
+		const trackElement = document.createElement('track');
+		trackElement.kind = 'subtitles';
+		trackElement.label = currentTrack.lang;
+		// Add timestamp to bust cache
+		const cacheBuster = `?t=${Date.now()}`;
+		trackElement.src = `/api${currentTrack.url}${cacheBuster}`;
+		trackElement.srclang = currentTrack.lang;
+		trackElement.default = true;
+
+		video.appendChild(trackElement);
+
+		// Force the video element to recognize the new track
+		video.textTracks[0].mode = 'hidden';
+
+		// Wait a tick, then show the track
+		const handleLoad = () => {
+			requestAnimationFrame(() => {
+				if (video.textTracks[0]) {
+					video.textTracks[0].mode = 'showing';
+				}
+			});
+		};
+
+		trackElement.addEventListener('load', handleLoad, { once: true });
+
+		// Cleanup
+		return () => {
+			trackElement.removeEventListener('load', handleLoad);
+		};
+	}, [currentTrack]);
 
 	return (
 		<div className="h-auto w-auto relative bg-black" ref={playerRef}>
@@ -280,15 +319,15 @@ export default function VideoPlayer({
 				}}
 			>
 
-				{currentTrack && (
+				{/* {currentTrack && (
 					<track
 						kind="subtitles"
 						label={currentTrack.lang}
-						src={`/api/${currentTrack.url}`}
+						src={`/api${currentTrack.url}`}
 						srcLang={currentTrack.lang}
 						default
 					/>
-				)}
+				)} */}
 
 			</video>
 
@@ -350,7 +389,7 @@ export default function VideoPlayer({
 						<ViewControls
 							subtitles={sources.subtitles}
 							currentSubtitleTrack={currentTrack}
-							captions={captions}
+							captions={true}
 							onCaptionToggle={handleCaptions}
 							onFullscreenToggle={handleFullscreen}
 							currentQuality={currentQuality}

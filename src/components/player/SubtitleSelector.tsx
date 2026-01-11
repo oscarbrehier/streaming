@@ -14,24 +14,28 @@ export function SubtitleSelector({
 
 		<div className="h-96 w-full space-y-2 overflow-y-scroll">
 
-			{!currentTrack ? (
-
-				<div>
-
-				</div>
-
-			) : subtitles.map((track, idx) => (
+			<div className="h-96 w-full space-y-2 overflow-y-scroll">
 
 				<SettingsOptionButton
-					key={track.id}
-					onClick={() => onTrackChange(track)}
-					active={currentTrack.id === track.id}
+					onClick={() => onTrackChange(null as any)}
+					active={currentTrack === null}
 					className="py-3 px-4 text-start"
 				>
-					<p className="uppercase">{track.lang}</p>
+					<p className="uppercase">Off</p>
 				</SettingsOptionButton>
 
-			))}
+				{subtitles.map((track) => (
+					<SettingsOptionButton
+						key={track.id}
+						onClick={() => onTrackChange(track)}
+						active={currentTrack?.id === track.id}
+						className="py-3 px-4 text-start"
+					>
+						<p className="uppercase">{track.lang}</p>
+					</SettingsOptionButton>
+				))}
+				
+			</div>
 
 
 		</div>
