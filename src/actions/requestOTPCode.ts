@@ -10,7 +10,7 @@ export async function requestOTPCodeHandler(
 	const { data: { session } } = await supabase.auth.getSession();
 	if (!session?.access_token) throw new Error("User not authenticated");
 	
-	await fetch(`${process.env.NEXT_PUBLIC_STREAMING_API_URL}/2fa/initiate`, {
+	await fetch(`${process.env.NEXT_PUBLIC_API_URL}/2fa/initiate`, {
 		method: "POST",
 		headers: {
 			"Authorization": `Bearer ${session.access_token}`
