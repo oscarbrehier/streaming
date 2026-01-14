@@ -1,15 +1,20 @@
 "use server"
 
 import { createAuditLog } from "@/utils/db/createAuditLog";
-import { cacheLife } from "next/cache";
 
 export async function getStreamingSources(mediaId: string, type: "movie" | "tv"): Promise<{ sources: MediaSources | null }> {
 
-	"use cache"
-	cacheLife("hours");
+	const { data: cached, isStale } = await checkCacheForSources(mediaId);
+
+	if (cached && !isStale) return { sources: cached };
+
+	if (cached && isStale) {
+		triggerBackgroundScrape(mediaId).catch((err) => console.log("Background Scrape Error:", err));
+		return { sources: cached };
+	};
 
 	const endpoint = `${process.env.NEXT_PUBLIC_LIBRARY_URL}/movie/${mediaId}`;
-
+	
 	try {
 
 		const res = await fetch(endpoint, {
@@ -65,5 +70,31 @@ export async function getStreamingSources(mediaId: string, type: "movie" | "tv")
 		return { sources: null };
 
 	};
+
+};
+
+async function triggerBackgroundScrape(mediaId: string) {
+
+	const endpoint = `${process.env.NEXT_PUBLIC_LIBRARY_URL}/movie/${mediaId}`;
+	await fetch(endpoint, {
+		method: "GET",
+		headers: {
+			"Authorization": `Bearer ${process.env.LIBRARY_SECRET}`,
+			"Content-Type": "application/json"
+		}
+	});
+
+};
+
+async function checkCacheForSources(mediaId: string): Promise<{ data: MediaSources | null, isStale: boolean }> {
+
+	const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cache/media-${mediaId}`, {
+		headers: {
+			'Authorization': `Bearer ${process.env.API_INTERNAL_KEY}`
+		}
+	});
+
+	if (!res.ok) return { data: null, isStale: false };
+	return await res.json();
 
 };
