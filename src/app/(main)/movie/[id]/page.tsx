@@ -15,28 +15,6 @@ interface PageProps {
 	searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
-async function checkAvailability(mediaId: string, accessToken: string): Promise<boolean> {
-
-	try {
-
-		const res = await fetch(`${process.env.NEXT_PUBLIC_STREAMING_API_URL}/media/${mediaId}/availability`, {
-			headers: {
-				"Authorization": `Bearer ${accessToken}`
-			}
-		});
-
-		if (!res.ok) return false;
-
-
-		const data = await res.json();
-		return Boolean(data.available);
-
-	} catch (err) {
-		return false;
-	};
-
-};
-
 export default async function Page({
 	params
 }: PageProps) {
@@ -53,8 +31,6 @@ export default async function Page({
 
 	const { data: { session } } = await supabase.auth.getSession();
 	if (!session) redirect("/login");
-
-	const isStreamAvailable = await checkAvailability(mediaId, session.access_token);
 
 	const { data: { user } } = await supabase.auth.getUser();
 
