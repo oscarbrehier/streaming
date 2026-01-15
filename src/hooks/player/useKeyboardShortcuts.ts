@@ -1,6 +1,8 @@
+import { PlayerState } from "@/components/player/Player";
 import { useEffect } from "react";
 
 export function useKeyBoardShortcuts(
+	playerState: PlayerState,
 	togglePlay: () => void,
 	toggleFullscreen: () => void,
 	skipForward: () => void,
@@ -8,6 +10,8 @@ export function useKeyBoardShortcuts(
 ) {
 
 	useEffect(() => {
+
+		if (playerState !== "ready") return;
 
 		const handleKeyDown = (e: KeyboardEvent) => {
 
@@ -29,6 +33,6 @@ export function useKeyBoardShortcuts(
 		document.addEventListener('keydown', handleKeyDown);
 		return () => document.removeEventListener('keydown', handleKeyDown);
 
-	}, [togglePlay, toggleFullscreen, skipForward, skipBackward]);
+	}, [playerState, togglePlay, toggleFullscreen, skipForward, skipBackward]);
 
 };

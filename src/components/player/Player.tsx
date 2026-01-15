@@ -21,6 +21,8 @@ import { glass } from "@/styles";
 import { useMediaSources } from "@/hooks/player/useMediaSources";
 import { useSubtitles } from "@/hooks/player/useSubtitles";
 
+const supabase = createClient();
+
 interface VideoPlayerProps {
 	userId: string;
 	mediaId: string;
@@ -32,7 +34,7 @@ interface VideoPlayerProps {
 	sources: MediaSources;
 };
 
-const supabase = createClient();
+export type PlayerState = "loading" | "ready" | "error";
 
 const ratings = [
 	{ value: 1, emoji: "❤️", title: "Love It" },
@@ -72,6 +74,8 @@ export default function VideoPlayer({
 	// const [captions, setCaptions] = useState(true);
 	const [rating, setRating] = useState(mediaStatus.rating ?? 0);
 
+	const [playerState, setPlayerState] = useState<PlayerState>("loading");
+
 	const { currentSource, changeSource } = useMediaSources(sources);
 	const { currentTrack, changeSubtitleTrack } = useSubtitles(sources.subtitles);
 	const { qualities, changeQuality, currentQuality, setupQualityListener } = useVideoQuality(hlsRef);
@@ -92,6 +96,8 @@ export default function VideoPlayer({
 
 			const hls = new Hls();
 
+			setPlayerState("loading");
+
 			hlsRef.current = hls;
 
 			setupQualityListener(hls);
@@ -99,11 +105,27 @@ export default function VideoPlayer({
 			hls.loadSource(videoUrl);
 
 			hls.on(Hls.Events.ERROR, (event, data) => {
+
 				if (data.fatal) {
+
+					setPlayerState("error");
+
 					if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+						console.log("Network failure, failed to fetch source.");
 						notFound();
+					} else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
+						console.log("Media failure, trying to recover");
+						hls.recoverMediaError();
+					} else {
+						hls.destroy();
 					};
+
 				};
+
+			});
+
+			hls.on(Hls.Events.LEVEL_LOADED, (_, __) => {
+				setPlayerState("ready");
 			});
 
 			hls.attachMedia(video);
@@ -118,7 +140,17 @@ export default function VideoPlayer({
 			video.src = videoUrl;
 		} else {
 			video.src = videoUrl;
+		};
+
+		function handleSafariError() {
+			setPlayerState("error");
 		}
+
+		video.addEventListener("error", handleSafariError, { once: true });
+
+		return () => {
+			video.removeEventListener("error", handleSafariError);
+		};
 
 	}, [currentSource]);
 
@@ -248,6 +280,7 @@ export default function VideoPlayer({
 	};
 
 	useKeyBoardShortcuts(
+		playerState,
 		handleMediaButtons,
 		handleFullscreen,
 		skipForward,
@@ -255,14 +288,13 @@ export default function VideoPlayer({
 	);
 
 	useEffect(() => {
+
 		const video = videoRef.current;
 		if (!video) return;
 
-		// Remove all existing tracks from DOM
 		const existingTracks = video.querySelectorAll('track');
 		existingTracks.forEach(track => track.remove());
 
-		// Disable all text tracks
 		Array.from(video.textTracks).forEach(track => {
 			track.mode = 'disabled';
 		});
@@ -271,22 +303,21 @@ export default function VideoPlayer({
 			return;
 		}
 
-		// Create and add new track with cache-busting timestamp
 		const trackElement = document.createElement('track');
+
 		trackElement.kind = 'subtitles';
 		trackElement.label = currentTrack.lang;
-		// Add timestamp to bust cache
+
 		const cacheBuster = `?t=${Date.now()}`;
+
 		trackElement.src = `/api${currentTrack.url}${cacheBuster}`;
 		trackElement.srclang = currentTrack.lang;
 		trackElement.default = true;
 
 		video.appendChild(trackElement);
 
-		// Force the video element to recognize the new track
 		video.textTracks[0].mode = 'hidden';
 
-		// Wait a tick, then show the track
 		const handleLoad = () => {
 			requestAnimationFrame(() => {
 				if (video.textTracks[0]) {
@@ -297,10 +328,10 @@ export default function VideoPlayer({
 
 		trackElement.addEventListener('load', handleLoad, { once: true });
 
-		// Cleanup
 		return () => {
 			trackElement.removeEventListener('load', handleLoad);
 		};
+
 	}, [currentTrack]);
 
 	return (
@@ -368,6 +399,7 @@ export default function VideoPlayer({
 				<div className="flex flex-col items-center px-5 pb-2">
 
 					<ProgressBar
+						playerState={playerState}
 						timecode={timecode}
 						videoRef={videoRef}
 						onSeek={handleSeek}
@@ -378,6 +410,7 @@ export default function VideoPlayer({
 					<div className="w-full h-10 flex items-center justify-between">
 
 						<PlaybackControls
+							playerState={playerState}
 							isPlaying={isPlaying}
 							handleMediaButtons={handleMediaButtons}
 							volume={volume}

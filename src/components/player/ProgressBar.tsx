@@ -1,13 +1,16 @@
 "use client"
 
 import { RefObject, useState } from "react";
+import { PlayerState } from "./Player";
 
 export function ProgressBar({
+	playerState,
 	timecode,
 	videoRef,
 	onSeek,
 	onProgressUpdate
 }: {
+	playerState: PlayerState;
 	timecode: number,
 	videoRef: RefObject<HTMLVideoElement | null>,
 	onSeek: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -43,6 +46,7 @@ export function ProgressBar({
 				max={100}
 				step={0.01}
 				value={(timecode / (videoRef.current?.duration || 1)) * 100 || 0}
+				disabled={playerState !== "ready"}
 				onChange={(e) => {
 					onSeek(e);
 					setIsSeeking(true);

@@ -1,9 +1,12 @@
 "use client"
 
+import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { FaPause, FaPlay } from "react-icons/fa";
+import { PlayerState } from "./Player";
 
 export function PlaybackControls({
+	playerState,
 	isPlaying,
 	handleMediaButtons,
 	volume,
@@ -11,6 +14,7 @@ export function PlaybackControls({
 	formattedTime,
 	formattedDuration
 }: {
+	playerState: PlayerState;
 	isPlaying: boolean;
 	handleMediaButtons: () => void;
 	volume: number;
@@ -40,10 +44,15 @@ export function PlaybackControls({
 		<div className="flex items-center space-x-4">
 			{/* Play/Pause */}
 			<button
-				className="hover:bg-neutral-700 transition-all ease-in-out duration-200 w-8 h-8 flex items-center justify-center rounded-md"
+				className={cn(
+					"hover:bg-neutral-700 transition-all ease-in-out duration-200 w-8 h-8 flex items-center justify-center rounded-md",
+					"disabled:text-neutral-500 text-white disabled:hover:bg-transparent"
+				)}
 				title={isPlaying ? 'Pause (Space)' : 'Play (Space)'}
-				onClick={handleMediaButtons}>
-				{isPlaying ? <FaPause className="text-white" /> : <FaPlay className="text-white" />}
+				onClick={handleMediaButtons}
+				disabled={playerState !== "ready"}
+			>
+				{isPlaying ? <FaPause /> : <FaPlay />}
 			</button>
 
 			{/* Volume */}
