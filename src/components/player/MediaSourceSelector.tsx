@@ -14,7 +14,7 @@ const names = [
 function getServerName(url: string): string {
 
 	const hash = SHA256(url).toString();
-	const hashInt = parseInt(hash.slice(0,8), 16);
+	const hashInt = parseInt(hash.slice(0, 8), 16);
 
 	const index = hashInt % names.length;
 
@@ -29,7 +29,7 @@ export default function MediaSourceSelector({
 }: {
 	sources: MediaSourceFile[];
 	currentSource: MediaSourceFile;
-	onSourceChange: (source: MediaSourceFile) => void;
+	onSourceChange: (sourceIdx: number) => void;
 }) {
 
 	const serverNames = useMemo(() => {
@@ -44,7 +44,7 @@ export default function MediaSourceSelector({
 
 				<SettingsOptionButton
 					key={source.file}
-					onClick={() => onSourceChange(source)}
+					onClick={() => onSourceChange(idx)}
 					active={currentSource.id === source.id}
 					className="py-3 px-4 text-start"
 				>

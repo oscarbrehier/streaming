@@ -50,7 +50,7 @@ export function PlaybackControls({
 				)}
 				title={isPlaying ? 'Pause (Space)' : 'Play (Space)'}
 				onClick={handleMediaButtons}
-				disabled={playerState !== "ready"}
+				disabled={playerState === "error"}
 			>
 				{isPlaying ? <FaPause /> : <FaPlay />}
 			</button>

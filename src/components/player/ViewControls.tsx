@@ -24,10 +24,9 @@ interface ViewControlsProps {
 	currentQuality: number | "auto";
 	qualities: QualityLevel[];
 
-	onCaptionToggle: (e: React.MouseEvent) => void;
 	onFullscreenToggle: () => void;
 	onQualityChange: (quality: number | "auto") => void;
-	onSourceChange: (source: MediaSourceFile) => void;
+	onSourceChange: (sourceIdx: number) => void;
 	onSubtitleChange: (track: SubtitleSource) => void;
 }
 
@@ -53,7 +52,6 @@ export function ViewControls({
 	captions,
 	sources,
 	currentSource,
-	onCaptionToggle,
 	onFullscreenToggle,
 	currentQuality,
 	qualities,

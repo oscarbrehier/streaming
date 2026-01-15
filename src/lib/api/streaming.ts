@@ -6,7 +6,10 @@ export async function getStreamingSources(mediaId: string, type: "movie" | "tv")
 
 	const { data: cached, isStale } = await checkCacheForSources(mediaId);
 
-	if (cached && !isStale) return { sources: cached };
+	if (cached && !isStale) {
+		console.log("Serving sources from cache")
+		return { sources: cached };
+	};
 
 	if (cached && isStale) {
 		triggerBackgroundScrape(mediaId).catch((err) => console.log("Background Scrape Error:", err));

@@ -46,7 +46,7 @@ export function ProgressBar({
 				max={100}
 				step={0.01}
 				value={(timecode / (videoRef.current?.duration || 1)) * 100 || 0}
-				disabled={playerState !== "ready"}
+				disabled={playerState === "error"}
 				onChange={(e) => {
 					onSeek(e);
 					setIsSeeking(true);

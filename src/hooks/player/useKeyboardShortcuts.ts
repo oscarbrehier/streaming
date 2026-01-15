@@ -11,7 +11,7 @@ export function useKeyBoardShortcuts(
 
 	useEffect(() => {
 
-		if (playerState !== "ready") return;
+		if (playerState === "error") return;
 
 		const handleKeyDown = (e: KeyboardEvent) => {
 

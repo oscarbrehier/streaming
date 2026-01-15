@@ -60,8 +60,6 @@ export default async function Page({ params }: PageProps) {
 	const { sources } = await getStreamingSources(id, "movie");
 	
 	if (!sources?.files || sources?.files.length === 0) return <MediaNotFound />
-
-	console.log(sources.files[0])
 	
 	const supabase = await createClient();
 	const { data: { user } } = await supabase.auth.getUser();

@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 import { glass } from "@/styles";
 import { useMediaSources } from "@/hooks/player/useMediaSources";
 import { useSubtitles } from "@/hooks/player/useSubtitles";
+import { Loader2 } from "lucide-react";
 
 const supabase = createClient();
 
@@ -27,8 +28,6 @@ interface VideoPlayerProps {
 	userId: string;
 	mediaId: string;
 	title?: string;
-	subtitleUrl?: string;
-	onRating?: (rating: number) => void;
 	showRating?: boolean;
 	mediaStatus: UserMediaStatus;
 	sources: MediaSources;
@@ -46,8 +45,6 @@ export default function VideoPlayer({
 	userId,
 	mediaId,
 	title,
-	subtitleUrl,
-	onRating,
 	showRating = true,
 	mediaStatus,
 	sources
@@ -71,17 +68,24 @@ export default function VideoPlayer({
 	} = useMediaState(videoRef)
 
 	const [fullscreen, setFullscreen] = useState(false);
-	// const [captions, setCaptions] = useState(true);
+
 	const [rating, setRating] = useState(mediaStatus.rating ?? 0);
 
 	const [playerState, setPlayerState] = useState<PlayerState>("loading");
 
-	const { currentSource, changeSource } = useMediaSources(sources);
+	const { currentSource, changeSource, nextSource } = useMediaSources(sources);
 	const { currentTrack, changeSubtitleTrack } = useSubtitles(sources.subtitles);
 	const { qualities, changeQuality, currentQuality, setupQualityListener } = useVideoQuality(hlsRef);
 
 	const { controls } = useVideoControls(videoRef, isPlaying);
 	const { handleProgressUpdate } = useVideoProgress(videoRef, mediaId, userId, mediaStatus.completed);
+
+	function handleSourceFailover() {
+
+		const wasSwitched = nextSource();
+		if (!wasSwitched) notFound();
+
+	};
 
 	// HLS support
 	useEffect(() => {
@@ -112,7 +116,7 @@ export default function VideoPlayer({
 
 					if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
 						console.log("Network failure, failed to fetch source.");
-						notFound();
+						handleSourceFailover();
 					} else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
 						console.log("Media failure, trying to recover");
 						hls.recoverMediaError();
@@ -124,9 +128,9 @@ export default function VideoPlayer({
 
 			});
 
-			hls.on(Hls.Events.LEVEL_LOADED, (_, __) => {
-				setPlayerState("ready");
-			});
+			// hls.on(Hls.Events.MANIFEST_PARSED, (_, __) => {
+			// 	setPlayerState("ready");
+			// });
 
 			hls.attachMedia(video);
 
@@ -136,23 +140,48 @@ export default function VideoPlayer({
 
 		};
 
+		// Safari support
 		if (video.canPlayType("application/vnd.apple.mpegurl")) {
+
 			video.src = videoUrl;
+
+			const setReady = () => setPlayerState("ready");
+			video.addEventListener("canplay", setReady);
+			video.addEventListener("loadedmetadata", setReady);
+
+			video.addEventListener("error", handleSourceFailover, { once: true });
+
+			return () => {
+				video.removeEventListener("error", handleSourceFailover);
+				video.removeEventListener("canplay", setReady);
+				video.removeEventListener("loadedmetadata", setReady);
+			};
+
 		} else {
 			video.src = videoUrl;
 		};
 
-		function handleSafariError() {
-			setPlayerState("error");
-		}
+	}, [currentSource]);
 
-		video.addEventListener("error", handleSafariError, { once: true });
+	useEffect(() => {
+
+		const video = videoRef.current;
+		if (!video) return;
+
+		const handleWaiting = () => setPlayerState(prev => (prev !== "error" ? "loading" : prev));
+		const handlePlaying = () => setPlayerState("ready");
+
+		video.addEventListener("waiting", handleWaiting);
+		video.addEventListener("playing", handlePlaying);
+		video.addEventListener("canplay", handlePlaying)
 
 		return () => {
-			video.removeEventListener("error", handleSafariError);
+			video.removeEventListener("waiting", handleWaiting);
+			video.removeEventListener("playing", handlePlaying);
+			video.removeEventListener("canplay", handlePlaying);
 		};
 
-	}, [currentSource]);
+	}, [videoRef]);
 
 	useEffect(() => {
 
@@ -233,18 +262,6 @@ export default function VideoPlayer({
 		};
 
 		setFullscreen(!fullscreen);
-
-	};
-
-	const handleCaptions = (e: React.MouseEvent) => {
-
-		// e.preventDefault();
-		// setCaptions(!captions);
-
-		// if (videoRef.current && videoRef.current.textTracks[0]) {
-		// 	const track = videoRef.current.textTracks[0];
-		// 	track.mode = captions ? 'hidden' : 'showing';
-		// };
 
 	};
 
@@ -384,16 +401,30 @@ export default function VideoPlayer({
 
 				</div>
 
-				{/* Rating (when paused and activated) */}
-				{isPlaying === false && showRating && (
+				<div className="flex-1 flex justify-center items-center relative">
 
-					<RatingOverlay
-						rating={rating}
-						onRatingUpdate={(v) => handleUpdateRating(v)}
-						ratings={ratings}
-					/>
+					{/* Rating (when paused and activated) */}
+					{isPlaying === false && showRating && (
 
-				)}
+						<RatingOverlay
+							rating={rating}
+							onRatingUpdate={(v) => handleUpdateRating(v)}
+							ratings={ratings}
+						/>
+
+					)}
+
+					{playerState === "loading" && (
+
+						<div className="absolute animate-spin">
+							<Loader2 size={26} />
+						</div>
+
+					)}
+
+				</div>
+
+
 
 				{/* Bottom Controls */}
 				<div className="flex flex-col items-center px-5 pb-2">
@@ -423,14 +454,13 @@ export default function VideoPlayer({
 							subtitles={sources.subtitles}
 							currentSubtitleTrack={currentTrack}
 							captions={true}
-							onCaptionToggle={handleCaptions}
 							onFullscreenToggle={handleFullscreen}
 							currentQuality={currentQuality}
 							qualities={qualities}
 							onQualityChange={changeQuality}
 							sources={sources}
 							currentSource={currentSource}
-							onSourceChange={(source) => changeSource(source)}
+							onSourceChange={(sourceIdx) => changeSource(sourceIdx)}
 							onSubtitleChange={changeSubtitleTrack}
 						/>
 
