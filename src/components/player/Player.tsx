@@ -112,6 +112,11 @@ export default function VideoPlayer({
 
 				if (data.fatal) {
 
+					if (data.details === Hls.ErrorDetails.FRAG_LOAD_ERROR ||
+						data.details === Hls.ErrorDetails.FRAG_LOAD_TIMEOUT) {
+						return;
+					};
+
 					setPlayerState("error");
 
 					if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
@@ -170,15 +175,27 @@ export default function VideoPlayer({
 
 		const handleWaiting = () => setPlayerState(prev => (prev !== "error" ? "loading" : prev));
 		const handlePlaying = () => setPlayerState("ready");
+		const handleSeeked = () => {
+			if (video.readyState >= 3) setPlayerState("ready");
+		};
+
+		const handlePlayState = () => setIsPlaying(true);
+		const handlePauseState = () => setIsPlaying(false);
 
 		video.addEventListener("waiting", handleWaiting);
 		video.addEventListener("playing", handlePlaying);
-		video.addEventListener("canplay", handlePlaying)
+		video.addEventListener("canplay", handlePlaying);
+		video.addEventListener("seeked", handleSeeked);
+		video.addEventListener("play", handlePlayState);
+		video.addEventListener("pause", handlePauseState);
 
 		return () => {
 			video.removeEventListener("waiting", handleWaiting);
 			video.removeEventListener("playing", handlePlaying);
 			video.removeEventListener("canplay", handlePlaying);
+			video.removeEventListener("seeked", handleSeeked);
+			video.removeEventListener("play", handlePlayState);
+			video.removeEventListener("pause", handlePauseState);
 		};
 
 	}, [videoRef]);
@@ -211,18 +228,37 @@ export default function VideoPlayer({
 
 	}, [isPlaying, handleProgressUpdate]);
 
-	const handleMediaButtons = () => {
+	const handleMediaButtons = async () => {
 
 		if (!videoRef.current) return;
 
 		if (isPlaying) {
 			videoRef.current.pause();
+			setIsPlaying(false);
 		} else {
-			videoRef.current.play();
+
+			try {
+
+				const playPromise = videoRef.current.play();
+
+				if (playPromise !== undefined) {
+					await playPromise;
+					setIsPlaying(true);
+				};
+
+			} catch (err) {
+
+				if (err instanceof Error && err.name === 'AbortError') {
+					console.log("Playback was interrupted by a new request");
+				} else {
+					console.error("PLayback error:", err);
+				};
+
+			};
+
 		};
 
 		handleProgressUpdate();
-		setIsPlaying(!isPlaying);
 
 	};
 
@@ -360,6 +396,7 @@ export default function VideoPlayer({
 				onLoadedMetadata={() => {
 
 					if (videoRef.current && mediaStatus.progress_sec > 0) {
+						setPlayerState("loading");
 						videoRef.current.currentTime = mediaStatus.progress_sec;
 						updatePlaybackTime();
 					};
