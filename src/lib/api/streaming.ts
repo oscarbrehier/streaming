@@ -76,7 +76,7 @@ export async function getStreamingSources(mediaId: string, type: "movie" | "tv")
 
 };
 
-async function triggerBackgroundScrape(mediaId: string) {
+export async function triggerBackgroundScrape(mediaId: string) {
 
 	const endpoint = `${process.env.NEXT_PUBLIC_LIBRARY_URL}/movie/${mediaId}`;
 	await fetch(endpoint, {

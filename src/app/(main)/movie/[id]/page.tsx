@@ -3,12 +3,13 @@ import { createClient } from "@/utils/supabase/server";
 import { formatTimeHuman } from "@/utils/timeFormat";
 import { constructImg } from "@/lib/tmdb/constructImg";
 import { getMainCast, getMovie } from "@/lib/tmdb/movie";
-import { Play } from "lucide-react";
+import { HardDriveDownload, Play } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { SuggestContentButton } from "./SuggestContentButton";
 import { isInWatchlist } from "@/utils/db/watchlist";
 import { AddToWatchlist } from "./AddToWatchlist";
+import { PreloadButton } from "./PreloadButton";
 
 interface PageProps {
 	params: Promise<{ id: string }>;
@@ -115,38 +116,19 @@ export default async function Page({
 
 				)}
 
-				<Link
-					href={`/watch/${movieDetails.id}`}
-					className="capitalize bg-white text-black text-md h-10 px-6 rounded-3xl cursor-pointer flex items-center space-x-4"
-				>
-					<Play className="text-black mt-0.5" fill="#000" size={16} />
-					<span>{userMediaStatus ? "Resume" : "Watch Now"}</span>
-				</Link>
+				<div className="flex space-x-4">
 
-				{/* <div className="flex space-x-4">
+					<Link
+						href={`/watch/${movieDetails.id}`}
+						className="capitalize bg-white text-black text-md h-10 px-6 rounded-3xl cursor-pointer flex items-center space-x-4"
+					>
+						<Play className="text-black mt-0.5" fill="#000" size={16} />
+						<span>{userMediaStatus ? "Resume" : "Watch Now"}</span>
+					</Link>
 
-					{isStreamAvailable ? (
+					<PreloadButton mediaId={mediaId} />
 
-						<Link
-							href={`/watch/${movieDetails.id}`}
-							className="capitalize bg-white text-black text-md h-10 px-6 rounded-3xl cursor-pointer flex items-center space-x-4"
-						>
-							<Play className="text-black mt-0.5" fill="#000" size={16} />
-							<span>{userMediaStatus ? "Resume" : "Watch Now"}</span>
-						</Link>
-
-					) : (
-
-						<SuggestContentButton mediaId={mediaId} />
-
-					)}
-
-					<AddToWatchlist
-						isAdded={isMovieInWatchlist}
-						mediaId={mediaId}
-					/>
-
-				</div> */}
+				</div>
 
 			</MovieOverview>
 
