@@ -17,7 +17,7 @@ export async function getStreamingSources(mediaId: string, type: "movie" | "tv")
 	};
 
 	const endpoint = `${process.env.NEXT_PUBLIC_LIBRARY_URL}/movie/${mediaId}`;
-	
+
 	try {
 
 		const res = await fetch(endpoint, {
@@ -79,13 +79,25 @@ export async function getStreamingSources(mediaId: string, type: "movie" | "tv")
 export async function triggerBackgroundScrape(mediaId: string) {
 
 	const endpoint = `${process.env.NEXT_PUBLIC_LIBRARY_URL}/movie/${mediaId}`;
-	await fetch(endpoint, {
-		method: "GET",
-		headers: {
-			"Authorization": `Bearer ${process.env.LIBRARY_SECRET}`,
-			"Content-Type": "application/json"
-		}
-	});
+
+	try {
+
+		const res = await fetch(endpoint, {
+			method: "GET",
+			headers: {
+				"Authorization": `Bearer ${process.env.LIBRARY_SECRET}`,
+				"Content-Type": "application/json"
+			}
+		});
+
+		return res.ok;
+
+	} catch (err) {
+
+		console.log("Scrape failed:", err);
+		return false;
+
+	};
 
 };
 
@@ -99,5 +111,18 @@ async function checkCacheForSources(mediaId: string): Promise<{ data: MediaSourc
 
 	if (!res.ok) return { data: null, isStale: false };
 	return await res.json();
+
+};
+
+export async function hasCachedSources(mediaId: string): Promise<boolean> {
+
+	const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cache/media-${mediaId}`, {
+		method: "HEAD",
+		headers: {
+			'Authorization': `Bearer ${process.env.API_INTERNAL_KEY}`
+		}
+	});
+
+	return res.ok;
 
 };

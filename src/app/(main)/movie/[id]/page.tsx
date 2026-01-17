@@ -10,6 +10,7 @@ import { SuggestContentButton } from "./SuggestContentButton";
 import { isInWatchlist } from "@/utils/db/watchlist";
 import { AddToWatchlist } from "./AddToWatchlist";
 import { PreloadButton } from "./PreloadButton";
+import { hasCachedSources } from "@/lib/api/streaming";
 
 interface PageProps {
 	params: Promise<{ id: string }>;
@@ -126,7 +127,9 @@ export default async function Page({
 						<span>{userMediaStatus ? "Resume" : "Watch Now"}</span>
 					</Link>
 
-					<PreloadButton mediaId={mediaId} />
+					{!(await hasCachedSources(mediaId)) && (
+						<PreloadButton mediaId={mediaId} />
+					)}
 
 				</div>
 
