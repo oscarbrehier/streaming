@@ -61,9 +61,9 @@ export default function Page() {
 	async function requestNewOTPCode(e: MouseEvent<HTMLButtonElement>) {
 
 		e.preventDefault();
-		
-		if (newRequestTimer > 0) return ;
-		
+
+		if (newRequestTimer > 0) return;
+
 		setNewRequestTimer(0);
 
 		const { error } = await requestOTPCode();

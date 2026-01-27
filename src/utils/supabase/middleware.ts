@@ -78,7 +78,7 @@ export async function updateSession(request: NextRequest) {
 		if (is2FARequired && !pathname.startsWith("/2fa")) {
 
 			await requestOTPCodeHandler(supabase);
-			return NextResponse.redirect(new URL("/2fa", request.url));
+			return NextResponse.redirect(new URL("2fa", request.url));
 
 		};
 
