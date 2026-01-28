@@ -1,7 +1,6 @@
-import { requestOTPCodeHandler } from '@/actions/requestOTPCode';
-import { BASE_PATH } from '@/lib/basePath';
 import { createServerClient } from '@supabase/ssr'
 import { NextRequest, NextResponse } from 'next/server'
+import { getRedirectURL } from '../redirect';
 
 async function check2FAStatus(access_token: string | undefined) {
 
@@ -22,7 +21,11 @@ async function check2FAStatus(access_token: string | undefined) {
 
 export async function updateSession(request: NextRequest) {
 
-	const pathname = request.nextUrl.pathname;
+	let internalPathname = request.nextUrl.pathname;
+
+	if (process.env.NODE_ENV === "production") {
+		internalPathname = internalPathname.replace(/^\/streaming/, "");
+	};
 
 	let supabaseResponse = NextResponse.next({
 		request,
@@ -44,7 +47,7 @@ export async function updateSession(request: NextRequest) {
 					supabaseResponse = NextResponse.next({
 						request,
 					});
-					cookiesToSet.forEach(({ name, value, options }) => supabaseResponse.cookies.set({ name, value, ...options, path: BASE_PATH }));
+					cookiesToSet.forEach(({ name, value, options }) => supabaseResponse.cookies.set({ name, value, ...options, path: "/" }));
 
 				},
 			},
@@ -57,15 +60,10 @@ export async function updateSession(request: NextRequest) {
 
 	if (
 		(!user || error) &&
-		!pathname.startsWith('/login') &&
-		!pathname.startsWith('/register')
+		!internalPathname.startsWith('/login') &&
+		!internalPathname.startsWith('/register')
 	) {
-
-		const url = request.nextUrl.clone();
-
-		url.pathname = '/login';
-		return NextResponse.redirect(url);
-
+		return NextResponse.redirect(new URL(getRedirectURL("/login"), request.url));
 	};
 
 	if (user) {
@@ -75,17 +73,14 @@ export async function updateSession(request: NextRequest) {
 
 		const is2FARequired = await check2FAStatus(access_token);
 
-		if (is2FARequired && !pathname.startsWith("/2fa")) {
-
-			await requestOTPCodeHandler(supabase);
-			return NextResponse.redirect(new URL("2fa", request.url));
-
+		if (is2FARequired && !internalPathname.startsWith("/2fa")) {
+			return NextResponse.redirect(new URL(getRedirectURL("/2fa"), request.url));
 		};
 
 
 	};
 
-	const isAdminRoute = pathname.startsWith("/dashboard");
+	const isAdminRoute = internalPathname.startsWith("/dashboard");
 
 	if (isAdminRoute && user) {
 

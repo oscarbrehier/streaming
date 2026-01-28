@@ -56,7 +56,7 @@ export async function useRateLimit<Args extends any[], Return>(
 				}
 			});
 
-			throw new Error("Rate limit exceeded.");
+			throw new Error("rate limit");
 		}
 
 		requestMap.set(ip, currentRequestCount + 1);
