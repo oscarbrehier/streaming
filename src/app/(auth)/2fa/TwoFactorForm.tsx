@@ -53,9 +53,7 @@ export default function TwoFactorForm({
 			if (success) router.push("/");
 
 		} catch (err) {
-
 			setError("An unknown error occurred. Please try again later");
-
 		} finally {
 			setLoading(false);
 		};

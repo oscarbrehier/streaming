@@ -1,24 +1,21 @@
 "use client"
 
+import { logout } from "@/actions/logout";
 import { Button } from "@/components/ui/button";
-import { createClient } from "@/utils/supabase/client";
-
-const supabase = createClient();
+import { Loader2 } from "lucide-react";
+import { useTransition } from "react";
 
 export function LogoutButton() {
 
-	async function signOut() {
-		const { error } = await supabase.auth.signOut();
-		if (!error) window.location.replace("/login");
-	};
+	const [isPending, startTransition] = useTransition();
 
 	return (
 
 		<Button
 			variant="secondary"
-			onClick={signOut}
+			onClick={() => startTransition(() => logout())}
 		>
-			Log Out
+			{isPending ? <Loader2 className="animate-spin" /> : "Log Out"}
 		</Button>
 
 	);
