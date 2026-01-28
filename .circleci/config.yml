@@ -13,18 +13,19 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - v1-dependencies-{{ checksum "package-lock.json" }}
-            - v1-dependencies-
+            - v1-pnpm-store-{{ checksum "pnpm-lock.yaml" }}
+            - v1-pnpm-store-
       - run:
           name: Install dependencies
-          command: npm install
-      - save_cache:
-          paths:
-            - node_modules
-          key: v1-dependencies-{{ checksum "package-lock.json" }}
+          command: pnpm install --frozen-lockfile
       - run:
           name: Build project
-          command: npm run build
+          command: pnpm run build
+      - save_cache:
+          key: v1-pnpm-store-{{ checksum "pnpm-lock.yaml" }}
+          paths:
+            - ~/.local/share/pnpm/store
+            - .next/cache
       - run:
           name: Run tests
           command: npm test || echo "No tests found"
@@ -34,7 +35,7 @@ jobs:
             - .next
             - node_modules
             - package.json
-            - package-lock.json
+            - pnpm-lock.yaml
             - public
             - next.config.ts
             - components.json
@@ -61,7 +62,7 @@ jobs:
               cd ~/streaming
               tar xzf deploy.tar.gz
               rm deploy.tar.gz
-              pm2 restart streaming || pm2 start npm --name streaming --cwd ~/streaming -- start
+              pm2 restart streaming || pm2 start pnpm --name streaming --cwd ~/streaming -- start
             "
 
 workflows:
