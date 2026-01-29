@@ -13,8 +13,11 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - v1-pnpm-store-{{ checksum "pnpm-lock.yaml" }}
-            - v1-pnpm-store-
+            - v1-pnpm-{{ checksum "pnpm-lock.yaml" }}
+      - restore_cache:
+          keys:
+            - v1-next-cache-{{ .Branch }}-
+            - v1-next-cache-
       - run:
           name: Install dependencies
           command: pnpm install --frozen-lockfile
@@ -22,9 +25,12 @@ jobs:
           name: Build project
           command: pnpm run build
       - save_cache:
-          key: v1-pnpm-store-{{ checksum "pnpm-lock.yaml" }}
+          key: v1-pnpm-{{ checksum "pnpm-lock.yaml" }}
           paths:
             - ~/.local/share/pnpm/store
+      - save_cache:
+          key: v1-next-cache-{{ .Branch }}-{{ epoch }}
+          paths:
             - .next/cache
       - run:
           name: Run tests
@@ -33,7 +39,6 @@ jobs:
           root: ~/repo
           paths:
             - .next
-            - node_modules
             - package.json
             - pnpm-lock.yaml
             - public
@@ -62,6 +67,7 @@ jobs:
               cd ~/streaming
               tar xzf deploy.tar.gz
               rm deploy.tar.gz
+              pnpm install --prod --frozen-lockfile
               pm2 restart streaming || pm2 start pnpm --name streaming --cwd ~/streaming -- start
             "
 
