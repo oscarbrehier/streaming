@@ -6,6 +6,9 @@ import { MovieOverview } from "./MovieOverview";
 import { cn } from "@/lib/utils";
 import { glass } from "@/styles";
 import { useEffect, useState } from "react";
+import { useBridge } from "@/context/BridgeContext";
+import { BRIDGE_UI_CONFIG } from "@/utils/constants";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
 export function HeroBanner({
 	items
@@ -14,6 +17,7 @@ export function HeroBanner({
 }) {
 
 	const [visibleIdx, setVisibleIdx] = useState(0);
+	const { isConnected } = useBridge();
 
 	useEffect(() => {
 
@@ -78,13 +82,33 @@ export function HeroBanner({
 
 						<div className="flex space-x-4">
 
-							<Link
-								href={`/watch/${items[visibleIdx]!.id}`}
-								className="capitalize bg-neutral-200 text-black text-md h-10 px-6 rounded-3xl cursor-pointer flex items-center sm:space-x-4"
-							>
-								<Play className="text-black mt-0.5" fill="#000" size={16} />
-								<span className="sm:block hidden">Watch now</span>
-							</Link>
+							{isConnected ? (
+
+								<Link
+									href={`/watch/${items[visibleIdx]!.id}`}
+									className="capitalize bg-neutral-200 text-black text-md h-10 px-6 rounded-3xl cursor-pointer flex items-center sm:space-x-4"
+								>
+									<Play className="text-black mt-0.5" fill="#000" size={16} />
+									<span className="sm:block hidden">Watch now</span>
+								</Link>
+
+							) : (
+
+								<Tooltip>
+									<TooltipTrigger asChild>
+										<div
+											className="cursor-not-allowed capitalize opacity-50 bg-neutral-200 text-black text-md h-10 px-6 rounded-3xl flex items-center sm:space-x-4"
+										>
+											<Play className="mt-0.5" fill="#000" size={16} />
+											<span className="sm:block hidden">Watch now</span>
+										</div>
+									</TooltipTrigger>
+									<TooltipContent>
+										{BRIDGE_UI_CONFIG.TOOLTIPS.STREAMING}
+									</TooltipContent>
+								</Tooltip>
+
+							)}
 
 							<Link
 								href={`/movie/${items[visibleIdx]!.id}`}

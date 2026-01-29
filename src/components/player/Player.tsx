@@ -21,6 +21,10 @@ import { glass } from "@/styles";
 import { useMediaSources } from "@/hooks/player/useMediaSources";
 import { useSubtitles } from "@/hooks/player/useSubtitles";
 import { Loader2 } from "lucide-react";
+import { useBridge } from "@/context/BridgeContext";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../ui/dialog";
+import { Button } from "../ui/button";
+import { BridgeDisconnectDialog } from "./BridgeDisconnectDialog";
 
 const supabase = createClient();
 
@@ -49,6 +53,8 @@ export default function VideoPlayer({
 	mediaStatus,
 	sources
 }: VideoPlayerProps) {
+
+	const { status } = useBridge();
 
 	const { updateRating, setMediaDuration } = new MediaService(supabase, mediaId, userId);
 
@@ -387,6 +393,18 @@ export default function VideoPlayer({
 
 	}, [currentTrack]);
 
+	useEffect(() => {
+
+		if (status === "DISCONNECTED" && isPlaying) {
+
+			videoRef.current?.pause();
+			setIsPlaying(false);
+			handleProgressUpdate();
+
+		};
+
+	}, [status, isPlaying, handleProgressUpdate])
+
 	return (
 		<div className="h-auto w-auto relative bg-black" ref={playerRef}>
 
@@ -402,21 +420,11 @@ export default function VideoPlayer({
 					};
 
 				}}
-			>
+			/>
 
-				{/* {currentTrack && (
-					<track
-						kind="subtitles"
-						label={currentTrack.lang}
-						src={`/api${currentTrack.url}`}
-						srcLang={currentTrack.lang}
-						default
-					/>
-				)} */}
+			<BridgeDisconnectDialog />
 
-			</video>
-
-			<div className={`h-screen w-full absolute flex flex-col justify-between z-2147483647 transition-opacity duration-300 ${controls ? 'opacity-100' : 'opacity-0'}`}>
+			<div className={`h-screen w-full absolute flex flex-col justify-between z-2147483640 transition-opacity duration-300 ${controls ? 'opacity-100' : 'opacity-0'}`}>
 
 				{/* Top Bar - Back Button */}
 				<div className='h-12 w-full flex items-center px-5 pt-5 space-x-8'>
@@ -441,7 +449,7 @@ export default function VideoPlayer({
 				<div className="flex-1 flex justify-center items-center relative">
 
 					{/* Rating (when paused and activated) */}
-					{isPlaying === false && showRating && (
+					{isPlaying === false && playerState !== "loading" && showRating && (
 
 						<RatingOverlay
 							rating={rating}

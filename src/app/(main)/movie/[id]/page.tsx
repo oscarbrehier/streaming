@@ -11,6 +11,7 @@ import { isInWatchlist } from "@/utils/db/watchlist";
 import { AddToWatchlist } from "./AddToWatchlist";
 import { PreloadButton } from "./PreloadButton";
 import { hasCachedSources } from "@/lib/api/streaming";
+import { StreamButton } from "./StreamButton";
 
 interface PageProps {
 	params: Promise<{ id: string }>;
@@ -119,13 +120,10 @@ export default async function Page({
 
 				<div className="flex space-x-4">
 
-					<Link
-						href={`/watch/${movieDetails.id}`}
-						className="capitalize bg-white text-black text-md h-10 px-6 rounded-3xl cursor-pointer flex items-center space-x-4"
-					>
-						<Play className="text-black mt-0.5" fill="#000" size={16} />
-						<span>{userMediaStatus ? "Resume" : "Watch Now"}</span>
-					</Link>
+					<StreamButton
+						movieId={movieDetails.id}
+						isInProgress={!!userMediaStatus}
+					/>
 
 					{!(await hasCachedSources(mediaId)) && (
 						<PreloadButton mediaId={mediaId} />

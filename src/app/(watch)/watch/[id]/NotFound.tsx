@@ -26,7 +26,7 @@ export function MediaNotFound() {
 
 					<EmptyTitle>Media not found</EmptyTitle>
 					<EmptyDescription>
-						The request media has not been found in our library
+						The requested media has not been found in our library
 					</EmptyDescription>
 
 				</EmptyHeader>

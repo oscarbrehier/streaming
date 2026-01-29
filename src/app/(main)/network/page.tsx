@@ -18,7 +18,6 @@ async function getPublicProfiles() {
 export default async function Page() {
 
 	const profiles = await getPublicProfiles();
-	console.log(profiles)
 
 	return (
 
