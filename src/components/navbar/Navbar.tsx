@@ -51,7 +51,7 @@ export function Navbar({ user }: NavbarProps) {
 
 			<div className="flex flex-col items-center space-y-6">
 
-				<Tooltip>
+				{/* <Tooltip>
 					<TooltipTrigger>
 						<div className={cn(
 							"size-3 animate-pulse rounded-full flex items-center justify-center",
@@ -61,7 +61,7 @@ export function Navbar({ user }: NavbarProps) {
 					<TooltipContent>
 						{BRIDGE_UI_CONFIG.STATUS[status].message}
 					</TooltipContent>
-				</Tooltip>
+				</Tooltip> */}
 
 				{
 					user && (

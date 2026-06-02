@@ -1,103 +1,94 @@
 "use server"
 
+import { getLookmovie } from "@/services/scraper/lookmovie";
+import { getMovieFromTmdb } from "@/services/scraper/tmdb";
 import { createAuditLog } from "@/utils/db/createAuditLog";
 
 export async function getStreamingSources(mediaId: string, type: "movie" | "tv"): Promise<{ sources: MediaSources | null }> {
 
-	const { data: cached, isStale } = await checkCacheForSources(mediaId);
+	const res = await scrape(mediaId);
+	return { sources: res };
 
-	if (cached && !isStale) {
-		console.log("Serving sources from cache")
-		return { sources: cached };
-	};
+	// const { data: cached, isStale } = await checkCacheForSources(mediaId);
 
-	if (cached && isStale) {
-		triggerBackgroundScrape(mediaId).catch((err) => console.log("Background Scrape Error:", err));
-		return { sources: cached };
-	};
+	// if (cached && !isStale) {
+	// 	console.log("Serving sources from cache")
+	// 	return { sources: cached };
+	// };
 
-	const endpoint = `${process.env.NEXT_PUBLIC_LIBRARY_URL}/movie/${mediaId}`;
+	// if (cached && isStale) {
+	// 	triggerBackgroundScrape(mediaId).catch((err) => console.log("Background Scrape Error:", err));
+	// 	return { sources: cached };
+	// };
 
-	try {
+	// const endpoint = `${process.env.NEXT_PUBLIC_LIBRARY_URL}/movie/${mediaId}`;
 
-		const res = await fetch(endpoint, {
-			method: "GET",
-			headers: {
-				"Authorization": `Bearer ${process.env.LIBRARY_SECRET}`,
-				"Content-Type": "application/json"
-			}
-		});
+	// try {
 
-		if (!res.ok) {
+	// 	const res = await fetch(endpoint, {
+	// 		method: "GET",
+	// 		headers: {
+	// 			"Authorization": `Bearer ${process.env.LIBRARY_SECRET}`,
+	// 			"Content-Type": "application/json"
+	// 		}
+	// 	});
 
-			createAuditLog({
-				action: "fetch_sources_api_error",
-				resource: "streaming",
-				details: {
-					mediaId,
-					mediaType: type,
-					endpoint,
-					statusCode: res.status,
-					statusText: res.statusText,
-				}
-			});
+	// 	if (!res.ok) {
 
-			return { sources: null };
+	// 		createAuditLog({
+	// 			action: "fetch_sources_api_error",
+	// 			resource: "streaming",
+	// 			details: {
+	// 				mediaId,
+	// 				mediaType: type,
+	// 				endpoint,
+	// 				statusCode: res.status,
+	// 				statusText: res.statusText,
+	// 			}
+	// 		});
 
-		}
+	// 		return { sources: null };
 
-		const data = await res.json();
+	// 	}
 
-		return { sources: data ?? null };
+	// 	const data = await res.json();
 
-	} catch (err) {
+	// 	return { sources: data ?? null };
 
-		createAuditLog({
-			action: "fetch_sources_exception",
-			resource: "streaming",
-			details: {
-				mediaId,
-				mediaType: type,
-				endpoint,
-				error:
-					err instanceof Error
-						? {
-							message: err.message,
-							stack: err.stack,
-							name: err.name,
-						}
-						: "Unknown error",
-			}
-		});
+	// } catch (err) {
 
-		return { sources: null };
+	// 	createAuditLog({
+	// 		action: "fetch_sources_exception",
+	// 		resource: "streaming",
+	// 		details: {
+	// 			mediaId,
+	// 			mediaType: type,
+	// 			endpoint,
+	// 			error:
+	// 				err instanceof Error
+	// 					? {
+	// 						message: err.message,
+	// 						stack: err.stack,
+	// 						name: err.name,
+	// 					}
+	// 					: "Unknown error",
+	// 		}
+	// 	});
 
-	};
+	// 	return { sources: null };
+
+	// };
 
 };
 
-export async function triggerBackgroundScrape(mediaId: string) {
+export async function scrape(mediaId: string) {
 
-	const endpoint = `${process.env.NEXT_PUBLIC_LIBRARY_URL}/movie/${mediaId}`;
+	const media = await getMovieFromTmdb(mediaId);
+	console.log(media)
 
-	try {
+	const res = await getLookmovie(media);
 
-		const res = await fetch(endpoint, {
-			method: "GET",
-			headers: {
-				"Authorization": `Bearer ${process.env.LIBRARY_SECRET}`,
-				"Content-Type": "application/json"
-			}
-		});
-
-		return res.ok;
-
-	} catch (err) {
-
-		console.log("Scrape failed:", err);
-		return false;
-
-	};
+	return res;
 
 };
 

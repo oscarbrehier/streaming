@@ -2,7 +2,7 @@
 
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { useBridge } from "@/context/BridgeContext";
-import { triggerBackgroundScrape } from "@/lib/api/streaming";
+// import { triggerBackgroundScrape } from "@/lib/api/streaming";
 import { cn } from "@/lib/utils";
 import { glass } from "@/styles";
 import { BRIDGE_UI_CONFIG } from "@/utils/constants";
@@ -21,8 +21,8 @@ export function PreloadButton({ mediaId }: { mediaId: string }) {
 		e.preventDefault();
 
 		startTransition(async () => {
-			const success = await triggerBackgroundScrape(mediaId);
-			if (success) setStatus("ready");
+			// const success = await triggerBackgroundScrape(mediaId);
+			// if (success) setStatus("ready");
 		});
 
 	};

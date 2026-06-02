@@ -125,9 +125,9 @@ export default async function Page({
 						isInProgress={!!userMediaStatus}
 					/>
 
-					{!(await hasCachedSources(mediaId)) && (
+					{/* {!(await hasCachedSources(mediaId)) && (
 						<PreloadButton mediaId={mediaId} />
-					)}
+					)} */}
 
 				</div>
 

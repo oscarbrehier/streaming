@@ -16,7 +16,7 @@ export function StreamButton({
 
 	const { isConnected } = useBridge();
 
-	return isConnected ? (
+	return (
 
 		<Link
 			href={`/watch/${movieId}`}
@@ -26,22 +26,34 @@ export function StreamButton({
 			<span>{isInProgress ? "Resume" : "Watch Now"}</span>
 		</Link>
 
-	) : (
+	);
 
-		<Tooltip>
-			<TooltipTrigger asChild>
-				<div
-					className="cursor-not-allowed capitalize opacity-50 bg-neutral-200 text-black text-md h-10 px-6 rounded-3xl flex items-center sm:space-x-4"
-				>
-					<Play className="mt-0.5" fill="#000" size={16} />
-					<span>{isInProgress ? "Resume" : "Watch now"}</span>
-				</div>
-			</TooltipTrigger>
-			<TooltipContent>
-				{BRIDGE_UI_CONFIG.TOOLTIPS.STREAMING}
-			</TooltipContent>
-		</Tooltip>
+	// return isConnected ? (
 
-	)
+	// 	<Link
+	// 		href={`/watch/${movieId}`}
+	// 		className="capitalize bg-white text-black text-md h-10 px-6 rounded-3xl cursor-pointer flex items-center space-x-4"
+	// 	>
+	// 		<Play className="text-black mt-0.5" fill="#000" size={16} />
+	// 		<span>{isInProgress ? "Resume" : "Watch Now"}</span>
+	// 	</Link>
+
+	// ) : (
+
+	// 	<Tooltip>
+	// 		<TooltipTrigger asChild>
+	// 			<div
+	// 				className="cursor-not-allowed capitalize opacity-50 bg-neutral-200 text-black text-md h-10 px-6 rounded-3xl flex items-center sm:space-x-4"
+	// 			>
+	// 				<Play className="mt-0.5" fill="#000" size={16} />
+	// 				<span>{isInProgress ? "Resume" : "Watch now"}</span>
+	// 			</div>
+	// 		</TooltipTrigger>
+	// 		<TooltipContent>
+	// 			{BRIDGE_UI_CONFIG.TOOLTIPS.STREAMING}
+	// 		</TooltipContent>
+	// 	</Tooltip>
+
+	// )
 
 };

@@ -393,17 +393,17 @@ export default function VideoPlayer({
 
 	}, [currentTrack]);
 
-	useEffect(() => {
+	// useEffect(() => {
 
-		if (status === "DISCONNECTED" && isPlaying) {
+	// 	if (status === "DISCONNECTED" && isPlaying) {
 
-			videoRef.current?.pause();
-			setIsPlaying(false);
-			handleProgressUpdate();
+	// 		videoRef.current?.pause();
+	// 		setIsPlaying(false);
+	// 		handleProgressUpdate();
 
-		};
+	// 	};
 
-	}, [status, isPlaying, handleProgressUpdate])
+	// }, [status, isPlaying, handleProgressUpdate])
 
 	return (
 		<div className="h-auto w-auto relative bg-black" ref={playerRef}>
@@ -422,7 +422,7 @@ export default function VideoPlayer({
 				}}
 			/>
 
-			<BridgeDisconnectDialog />
+			{/* <BridgeDisconnectDialog /> */}
 
 			<div className={`h-screen w-full absolute flex flex-col justify-between z-2147483640 transition-opacity duration-300 ${controls ? 'opacity-100' : 'opacity-0'}`}>
 

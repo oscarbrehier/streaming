@@ -17,7 +17,7 @@ export function HeroBanner({
 }) {
 
 	const [visibleIdx, setVisibleIdx] = useState(0);
-	const { isConnected } = useBridge();
+	// const { isConnected } = useBridge();
 
 	useEffect(() => {
 
@@ -82,7 +82,15 @@ export function HeroBanner({
 
 						<div className="flex space-x-4">
 
-							{isConnected ? (
+							<Link
+								href={`/watch/${items[visibleIdx]!.id}`}
+								className="capitalize bg-neutral-200 text-black text-md h-10 px-6 rounded-3xl cursor-pointer flex items-center sm:space-x-4"
+							>
+								<Play className="text-black mt-0.5" fill="#000" size={16} />
+								<span className="sm:block hidden">Watch now</span>
+							</Link>
+
+							{/* {isConnected ? (
 
 								<Link
 									href={`/watch/${items[visibleIdx]!.id}`}
@@ -108,7 +116,7 @@ export function HeroBanner({
 									</TooltipContent>
 								</Tooltip>
 
-							)}
+							)} */}
 
 							<Link
 								href={`/movie/${items[visibleIdx]!.id}`}
