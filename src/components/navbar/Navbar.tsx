@@ -27,7 +27,7 @@ export function Navbar({ user }: NavbarProps) {
 
 	return (
 
-		<div className="fixed bottom-4 right-4 h-auto w-16 z-40 bg-card border border-border rounded-full flex flex-col items-center justify-between p-4 space-y-14">
+		<div className="fixed bottom-4 right-4 h-auto w-16 z-40 bg-background border border-border rounded-full flex flex-col items-center justify-between p-4 space-y-14">
 
 			<div className="flex flex-col space-y-4">
 
