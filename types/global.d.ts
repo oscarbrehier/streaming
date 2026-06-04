@@ -208,6 +208,7 @@ declare global {
 	};
 
 	type MovieSearchResponse = PaginatedResponse<MovieSummary>;
+	type TvSearchResponse = PaginatedResponse<TvSummary>;
 
 	type UserRole = "member" | "admin";
 
@@ -295,11 +296,11 @@ declare global {
 		updated_at: Date;
 	};
 
-	type Wishlist = {
+	type Watchlist = {
 		id: string;
 		user_id: string;
-		movie_id: string;
-		media_type: "movie" | "tv";
+		media_id: string;
+		media_type: MediaType;
 		created_at: Date;
 	};
 
@@ -326,6 +327,8 @@ declare global {
 		files: MediaSourceFile[];
 		subtitles: SubtitleSource[];
 	};
+
+	type MediaType = "movie" | "tv";
 
 };
 

@@ -1,6 +1,6 @@
 "use client"
 
-import { Info, Play } from "lucide-react";
+import { Info, Play, Plus } from "lucide-react";
 import Link from "next/link";
 import { MovieOverview } from "./MovieOverview";
 import { cn } from "@/lib/utils";
@@ -9,6 +9,8 @@ import { useEffect, useState } from "react";
 import { useBridge } from "@/context/BridgeContext";
 import { BRIDGE_UI_CONFIG } from "@/utils/constants";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
+import { Button } from "./Button";
+import { AddToWatchlist } from "@/app/(main)/movie/[id]/AddToWatchlist";
 
 export function HeroBanner({
 	items
@@ -17,7 +19,6 @@ export function HeroBanner({
 }) {
 
 	const [visibleIdx, setVisibleIdx] = useState(0);
-	// const { isConnected } = useBridge();
 
 	useEffect(() => {
 
@@ -34,6 +35,8 @@ export function HeroBanner({
 	const renderIndices = items.length > 1
 		? [visibleIdx, (visibleIdx + 1) % items.length]
 		: [visibleIdx];
+
+	let item = items[visibleIdx];
 
 	return (
 
@@ -69,65 +72,33 @@ export function HeroBanner({
 
 			<div className="absolute inset-0 bg-linear-to-t from-background to-transparent z-10" />
 
-			{items[visibleIdx] && (
+			{item && (
 
 				<div
 					className={cn("absolute inset-0 z-20 flex flex-col justify-end p-8 transition-all duration-1000 ease-in-out",
-						items[visibleIdx] ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+						item ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
 					)}
-					key={items[visibleIdx]!.id}
+					key={item!.id}
 				>
 
-					<MovieOverview movie={items[visibleIdx]}>
+					<MovieOverview movie={item}>
 
-						<div className="flex space-x-4">
+						<div className="flex space-x-4 mt-8">
 
-							<Link
-								href={`/watch/${items[visibleIdx]!.id}`}
-								className="capitalize bg-neutral-200 text-black text-md h-10 px-6 rounded-3xl cursor-pointer flex items-center sm:space-x-4"
-							>
-								<Play className="text-black mt-0.5" fill="#000" size={16} />
-								<span className="sm:block hidden">Watch now</span>
-							</Link>
+							<Button
+								href={`/watch/${item!.id}`}
+								label="Play"
+								icon={<Play className="text-black mt-0.5" fill="#000" size={16} />}
+							/>
 
-							{/* {isConnected ? (
+							<AddToWatchlist mediaId={String(item!.id)} isAdded={false} />
 
-								<Link
-									href={`/watch/${items[visibleIdx]!.id}`}
-									className="capitalize bg-neutral-200 text-black text-md h-10 px-6 rounded-3xl cursor-pointer flex items-center sm:space-x-4"
-								>
-									<Play className="text-black mt-0.5" fill="#000" size={16} />
-									<span className="sm:block hidden">Watch now</span>
-								</Link>
-
-							) : (
-
-								<Tooltip>
-									<TooltipTrigger asChild>
-										<div
-											className="cursor-not-allowed capitalize opacity-50 bg-neutral-200 text-black text-md h-10 px-6 rounded-3xl flex items-center sm:space-x-4"
-										>
-											<Play className="mt-0.5" fill="#000" size={16} />
-											<span className="sm:block hidden">Watch now</span>
-										</div>
-									</TooltipTrigger>
-									<TooltipContent>
-										{BRIDGE_UI_CONFIG.TOOLTIPS.STREAMING}
-									</TooltipContent>
-								</Tooltip>
-
-							)} */}
-
-							<Link
-								href={`/movie/${items[visibleIdx]!.id}`}
-								className={cn(
-									"capitalize text-md h-10 px-6 rounded-3xl cursor-pointer flex items-center sm:space-x-4",
-									glass("active")
-								)}
-							>
-								<Info className="text-neutral-200 mt-0.5" size={16} />
-								<span className="sm:block hidden">More Info</span>
-							</Link>
+							<Button
+								href={`/movie/${item!.id}`}
+								label="Details"
+								icon={<Info className="text-neutral-200 mt-0.5" size={16} />}
+								variant="glass"
+							/>
 
 						</div>
 

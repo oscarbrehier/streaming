@@ -1,47 +1,6 @@
+import { getGenres } from "@/lib/tmdb/api";
 import { constructImg } from "@/lib/tmdb/constructImg";
 import { fetchtTMDB } from "@/lib/tmdb/fetchTMDB";
-
-interface Genre {
-	id: number;
-	name: string;
-	backdrop_url?: string;
-};
-
-async function getGenres(): Promise<{ result: Genre[] | null, error: string | null }> {
-
-	try {
-
-		const res = await fetchtTMDB<{ genres: Genre[] }>(`/genre/movie/list`);
-		return { result: res.genres, error: null };
-
-	} catch (err) {
-		return { error: (err as Error).message, result: null }
-	};
-
-};
-
-async function getBackdropForGenre(genreId: number): Promise<string | null> {
-
-	const response = await fetchtTMDB(
-		`/discover/movie`
-		+ `&with_genres=${genreId}`
-		+ `&sort_by=vote_average.desc`
-		+ `&primary_release_date.lte=1999-12-31`
-		+ `&vote_count.gte=1000`
-		+ `&vote_average.gte=7.5`
-		+ `&with_original_language=en|fr|it|ja|de`
-		+ `&page=1`
-	);
-
-	if (response.status !== 200) return null;
-
-	const data = await response.json();
-	const movie = data.results?.find((m: any) => m.backdrop_path);
-
-	if (!movie) return null;
-
-	return `https://image.tmdb.org/t/p/original${movie.backdrop_path}`;
-};
 
 import { cn } from "@/lib/utils";
 import Link from "next/link";

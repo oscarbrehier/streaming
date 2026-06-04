@@ -8,20 +8,22 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useRef } from "react";
 
-export type MovieCardItem = {
+export type PostCardItem = {
 	id: number;
-	title: string;
+	title?: string;
+	name?: string;
 	poster_path: string | null;
 	overview: string;
+	mediaType?: MediaType;
 };
 
-export function MoviePosterCard({
-	movie,
+export function PosterCard({
+	media,
 	loading = "lazy",
 	action,
 	hoverable
 }: {
-	movie: MovieCardItem;
+	media: PostCardItem;
 	loading?: "eager" | "lazy",
 	action?: string;
 	hoverable?: boolean;
@@ -49,28 +51,31 @@ export function MoviePosterCard({
 		setIsCardVisible(false);
 	};
 
+	const displayTitle = media.title ?? media.name ?? "Unknown";
+	const path = action ?? `/${media.mediaType === "tv" ? "tv" : "movie"}/${media.id}`;
+
 	return (
 
 		<Link
-			href={isCardVisible ? "#" : (action ?? `/movie/${movie.id}`)}
+			href={isCardVisible ? "#" : (action ?? path)}
 			aria-disabled="true"
 			onClick={isCardVisible ? (e) => e.preventDefault() : undefined}
-			className={cn("relative aspect-2/3 w-full", isCardVisible && "cursor-auto")}
+			className={cn("absolute aspect-2/3 w-full", isCardVisible && "cursor-auto")}
 			onMouseEnter={hoverable ? handleMouseEnter : undefined}
 			onMouseLeave={hoverable ? handleMouseLeave : undefined}
 		>
 
 			{hoverable && (
 				<HoverCard
-					movie={movie}
+					media={media}
 					alignRight={alignRight}
 					visible={isCardVisible}
 				/>
 			)}
 
 			<Image
-				src={constructImg(movie.poster_path ?? "")}
-				alt={movie.title}
+				src={constructImg(media.poster_path ?? "")}
+				alt={displayTitle}
 				fill
 				className="object-cover rounded-4xl shadow"
 				loading={loading}
@@ -83,16 +88,17 @@ export function MoviePosterCard({
 };
 
 function HoverCard({
-	movie,
+	media,
 	alignRight,
 	visible
 }: {
-	movie: MovieCardItem;
+	media: PostCardItem;
 	alignRight: boolean;
 	visible: boolean;
 }) {
 
 	const router = useRouter();
+	const displayTitle = media.title ?? media.name ?? "Unknown";
 
 	return (
 
@@ -120,17 +126,17 @@ function HoverCard({
 			>
 
 				<p className="text-neutral-50 text-3xl font-semibold tracking-tight mb-10">
-					{movie.title}
+					{displayTitle}
 				</p>
 
 				<p className="text-balance line-clamp-6">
-					{movie.overview}
+					{media.overview}
 				</p>
 
 			</div>
 
 			<button
-				onClick={() => router.push(`/watch/${movie.id}`)}
+				onClick={() => router.push(`/${media.mediaType === "tv" ? "tv" : "movie"}/${media.id}`)}	
 				className="w-full h-10 bg-neutral-200 text-neutral-800 rounded-3xl cursor-pointer">
 				<p>Resume</p>
 			</button>

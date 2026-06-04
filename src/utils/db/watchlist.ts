@@ -1,5 +1,6 @@
 "use server"
 
+import { getSerie } from "@/lib/tmdb/api";
 import { createClient } from "../supabase/server"
 import { getMovie } from "@/lib/tmdb/movie";
 
@@ -14,7 +15,7 @@ export async function addToWatchlist(mediaId: string, mediaType?: "movie" | "tv"
 		.from("watchlists")
 		.insert({
 			user_id: user.id,
-			movie_id: mediaId,
+			media_id: mediaId,
 			media_type: mediaType ?? "movie"
 		});
 
@@ -24,19 +25,26 @@ export async function addToWatchlist(mediaId: string, mediaType?: "movie" | "tv"
 
 };
 
-export async function getWatchlistEntries(mediaId?: string): Promise<{ data: Wishlist[], error?: string }> {
+export async function getWatchlistEntries(opts?: {
+	mediaId?: string,
+	mediaType?: MediaType
+}): Promise<{ data: Watchlist[], error?: string }> {
 
 	const supabase = await createClient();
 	const { data: { user } } = await supabase.auth.getUser();
-	
+
 	if (!user) return { data: [], error: "User not authenticated" };
 
-	const query = supabase
+	let query = supabase
 		.from("watchlists")
 		.select("*");
 
-	if (mediaId) {
-		query.eq("movie_id", mediaId);
+	if (opts?.mediaId) {
+		query = query.eq("media_id", opts.mediaId);
+	};
+
+	if (opts?.mediaType) {
+		query = query.eq("media_type", opts.mediaType);
 	};
 
 	const { data, error } = await query;
@@ -46,21 +54,20 @@ export async function getWatchlistEntries(mediaId?: string): Promise<{ data: Wis
 
 };
 
-export async function getWatchlist(): Promise<MovieDetails[]> {
+export async function getWatchlist(mediaType?: MediaType): Promise<MovieDetails[]> {
 
-	const { data: watchlistEntries, error } = await getWatchlistEntries();
+	const { data: watchlistEntries, error } = await getWatchlistEntries({ mediaType });
 	if (error || watchlistEntries.length == 0) return [];
 
-	const watchlist = (await Promise.all(
-		watchlistEntries.map(async (item) => {
+	const movies = watchlistEntries.filter(i => i.media_type == "movie");
+	const series = watchlistEntries.filter(i => i.media_type == "tv");
 
-			const movie = await getMovie<MovieDetails>(item.movie_id);
-			return movie;
+	const [movieResults, seriesResults] = await Promise.all([
+		Promise.all(movies.map(item => getMovie<MovieDetails>(item.media_id))),
+		Promise.all(series.map(item => getSerie<MovieDetails>(item.media_id))),
+	]);
 
-		})
-	)).filter(Boolean);
-
-	return watchlist;
+	return [...movieResults, ...seriesResults].filter(Boolean) as MovieDetails[];
 
 };
 
@@ -78,7 +85,7 @@ export async function isInWatchlist(
 		.from("watchlists")
 		.select("id")
 		.eq("user_id", user.id)
-		.eq("movie_id", mediaId)
+		.eq("media_id", mediaId)
 		.eq("media_type", mediaType ?? "movie")
 		.maybeSingle();
 

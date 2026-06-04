@@ -1,22 +1,29 @@
 "use client";
-
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+
+const MAX_ITEMS_PER_SLIDE = 8;
+
+export type CarouselCard<T extends { id: number }> = (props: { media: T, loading: "eager" | "lazy" }) => React.ReactNode;
+
+export type CarouselItem<T extends { id: number }> = {
+    data: T[],
+    Card: CarouselCard<T>,
+    title: string,
+    ranked?: boolean
+};
+
 
 export function Carousel<T extends { id: number }>({
 	data,
-	card,
+	Card,
 	title,
-}: {
-	data: T[];
-	card: (props: { movie: T, loading: "eager" | "lazy" }) => React.ReactNode;
-	title: string;
-}) {
+	ranked = false,
+}: CarouselItem<T>) {
 
 	const sliderRef = useRef<HTMLDivElement>(null);
-
-	const [itemsPerSlide, setItemsPerSlide] = useState(6);
-	const [currentSlide, setCurrentSlide] = useState(0);
+	const [itemsPerSlide, setItemsPerSlide] = useState(MAX_ITEMS_PER_SLIDE);
+	const [currentIndex, setCurrentIndex] = useState(0);
 
 	useEffect(() => {
 		const handleCarouselResize = () => {
@@ -25,101 +32,83 @@ export function Carousel<T extends { id: number }>({
 			if (width < 450) setItemsPerSlide(1);
 			else if (width < 640) setItemsPerSlide(2);
 			else if (width < 768) setItemsPerSlide(4);
-			else setItemsPerSlide(6);
-		};
+			else setItemsPerSlide(MAX_ITEMS_PER_SLIDE);
 
+		};
 		handleCarouselResize();
 		window.addEventListener("resize", handleCarouselResize);
-
 		return () => window.removeEventListener("resize", handleCarouselResize);
-	}, []);
-
-	const chunkedData = useMemo(() => {
-		const arr = [];
-		for (let i = 0; i < data.length; i += itemsPerSlide) {
-			arr.push(data.slice(i, i + itemsPerSlide));
-		}
-		return arr;
-	}, [data, itemsPerSlide]);
-
-	const totalSlides = chunkedData.length;
+	}, [ranked]);
 
 	useEffect(() => {
-		setCurrentSlide(0);
+		setCurrentIndex(0);
 	}, [itemsPerSlide]);
 
-	const slideWidth = sliderRef.current?.clientWidth || 0;
-	const translateX = -(currentSlide * slideWidth);
+	const maxIndex = data.length - itemsPerSlide;
+	const itemWidthPercent = 100 / itemsPerSlide;
+	const gapPx = 16;
+	const translateX = currentIndex * (itemWidthPercent / 100);
 
-	const handleTranslateRight = () => {
-		setCurrentSlide((prev) =>
-			prev === totalSlides - 1 ? 0 : prev + 1
-		);
-	};
+	const handleNext = () => setCurrentIndex((prev) => Math.min(prev + itemsPerSlide, maxIndex));
+	const handlePrev = () => setCurrentIndex((prev) => Math.max(prev - itemsPerSlide, 0));
 
-	const handleTranslateLeft = () => {
-		setCurrentSlide((prev) =>
-			prev === 0 ? totalSlides - 1 : prev - 1
-		);
-	};
+	const canGoNext = currentIndex < maxIndex;
+	const canGoPrev = currentIndex > 0;
 
 	return (
 
-		<div className="relative w-full max-w-7xl overflow-x-clip flex flex-col space-y-2">
+		<div className="relative w-full overflow-x-clip flex flex-col space-y-2">
 
-			<div className="flex space-x-2">
-				<p className="text-2xl font-medium">{title}</p>
-			</div>
+			<p className="text-3xl font-semibold">{title}</p>
 
-			<div
-				ref={sliderRef}
-				className="w-full relative flex transition-transform duration-500 ease-in-out"
-				style={{ transform: `translateX(${translateX}px)` }}
-			>
+			<div className="w-full overflow-hidden mt-8">
 
-				{chunkedData.map((chunk, index) => (
+				<div
+					ref={sliderRef}
+					className="flex transition-transform duration-500 ease-in-out"
+					style={{
+						gap: `${gapPx}px`,
+						transform: `translateX(calc(-${currentIndex} * (${itemWidthPercent}% + ${gapPx - gapPx / itemsPerSlide}px)))`,
+					}}
+				>
 
-					<div
-						key={index}
-						style={{
-							gridTemplateColumns: `repeat(${itemsPerSlide}, minmax(0, 1fr))`,
-						}}
-						className="w-full grid gap-4 shrink-0 basis-full"
-					>
+					{data.map((movie, idx) => (
 
-						{chunk.map((movie, idx) => (
+						<div
+							key={movie.id}
+							className="shrink-0 relative aspect-2/3"
+							style={{ width: `calc(${itemWidthPercent}% - ${gapPx * (itemsPerSlide - 1) / itemsPerSlide}px)` }}
+						>
+							<Card media={movie} loading={idx < itemsPerSlide ? "eager" : "lazy"} />
+						</div>
 
-							<React.Fragment key={movie.id}>
-								{card({ movie, loading: idx <= itemsPerSlide ? "eager" : "lazy" })}
-							</React.Fragment>
+					))}
 
-						))}
-
-					</div>
-				))}
+				</div>
 
 			</div>
 
-			{(data.length > itemsPerSlide) && (
-
+			{data.length > itemsPerSlide && (
 				<>
 
-					<button
-						onClick={handleTranslateLeft}
-						className="absolute left-4 top-1/2 -translate-y-1/2 z-50 p-3 bg-neutral-300/10 backdrop-blur-md rounded-full ring-neutral-300/30 ring-1 shadow-xl cursor-pointer"
-					>
-						<ChevronLeft />
-					</button>
-
-					<button
-						onClick={handleTranslateRight}
-						className="absolute right-4 top-1/2 -translate-y-1/2 z-50 p-3 bg-neutral-300/10 backdrop-blur-md rounded-full ring-neutral-300/30 ring-1 shadow-xl cursor-pointer"
-					>
-						<ChevronRight />
-					</button>
+					{canGoPrev && (
+						<button
+							onClick={handlePrev}
+							className="absolute left-4 top-1/2 -translate-y-1/2 z-50 p-3 bg-neutral-300/10 backdrop-blur-md rounded-full ring-neutral-300/30 ring-1 shadow-xl cursor-pointer"
+						>
+							<ChevronLeft />
+						</button>
+					)}
+					{canGoNext && (
+						<button
+							onClick={handleNext}
+							className="absolute right-4 top-1/2 -translate-y-1/2 z-50 p-3 bg-neutral-300/10 backdrop-blur-md rounded-full ring-neutral-300/30 ring-1 shadow-xl cursor-pointer"
+						>
+							<ChevronRight />
+						</button>
+					)}
 
 				</>
-
 			)}
 
 		</div>

@@ -1,20 +1,27 @@
-import { Carousel } from "@/components/Carousel";
+import { Carousel, CarouselItem } from "@/components/Carousel";
 import { HeroBanner } from "@/components/HeroBanner";
-import { MovieCardItem, MoviePosterCard } from "@/components/movie-cards/Poster";
+import { PostCardItem, PosterCard } from "@/components/movie-cards/Poster";
 import { getRecentlyWatched } from "@/utils/supabase/queries/userMedia";
 import { createClient } from "@/utils/supabase/server";
 import { fetchtTMDB } from "@/lib/tmdb/fetchTMDB";
 import { redirect } from "next/navigation";
 import { getWatchlist } from "@/utils/db/watchlist";
 import { getHeroBannerItems } from "@/utils/db/featuredContent";
+import { Search } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { glass } from "@/styles";
+import { CategorySelector } from "./CategorySelector";
+import { BlobBackground } from "@/components/BlobBackground";
+import { getTopToday } from "@/lib/tmdb/api";
 
-type CarouselItem<T extends { id: number }> = {
-	data: T[],
-	card: (props: { movie: T }) => React.ReactNode,
-	title: string
-}
+export default async function Page({
+	searchParams
+}: {
+	searchParams: Promise<{ category?: string }>
+}) {
 
-export default async function Page() {
+	const { category = "all" } = await searchParams;
+	const mediaType = category === "all" ? undefined : category === "movies" ? "movie" : "tv";
 
 	const supabase = await createClient();
 	const { data: { user } } = await supabase.auth.getUser();
@@ -23,36 +30,43 @@ export default async function Page() {
 
 	const heroBannerItems = await getHeroBannerItems();
 
-	const topToday = await fetchtTMDB<MovieSearchResponse>("/discover/movie?include_adult=false&include_video=false&language=en-US&page=1&sort_by=popularity.desc");
-	const recentlyWatched = await getRecentlyWatched(supabase, user.id);
-	const watchlist = await getWatchlist();
+	const topToday = await getTopToday(mediaType);
+	const watchlist = await getWatchlist(mediaType);
+	const recentlyWatched = await getRecentlyWatched(user.id);
 
-	const carousels: CarouselItem<MovieCardItem>[] = [
-		{ data: topToday.results.slice(0, 12), card: MoviePosterCard, title: "Top Today" },
-		{ data: recentlyWatched, card: MoviePosterCard, title: "Continue Watching" },
-		{ data: watchlist, card: MoviePosterCard, title: "Watchlist" },
+	const carousels: CarouselItem<PostCardItem>[] = [
+		{ data: topToday.slice(0, 10), Card: PosterCard, title: "Top 10 Today", ranked: true },
+		{ data: watchlist, Card: PosterCard, title: "Watchlist" },
+		{ data: recentlyWatched, Card: PosterCard, title: "Continue Watching" },
 	];
 
 	return (
 
-		<div className="h-auto w-full pb-8 dark flex flex-col items-center">
+		<BlobBackground>
 
-			<HeroBanner items={heroBannerItems} />
+			<div className="h-auto w-full pb-8 dark flex flex-col items-center">
 
-			<div className="w-full flex flex-col items-center space-y-10 mt-10">
+				<HeroBanner items={heroBannerItems} />
 
-				{carousels.map((item, idx) => (
-					item.data.length > 0 && <Carousel
-						key={idx}
-						data={item.data}
-						card={item.card}
-						title={item.title}
-					/>
-				))}
+				<CategorySelector />
+
+				<div className="w-full flex flex-col items-center space-y-16 mt-20 px-40">
+
+					{carousels.map((item, idx) => (
+						item.data.length > 0 && <Carousel
+							key={idx}
+							data={item.data}
+							Card={item.Card}
+							title={item.title}
+							ranked={item.ranked}
+						/>
+					))}
+
+				</div>
 
 			</div>
 
-		</div>
+		</BlobBackground>
 
 	);
 

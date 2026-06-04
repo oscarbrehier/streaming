@@ -1,7 +1,9 @@
 import { getMovie } from "@/lib/tmdb/movie";
 import { createClient } from "../server";
 
-export async function getRecentlyWatched(supabase: Awaited<ReturnType<typeof createClient>>, userId: string): Promise<MovieSummary[]> {
+export async function getRecentlyWatched(userId: string): Promise<MovieSummary[]> {
+
+	const supabase = await createClient();
 
 	const { data, error } = await supabase
 		.from("user_media_status")

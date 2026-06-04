@@ -1,4 +1,4 @@
-import { Open_Sans, Bodoni_Moda } from "next/font/google";
+import { Open_Sans, Bodoni_Moda, Hanken_Grotesk } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Suspense } from "react";
@@ -11,7 +11,8 @@ export const bodoni = Bodoni_Moda({
 	display: "swap",
 });
 
-const openSans = Open_Sans({ subsets: ['latin'] })
+const openSans = Open_Sans({ subsets: ['latin'] });
+const hankenGrotesk = Hanken_Grotesk({ subsets: ['latin' ]});
 
 export default function RootLayout({
 	children
@@ -24,7 +25,7 @@ export default function RootLayout({
 		<html lang="en" suppressHydrationWarning>
 
 			<body
-				className={`${openSans.className} antialiased`}
+				className={`${hankenGrotesk.className} antialiased`}
 			>
 
 				<ThemeProvider
