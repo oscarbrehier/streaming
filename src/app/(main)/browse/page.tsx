@@ -1,11 +1,157 @@
-export default function Page() {
+import { constructImg } from "@/lib/tmdb/constructImg";
+import { fetchtTMDB } from "@/lib/tmdb/fetchTMDB";
+
+interface Genre {
+	id: number;
+	name: string;
+	backdrop_url?: string;
+};
+
+async function getGenres(): Promise<{ result: Genre[] | null, error: string | null }> {
+
+	try {
+
+		const res = await fetchtTMDB<{ genres: Genre[] }>(`/genre/movie/list`);
+		return { result: res.genres, error: null };
+
+	} catch (err) {
+		return { error: (err as Error).message, result: null }
+	};
+
+};
+
+async function getBackdropForGenre(genreId: number): Promise<string | null> {
+
+	const response = await fetchtTMDB(
+		`/discover/movie`
+		+ `&with_genres=${genreId}`
+		+ `&sort_by=vote_average.desc`
+		+ `&primary_release_date.lte=1999-12-31`
+		+ `&vote_count.gte=1000`
+		+ `&vote_average.gte=7.5`
+		+ `&with_original_language=en|fr|it|ja|de`
+		+ `&page=1`
+	);
+
+	if (response.status !== 200) return null;
+
+	const data = await response.json();
+	const movie = data.results?.find((m: any) => m.backdrop_path);
+
+	if (!movie) return null;
+
+	return `https://image.tmdb.org/t/p/original${movie.backdrop_path}`;
+};
+
+import { cn } from "@/lib/utils";
+import Link from "next/link";
+
+const orbColors = {
+	coral: 'var(--color-coral)',
+	lavender: 'var(--color-lavender)',
+	peach: 'var(--color-peach)',
+	olive: 'var(--color-olive)',
+	periwinkle: 'var(--color-periwinkle)',
+	mint: 'var(--color-mint)',
+	rose: 'var(--color-rose)',
+	apricot: 'var(--color-apricot)',
+} as const;
+
+type OrbColor = keyof typeof orbColors;
+
+const orbColorKeys = Object.keys(orbColors) as OrbColor[];
+
+interface GenreCardProps {
+	name: string;
+	count?: number;
+	color?: OrbColor;
+	index?: number;
+	className?: string;
+	href: string;
+}
+
+export function GenreCard({ name, count, color, index, className, href }: GenreCardProps) {
+
+	const resolvedColor = color ?? orbColorKeys[index! % orbColorKeys.length];
+	const hue = `color-mix(in srgb, ${orbColors[resolvedColor]} 25%, transparent)`;
+
+	return (
+
+		<Link
+			href={href}
+			className={cn(
+				"group relative h-37.5 overflow-hidden rounded-[18px]",
+				"bg-[#16161b] cursor-pointer",
+				"transition-transform duration-300 hover:-translate-y-1.5",
+				className
+			)}
+
+			style={{
+				backgroundImage: [
+					`repeating-linear-gradient(135deg, rgba(255,255,255,0.018) 0px, rgba(255,255,255,0.018) 1.5px, transparent 1.5px, transparent 13px)`,
+					`radial-gradient(130% 120% at 25% 18%, ${hue} 0%, transparent 60%)`,
+					`linear-gradient(165deg, ${hue} 0%, rgba(10,10,13,0.08) 40%, rgba(10,10,13,0.85) 100%)`,
+				].join(', ')
+			}}
+		>
+
+			<div
+				className="absolute inset-0 rounded-[18px] pointer-events-none"
+				style={{
+					background: 'transparent',
+					boxShadow: `inset -1px -1px 0px color-mix(in srgb, ${orbColors[resolvedColor]} 15%, transparent)`,
+				}}
+			/>
+
+			<div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(8,8,11,0.75),transparent_70%)]" />
+
+			<div className="pointer-events-none absolute inset-0 rounded-[inherit] opacity-0
+                shadow-[0_18px_50px_-12px_rgba(0,0,0,0.7)]
+                transition-opacity duration-300 group-hover:opacity-100"
+			/>
+
+			<div className="absolute left-5.5 top-5 text-[23px] font-bold tracking-[-0.6px] text-ink">
+				{name}
+			</div>
+
+		</Link>
+
+	);
+
+};
+
+async function getNewReleasesThisWeek() {
+	const now = new Date();
+	const thirtyDaysAgo = new Date(now);
+	thirtyDaysAgo.setDate(now.getDate() - 30);
+
+	const fmt = (d: Date) => d.toISOString().split('T')[0];
+
+	const data = await fetchtTMDB<{ results: any[] }>(
+		`/discover/movie`
+		+ `?sort_by=vote_average.desc`
+		+ `&primary_release_date.gte=${fmt(thirtyDaysAgo)}`
+		+ `&primary_release_date.lte=${fmt(now)}`
+		+ `&vote_count.gte=50`
+		+ `&vote_average.gte=7.0`
+		+ `&with_original_language=en|fr|it|ja|de|ko`
+	);
+
+	return data.results ?? [];
+
+};
+
+export default async function Page() {
+
+	const genres = await getGenres();
+	const newReleases = await getNewReleasesThisWeek();
 
 	return (
 
 		<div className="p-20">
 
 			<div>
-				<p className="text-4xl font-bold">Browse</p>
+				<p className="text-5xl font-bold">Browse</p>
 				<p className="text-neutral-300 mt-4">Find something by mood, genre, or format.</p>
 			</div>
 
@@ -13,141 +159,60 @@ export default function Page() {
 
 				<p className="text-2xl font-semibold mb-8">Genres</p>
 
-				<div className="grid grid-cols-4 gap-8">
+				<div className="grid grid-cols-6 gap-4">
 
-					<div className="w-full aspect-video bg-violet-300 rounded-2xl p-8">
-						<p className="text-2xl font-semibold">Genre</p>
-					</div>
-					<div className="w-full aspect-video bg-violet-300 rounded-2xl p-8">
-						<p className="text-2xl font-semibold">Genre</p>
-					</div>
-					<div className="w-full aspect-video bg-violet-300 rounded-2xl p-8">
-						<p className="text-2xl font-semibold">Genre</p>
-					</div>
-					<div className="w-full aspect-video bg-violet-300 rounded-2xl p-8">
-						<p className="text-2xl font-semibold">Genre</p>
-					</div>
-					<div className="w-full aspect-video bg-violet-300 rounded-2xl p-8">
-						<p className="text-2xl font-semibold">Genre</p>
-					</div>
-					<div className="w-full aspect-video bg-violet-300 rounded-2xl p-8">
-						<p className="text-2xl font-semibold">Genre</p>
-					</div>
-					<div className="w-full aspect-video bg-violet-300 rounded-2xl p-8">
-						<p className="text-2xl font-semibold">Genre</p>
-					</div>
-					<div className="w-full aspect-video bg-violet-300 rounded-2xl p-8">
-						<p className="text-2xl font-semibold">Genre</p>
-					</div>
+					{genres.result?.map((genre, i) => (
+						<GenreCard key={genre.id} href={`browse/${genre.name.toLocaleLowerCase()}`} name={genre.name} index={i} />
+					))}
 
 				</div>
 
 			</div>
 
+
 			<div className="mt-20">
 
 				<div className="flex items-end space-x-4">
-					<p className="text-2xl font-semibold mb-8">New in X</p>
-					<p className="text-neutral-500 mb-8 uppercase">this week</p>
+					<p className="text-2xl font-semibold mb-8">New this week</p>
 				</div>
 
 				<div className="grid grid-cols-8 gap-6">
 
-					<div className="w-full h-96 bg-violet-300 rounded-2xl p-6 flex flex-col justify-between">
+					{newReleases.map((movie) => (
 
-						<div>
+						<Link
+							key={movie.id}
+							href={`/movie/${movie.id}`}
+							className="group relative w-full h-96 rounded-2xl overflow-hidden cursor-pointer transition-transform duration-300 hover:-translate-y-1.5"
+							style={{
+								backgroundImage: `url(${constructImg(movie.poster_path)})`,
+								backgroundSize: 'cover',
+								backgroundPosition: 'center',
+							}}
+						>
 
-						</div>
+							<div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(10,10,13,0.95)_0%,rgba(10,10,13,0.4)_40%,transparent_100%)]" />
 
-						<div>
-							<p>Title</p>
-							<p className="text-neutral-300 text-sm">Genre</p>
-						</div>
-					</div>
+							<div
+								className="absolute inset-0 rounded-[inherit] pointer-events-none"
+								style={{
+									boxShadow: `inset -1px -1px 0px rgba(255,255,255,0.06)`,
+								}}
+							/>
 
-					<div className="w-full h-96 bg-violet-300 rounded-2xl p-6 flex flex-col justify-between">
+							<div className="absolute bottom-5 left-5 right-5">
+								<p className="text-[15px] font-semibold tracking-[-0.3px] text-ink leading-snug">
+									{movie.title}
+								</p>
+								<p className="text-[11px] mt-1 text-ink3 font-mono tracking-[0.4px] uppercase">
+									{movie.release_date?.split('-')[0]}
+								</p>
+							</div>
 
-						<div>
+						</Link>
 
-						</div>
 
-						<div>
-							<p>Title</p>
-							<p className="text-neutral-300 text-sm">Genre</p>
-						</div>
-					</div>
-
-					<div className="w-full h-96 bg-violet-300 rounded-2xl p-6 flex flex-col justify-between">
-
-						<div>
-
-						</div>
-
-						<div>
-							<p>Title</p>
-							<p className="text-neutral-300 text-sm">Genre</p>
-						</div>
-					</div>
-
-					<div className="w-full h-96 bg-violet-300 rounded-2xl p-6 flex flex-col justify-between">
-
-						<div>
-
-						</div>
-
-						<div>
-							<p>Title</p>
-							<p className="text-neutral-300 text-sm">Genre</p>
-						</div>
-					</div>
-
-					<div className="w-full h-96 bg-violet-300 rounded-2xl p-6 flex flex-col justify-between">
-
-						<div>
-
-						</div>
-
-						<div>
-							<p>Title</p>
-							<p className="text-neutral-300 text-sm">Genre</p>
-						</div>
-					</div>
-
-					<div className="w-full h-96 bg-violet-300 rounded-2xl p-6 flex flex-col justify-between">
-
-						<div>
-
-						</div>
-
-						<div>
-							<p>Title</p>
-							<p className="text-neutral-300 text-sm">Genre</p>
-						</div>
-					</div>
-
-					<div className="w-full h-96 bg-violet-300 rounded-2xl p-6 flex flex-col justify-between">
-
-						<div>
-
-						</div>
-
-						<div>
-							<p>Title</p>
-							<p className="text-neutral-300 text-sm">Genre</p>
-						</div>
-					</div>
-
-					<div className="w-full h-96 bg-violet-300 rounded-2xl p-6 flex flex-col justify-between">
-
-						<div>
-
-						</div>
-
-						<div>
-							<p>Title</p>
-							<p className="text-neutral-300 text-sm">Genre</p>
-						</div>
-					</div>
+					))}
 
 				</div>
 
