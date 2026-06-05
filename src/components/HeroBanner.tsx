@@ -91,7 +91,7 @@ export function HeroBanner({
 								icon={<Play className="text-black mt-0.5" fill="#000" size={16} />}
 							/>
 
-							<AddToWatchlist mediaId={String(item!.id)} isAdded={false} />
+							<AddToWatchlist mediaId={String(item!.id)} />
 
 							<Button
 								href={`/movie/${item!.id}`}

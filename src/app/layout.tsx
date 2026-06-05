@@ -1,4 +1,4 @@
-import { Open_Sans, Bodoni_Moda, Hanken_Grotesk } from "next/font/google";
+import { Open_Sans, Bodoni_Moda, Hanken_Grotesk, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Suspense } from "react";
@@ -11,8 +11,15 @@ export const bodoni = Bodoni_Moda({
 	display: "swap",
 });
 
+export const jetbrainsMono = JetBrains_Mono({
+	subsets: ["latin"],
+	weight: ["400", "500", "600", "700"],
+	display: "swap",
+	variable: "--font-jetbrains-mono",
+});
+
 const openSans = Open_Sans({ subsets: ['latin'] });
-const hankenGrotesk = Hanken_Grotesk({ subsets: ['latin' ]});
+const hankenGrotesk = Hanken_Grotesk({ subsets: ['latin'] });
 
 export default function RootLayout({
 	children
@@ -25,7 +32,7 @@ export default function RootLayout({
 		<html lang="en" suppressHydrationWarning>
 
 			<body
-				className={`${hankenGrotesk.className} antialiased`}
+				className={`${hankenGrotesk.className} ${jetbrainsMono.variable} antialiased`}
 			>
 
 				<ThemeProvider
