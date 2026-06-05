@@ -10,7 +10,7 @@ import { useBridge } from "@/context/BridgeContext";
 import { BRIDGE_UI_CONFIG } from "@/utils/constants";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import { Button } from "./Button";
-import { AddToWatchlist } from "@/app/(main)/movie/[id]/AddToWatchlist";
+import { AddToWatchlist } from "@/app/(main)/(media)/movie/[id]/AddToWatchlist";
 
 export function HeroBanner({
 	items

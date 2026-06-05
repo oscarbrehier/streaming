@@ -1,6 +1,6 @@
 "use server"
 
-import { getSerie } from "@/lib/tmdb/api";
+import { getSerie } from "@/lib/tmdb/series";
 import { createClient } from "../supabase/server"
 import { getMovie } from "@/lib/tmdb/movie";
 

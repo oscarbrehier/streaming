@@ -10,7 +10,7 @@ export async function getMovieVideos(movieId: string): Promise<VideoResult[]> {
 	return data.results.filter(v => v.site == "YouTube");
 };
 
-export async function getCast(movieId: string): Promise<CreditsResponse | null> {
+export async function getMovieCredits(movieId: string): Promise<CreditsResponse | null> {
 
 	try {
 

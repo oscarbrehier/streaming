@@ -1,17 +1,11 @@
-import { MovieOverview } from "@/components/MovieOverview";
 import { createClient } from "@/utils/supabase/server";
-import { formatTimeHuman } from "@/utils/timeFormat";
 import { constructImg } from "@/lib/tmdb/constructImg";
-import { getCast, getMovie, getMovieVideos } from "@/lib/tmdb/movie";
-import { HardDriveDownload, Play } from "lucide-react";
+import { getMovieCredits, getMovie, getMovieVideos } from "@/lib/tmdb/movie";
+import { Play } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { SuggestContentButton } from "./SuggestContentButton";
 import { isInWatchlist } from "@/utils/db/watchlist";
 import { AddToWatchlist } from "./AddToWatchlist";
-import { PreloadButton } from "./PreloadButton";
-import { hasCachedSources } from "@/lib/api/streaming";
-import { StreamButton } from "./StreamButton";
 import { Button } from "@/components/Button";
 import { Pill } from "@/components/Pill";
 
@@ -29,7 +23,7 @@ export default async function Page({
 	const { id: mediaId } = await params;
 
 	const movie = await getMovie(mediaId);
-	const credits = await getCast(mediaId);
+	const credits = await getMovieCredits(mediaId);
 	const isMovieInWatchlist = await isInWatchlist(mediaId);
 
 	const videos = await getMovieVideos(mediaId);
@@ -113,12 +107,12 @@ export default async function Page({
 				<div className="flex space-x-4">
 
 					<Button
-						href={`/watch/${movie.id}`}
+						href={`/watch/${mediaId}`}
 						label="Play"
 						icon={<Play className="text-black mt-0.5" fill="#000" size={16} />}
 					/>
 
-					<AddToWatchlist mediaId={String(movie.id)} />
+					<AddToWatchlist mediaId={mediaId} />
 
 				</div>
 

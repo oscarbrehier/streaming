@@ -155,6 +155,19 @@ declare global {
 		season_number: number;
 	};
 
+	interface Creator {
+		id: number;
+		name: string;
+		profile_path: string | null;
+	};
+
+	interface Network {
+		id: number;
+		name: string;
+		logo_path: string | null;
+		origin_country: string;
+	};
+
 	interface TvDetails {
 		id: number;
 		name: string;
@@ -162,6 +175,8 @@ declare global {
 		overview: string;
 		poster_path: string | null;
 		backdrop_path: string | null;
+		production_companies: ProductionCompany[];
+		production_countries: ProductionCountry[];
 		first_air_date: string;
 		last_air_date: string;
 		number_of_seasons: number;
@@ -171,8 +186,77 @@ declare global {
 		vote_average: number;
 		vote_count: number;
 		popularity: number;
+		created_by: Creator[];
+		networks: Network[];
+		in_production: boolean;
 		original_language: string;
 		origin_country: string[];
+	};
+
+	interface EpisodeCrew {
+		department: string;
+		job: string;
+		credit_id: string;
+		adult: boolean;
+		gender: number;
+		id: number;
+		known_for_department: string;
+		name: string;
+		original_name: string;
+		popularity: number;
+		profile_path: string | null;
+	};
+
+	interface EpisodeGuestStar {
+		character: string;
+		credit_id: string;
+		order: number;
+		adult: boolean;
+		gender: number;
+		id: number;
+		known_for_department: string;
+		name: string;
+		original_name: string;
+		popularity: number;
+		profile_path: string | null;
+	};
+
+	interface Episode {
+		air_date: string;
+		episode_number: number;
+		episode_type: "standard" | "finale" | "mid_season" | "premiere";
+		id: number;
+		name: string;
+		overview: string;
+		production_code: string;
+		runtime: number;
+		season_number: number;
+		show_id: number;
+		still_path: string | null;
+		vote_average: number;
+		vote_count: number;
+		crew: EpisodeCrew[];
+		guest_stars: EpisodeGuestStar[];
+	};
+
+	interface SeasonNetwork {
+		id: number;
+		logo_path: string | null;
+		name: string;
+		origin_country: string;
+	};
+
+	interface TvSeason {
+		_id: string;
+		id: number;
+		name: string;
+		overview: string;
+		poster_path: string | null;
+		season_number: number;
+		vote_average: number;
+		air_date: string;
+		episodes: Episode[];
+		networks: SeasonNetwork[];
 	};
 
 	interface PersonSummary {
@@ -204,6 +288,10 @@ declare global {
 	}
 
 	interface MovieDetailsWithImages extends MovieDetails {
+		images: Images
+	};
+
+	interface TvDetailsWithImages extends TvDetails {
 		images: Images
 	};
 
