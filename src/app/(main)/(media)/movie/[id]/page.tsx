@@ -8,6 +8,7 @@ import { isInWatchlist } from "@/utils/db/watchlist";
 import { AddToWatchlist } from "./AddToWatchlist";
 import { Button } from "@/components/Button";
 import { Pill } from "@/components/Pill";
+import { getActiveProfileId } from "@/utils/profiles";
 
 interface PageProps {
 	params: Promise<{ id: string }>;
@@ -35,15 +36,15 @@ export default async function Page({
 	const { data: { session } } = await supabase.auth.getSession();
 	if (!session) redirect("/login");
 
-	const { data: { user } } = await supabase.auth.getUser();
+	const profileId = await getActiveProfileId();
 
-	if (user) {
+	if (profileId) {
 
 		const { data, error } = await supabase
 			.from("user_media_status")
 			.select("*")
 			.eq("media_id", mediaId)
-			.eq("user_id", user.id)
+			.eq("profile_id", profileId)
 			.single();
 
 		if (!error && data) userMediaStatus = data;

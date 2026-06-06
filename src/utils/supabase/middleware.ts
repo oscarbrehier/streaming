@@ -98,6 +98,17 @@ export async function updateSession(request: NextRequest) {
 
 	};
 
+	if (user && !isPublic && !internalPathname.startsWith("/2fa")) {
+		
+		const profileId = request.cookies.get("active_profile")?.value;
+		const isOnProfilePage = internalPathname.startsWith("/profiles");
+
+		if (!profileId && !isOnProfilePage) {
+			return NextResponse.redirect(new URL(getRedirectURL("/profiles"), request.url));
+		};
+
+	};
+
 	const isAdminRoute = internalPathname.startsWith("/dashboard");
 
 	if (isAdminRoute && user) {

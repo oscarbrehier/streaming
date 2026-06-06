@@ -418,6 +418,17 @@ declare global {
 
 	type MediaType = "movie" | "tv";
 
+	interface ViewingProfile {
+		id: string;
+		user_id: string;
+		name: string;
+		avatar_url: string;
+		is_default: boolean;
+		pin_hash: string;
+		created_at: Date;
+		updated_at: Date;
+	};
+
 };
 
 export { };

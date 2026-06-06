@@ -3,18 +3,23 @@
 import { getSerie } from "@/lib/tmdb/series";
 import { createClient } from "../supabase/server"
 import { getMovie } from "@/lib/tmdb/movie";
+import { getActiveProfileId } from "../profiles";
 
 export async function addToWatchlist(mediaId: string, mediaType?: "movie" | "tv"): Promise<{ success?: boolean, error?: string }> {
 
 	const supabase = await createClient();
-	const { data: { user } } = await supabase.auth.getUser();
 
+	const { data: { user } } = await supabase.auth.getUser();
 	if (!user) return { error: "User not authenticated" };
+
+	const profileId = await getActiveProfileId();
+	if (!profileId) return { error: "TODO_profile_id" };
 
 	const { error } = await supabase
 		.from("watchlists")
 		.insert({
 			user_id: user.id,
+			profile_id: profileId,
 			media_id: mediaId,
 			media_type: mediaType ?? "movie"
 		});
@@ -31,13 +36,17 @@ export async function getWatchlistEntries(opts?: {
 }): Promise<{ data: Watchlist[], error?: string }> {
 
 	const supabase = await createClient();
-	const { data: { user } } = await supabase.auth.getUser();
 
+	const { data: { user } } = await supabase.auth.getUser();
 	if (!user) return { data: [], error: "User not authenticated" };
+
+	const profileId = await getActiveProfileId();
+	if (!profileId) return { data: [], error: "TODO_profile_id" };
 
 	let query = supabase
 		.from("watchlists")
-		.select("*");
+		.select("*")
+		.eq("profile_id", profileId);
 
 	if (opts?.mediaId) {
 		query = query.eq("media_id", opts.mediaId);
@@ -77,14 +86,14 @@ export async function isInWatchlist(
 ): Promise<boolean> {
 
 	const supabase = await createClient();
-	const { data: { user } } = await supabase.auth.getUser();
 
-	if (!user) return false;
+	const profileId = await getActiveProfileId();
+	if (!profileId) throw "TODO_profile_id";
 
 	const { data, error } = await supabase
 		.from("watchlists")
 		.select("id")
-		.eq("user_id", user.id)
+		.eq("profile_id", profileId)
 		.eq("media_id", mediaId)
 		.eq("media_type", mediaType ?? "movie")
 		.maybeSingle();

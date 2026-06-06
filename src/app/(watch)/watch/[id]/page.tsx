@@ -4,6 +4,7 @@ import { createClient } from "@/utils/supabase/server";
 import { getMovie } from "@/lib/tmdb/movie";
 import { connection } from "next/server";
 import { getStreamingSources } from "@/lib/api/streaming";
+import { getActiveProfileId } from "@/utils/profiles";
 
 interface PageProps {
 	params: Promise<{ id: string }>;
@@ -18,10 +19,15 @@ async function updateUserMediaStatus(
 
 	await connection();
 
+	let profileId = await getActiveProfileId();
+
+	if (!profileId) throw "TODO_profile_id";
+
 	let { data, error } = await supabase
 		.from("user_media_status")
 		.select(`*`)
 		.limit(1)
+		.eq("profile_id", profileId)
 		.eq("media_id", mediaId)
 		.maybeSingle();
 
@@ -29,23 +35,24 @@ async function updateUserMediaStatus(
 
 	if (!data) {
 
-		let { data, error } = await supabase
+		let { data: newData, error: newError } = await supabase
 			.from("user_media_status")
 			.upsert({
 				user_id: userId,
+				profile_id: profileId,
 				media_id: mediaId,
 				progress_sec: 0,
 				duration_sec: 0,
 				completed: false,
 				last_watched: new Date()
 			}, {
-				onConflict: "user_id, media_id"
+				onConflict: "profile_id, media_id"
 			})
 			.select()
 			.single();
 
-		if (error || !data) return null;
-		return data;
+		if (newError || !newData) return null;
+		return newData;
 
 	};
 
