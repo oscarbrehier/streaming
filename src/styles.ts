@@ -4,7 +4,7 @@ export const glass = (interaction: Interaction = "active", text?: boolean) => {
 
 	const bgColor = text ? "bg-neutral-600/50" : "bg-panel2";
 
-	const base = `ring-1 ring-ink/24 backdrop-blur-md shadow-xl`;
+	const base = `ring-1 ring-ink/20 backdrop-blur-md shadow-xl`;
 
 	const variants: Record<Interaction, string> = {
 		"active": `${bgColor}`,

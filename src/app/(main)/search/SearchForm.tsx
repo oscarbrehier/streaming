@@ -1,13 +1,16 @@
 "use client"
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { constructImg } from "@/lib/tmdb/constructImg";
-import { Search } from "lucide-react";
+import { Search, Sparkle } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { Input } from "@/components/Input";
+import { SearchBar } from "./SearchBar";
+import { Pill } from "@/components/Pill";
+import { Button } from "@/components/Button";
+import { Switch } from "@/components/ui/switch";
 
 export interface TMDBMovie {
 	id: number;
@@ -20,23 +23,27 @@ export interface TMDBMovie {
 	first_air_date?: string;
 	vote_average: number;
 	type?: "movie" | "tv";
-}
+};
 
 export interface TMDBSearchResponse {
 	page: number;
 	results: TMDBMovie[];
 	total_pages: number;
 	total_results: number;
-}
+};
+
+const CATEGORIES = ["all", "movie", "tv"] as const;
 
 export function SearchForm({
 	query,
 	type,
+	strict,
 	data
 }: {
-	query: string | null,
-	type: "all" | "movie" | "tv" | null
-	data: TMDBSearchResponse | null
+	query: string | null;
+	type: "all" | "movie" | "tv" | null;
+	strict: boolean;
+	data: TMDBSearchResponse | null;
 }) {
 
 	const router = useRouter();
@@ -68,6 +75,10 @@ export function SearchForm({
 	}, [mediaType]);
 
 	useEffect(() => {
+		setSearchQuery(query ?? null);
+	}, [query]);
+
+	useEffect(() => {
 
 		if (searchInputRef.current) {
 
@@ -81,56 +92,169 @@ export function SearchForm({
 
 	return (
 
-		<div className="flex-1 w-full flex flex-col items-center py-10 sm:px-10 px-4">
+		<div className="flex-1 w-full flex flex-col p-20">
 
-			<div className="flex flex-col space-y-2 w-full max-w-4xl">
+			<div className="w-full flex items-center justify-between ">
 
-				{/* <Input
-					ref={searchInputRef}
-					className="w-full"
-					placeholder="Search for movies, TV shows..."
-					value={searchQuery ?? ""}
-					onChange={(e) => handleSearch(e.target.value)}
-				/> */}
-
-				<div className="rounded-4xl bg-neutral-800 h-10 flex items-center justify-between px-4 space-x-4">
-
-					<input
-						type="text"
-						placeholder="Search"
-						className="outline-none w-full"
+				<div className="flex items-center w-full space-x-6">
+					<SearchBar
 						value={searchQuery ?? ""}
-						onChange={(e) => handleSearch(e.target.value)}
+						onChange={(v) => handleSearch(v)}
 					/>
 
-					<Search size={20} className="text-neutral-500" />
+					{/* <div className="flex items-center space-x-4">
+						<p className={cn(
+							"text-sm w-28 text-right",
+							strict ? "text-lavender" : "text-ink/50 "
+						)}>
+							Curated only
+						</p>
+						<Switch
+							checked={strict}
+							onCheckedChange={(val) => router.replace(
+								`?query=${searchQuery ?? ""}&type=${type ?? "all"}&strict=${val}`,
+								{ scroll: false }
+							)}
+						/>
+					</div> */}
 
 				</div>
 
-				<div className="grid grid-cols-3 gap-2 flex-none max-w-fit">
+				{data?.results && (
+					<p className="shrink-0 uppercase text-ink3 font-jet-mono text-sm">{data.results.length} results</p>
+				)}
 
-					{(["all", "movie", "tv"] as const).map((type) => (
+			</div>
+
+			<div className="h-px w-full bg-ink4/38 my-6" />
+
+			<div className="flex items-center justify-between space-x-4">
+
+				<div className="space-x-4">
+
+					{CATEGORIES.map((c, i) => (
 
 						<button
-							key={type}
-							// size="sm"
+							key={i}
+							onClick={() => setMediaType(c)}
 							className={cn(
-								"capitalize h-8 px-3 rounded-4xl text-sm cursor-pointer border",
-								type === mediaType ? "bg-neutral-800 border-transparent" : "bg-transparent text-accent-foreground border border-input"
+								"ring-1 h-8 px-4 rounded-full text-sm capitalize",
+								"transition-all ease-in-out",
+								c === mediaType ? "ring-ink/20 bg-panel2" : "bg-panel ring-ink/10 hover:ring-ink/20"
 							)}
-							// variant={type == mediaType ? "secondary" : "outline"}
-							onClick={() => setMediaType(type)}
 						>
-							{type}
+							{c}
 						</button>
 
 					))}
 
 				</div>
 
+				<div className={cn(
+					"flex items-center space-x-4 p-2 pl-3 rounded-full text-sm border",
+					strict ? "bg-lavender/20 border-lavender/80" : "bg-panel"
+				)}>
+
+					<div className="flex items-center space-x-2">
+
+						{strict ? (
+							<Sparkle size={14} className="text-lavender" fill="var(--color-lavender)" />
+						) : (
+							<Sparkle size={14} className="text-ink opacity-50" fill="var(--color-ink)" />
+						)}
+
+						<p className={cn(
+							"text-sm",
+							strict ? "text-lavender" : "text-ink/50 "
+						)}>
+							Curated only
+						</p>
+					</div>
+
+					<Switch
+						color="var(--color-lavender)"
+						checked={strict}
+						onCheckedChange={(val) => router.replace(
+							`?query=${searchQuery ?? ""}&type=${type ?? "all"}&strict=${val}`,
+							{ scroll: false }
+						)}
+					/>
+
+				</div>
+
 			</div>
 
-			<div className="w-full mt-10 overflow-y-auto grid lg:grid-cols-8 md:grid-cols-4 sm:grid-cols-2 gap-4 auto-rows-min">
+			{data?.results.length === 0 && (
+
+				<div className="flex-1 w-full mt-10 flex items-center justify-center">
+
+					<div className="flex flex-col items-center space-y-8">
+
+						{strict ? (
+
+							<>
+								<p className="text-3xl font-bold text-center">
+									No curated results for
+									<br />
+									<span className="text-lavender">"{query}"</span>
+								</p>
+
+								<div className="text-center">
+									<p className="text-ink/50">
+										Curated mode shows titles with a proven track record of quality.
+									</p>
+									<p className="text-ink/50">Turn off <span className="text-ink font-semibold">Curated only</span> to search the full library.</p>
+								</div>
+
+								<div className="flex space-x-4">
+
+									<Button
+										onClick={() => router.replace(
+											`?query=${searchQuery ?? ""}&type=${type ?? "all"}&strict=false`,
+											{ scroll: false }
+										)}
+										label="Search the full library"
+										icon={<Sparkle size={16} className="text-lavender" fill="var(--color-lavender)" />}
+									/>
+
+									<Button
+										onClick={() => router.push(`/search?type=${mediaType}`)}
+										label="Clear search"
+										variant="glass"
+									/>
+
+								</div>
+
+							</>
+
+						) : (
+
+							<>
+
+								<p className="text-3xl font-bold text-center">
+									No results for
+									<br />
+									<span className="text-lavender">"{query}"</span>
+								</p>
+
+								<p className="text-ink/50">Try a different search term or check your spelling.</p>
+
+								<Button
+									onClick={() => router.push(`/search?type=${mediaType}`)}
+									label="Clear search"
+									variant="glass"
+								/>
+
+							</>
+						)}
+
+					</div>
+
+				</div>
+
+			)}
+
+			<div className="w-full mt-10 overflow-y-auto grid lg:grid-cols-8 md:grid-cols-4 sm:grid-cols-2 gap-12 auto-rows-min">
 
 				{data?.results?.map((item) => {
 
@@ -140,41 +264,41 @@ export function SearchForm({
 
 					return (
 
-						<a href={`/${item.type || mediaType}/${item.id}`} key={item.id} className="relative w-full rounded-md overflow-hidden grid grid-cols-1 grid-rows-1">
+						<div
+							key={item.id}
+							className="flex flex-col"
+						>
 
-							<div className="relative w-full col-start-1 row-start-1" style={{ paddingBottom: '150%' }}>
+							<a href={`/${item.type || mediaType}/${item.id}`} className="relative w-full rounded-2xl overflow-hidden grid grid-cols-1 grid-rows-1">
 
-								{posterUrl ? (
-									<Image
-										src={posterUrl}
-										alt={item.title || item.name || "Poster"}
-										fill
-										className="object-cover"
-										sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 12vw"
-									/>
+								<div className="relative w-full col-start-1 row-start-1" style={{ paddingBottom: '150%' }}>
 
-								) : (
+									{posterUrl ? (
+										<Image
+											src={posterUrl}
+											alt={item.title || item.name || "Poster"}
+											fill
+											className="object-cover"
+											sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 12vw"
+										/>
 
-									<div className="absolute inset-0 bg-neutral-900 flex items-center justify-center text-white text-sm">
-										{item.title || item.name}
-									</div>
+									) : (
 
-								)}
+										<div className="absolute inset-0 bg-neutral-900 flex items-center justify-center text-white text-sm">
+											{item.title || item.name}
+										</div>
+
+									)}
+								</div>
+
+							</a>
+
+							<div className="mt-2">
+								<p className="font-semibold">{item.title ?? item.name}</p>
+								<p className="uppercase text-ink3 font-jet-mono text-sm">{releaseYear}</p>
 							</div>
 
-							{item.type && (
-								<div className="py-1 px-2 absolute top-2 left-2 col-start-1 row-start-1 z-10 rounded-xl bg-neutral-800/80">
-									<p className="text-xs capitalize">{item.type}</p>
-								</div>
-							)}
-
-							{releaseYear && (
-								<div className="py-1 px-2 absolute top-2 right-2 col-start-1 row-start-1 z-10 rounded-xl bg-neutral-800/80">
-									<p className="text-xs">{releaseYear}</p>
-								</div>
-							)}
-
-						</a>
+						</div>
 
 					);
 

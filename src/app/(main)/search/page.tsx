@@ -4,16 +4,14 @@ import { searchTMDB } from "@/lib/tmdb/search";
 export default async function Page({
 	searchParams
 }: {
-	searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+	searchParams: Promise<{ query: string, type: string, strict: string }>
 }) {
 
-	const params = await searchParams;
-
-	const query = Array.isArray(params.query) ? params.query[0] : params.query;
+	const { query, type, strict: strictParams = "true" } = await searchParams;
+	const strict = strictParams !== "false";
 
 	const allowedTypes = ["all", "movie", "tv"] as const;
-	const mediaTypeParam = Array.isArray(params.type) ? params.type[0] : params.type;
-	const mediaType = allowedTypes.includes(mediaTypeParam as any) ? (mediaTypeParam as "all" | "movie" | "tv") : null;
+	const mediaType = allowedTypes.includes(type as any) ? (type as "all" | "movie" | "tv") : null;
 
 	let data: any | null;
 
@@ -21,7 +19,7 @@ export default async function Page({
 
 		try {
 
-			data = await searchTMDB(query, mediaType);
+			data = await searchTMDB(query, mediaType, 1, strict);
 
 		} catch (err) {
 
@@ -31,12 +29,12 @@ export default async function Page({
 
 	};
 
-
 	return (
 
 		<SearchForm
 			query={query ?? null}
 			type={mediaType ?? null}
+			strict={strict}
 			data={data}
 		/>
 

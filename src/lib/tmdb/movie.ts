@@ -1,7 +1,7 @@
 import { fetchtTMDB } from "./fetchTMDB";
 
 export async function getMovie<T = MovieDetailsWithImages>(movieId: string): Promise<T> {
-	const data = await fetchtTMDB(`/movie/${movieId}?language=en-US&append_to_response=images`, { next: { revalidate: 43200 } });
+	const data = await fetchtTMDB(`/movie/${movieId}?language=en-US&append_to_response=images&include_image_language=en,null`, { next: { revalidate: 43200 } });
 	return { ...data, mediaType: "movie" } as T;
 };
 

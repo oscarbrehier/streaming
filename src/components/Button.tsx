@@ -4,7 +4,7 @@ import { glass } from "@/styles";
 
 interface ButtonProps {
 	label?: string;
-	icon: React.ReactNode;
+	icon?: React.ReactNode;
 	variant?: "solid" | "glass";
 	href?: string;
 	onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
