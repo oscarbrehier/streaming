@@ -50,3 +50,18 @@ export const getLabelBgColor = (action: string) => {
 	return colors[hash % colors.length];
 
 };
+
+export const orbColors = {
+	coral: 'var(--color-coral)',
+	lavender: 'var(--color-lavender)',
+	peach: 'var(--color-peach)',
+	olive: 'var(--color-olive)',
+	periwinkle: 'var(--color-periwinkle)',
+	mint: 'var(--color-mint)',
+	rose: 'var(--color-rose)',
+	apricot: 'var(--color-apricot)',
+} as const;
+
+export type OrbColor = keyof typeof orbColors;
+
+export const orbColorKeys = Object.keys(orbColors) as OrbColor[];

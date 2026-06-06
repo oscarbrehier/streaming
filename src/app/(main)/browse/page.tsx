@@ -3,22 +3,8 @@ import { constructImg } from "@/lib/tmdb/constructImg";
 import { fetchtTMDB } from "@/lib/tmdb/fetchTMDB";
 
 import { cn } from "@/lib/utils";
+import { OrbColor, orbColorKeys, orbColors } from "@/utils/colors";
 import Link from "next/link";
-
-const orbColors = {
-	coral: 'var(--color-coral)',
-	lavender: 'var(--color-lavender)',
-	peach: 'var(--color-peach)',
-	olive: 'var(--color-olive)',
-	periwinkle: 'var(--color-periwinkle)',
-	mint: 'var(--color-mint)',
-	rose: 'var(--color-rose)',
-	apricot: 'var(--color-apricot)',
-} as const;
-
-type OrbColor = keyof typeof orbColors;
-
-const orbColorKeys = Object.keys(orbColors) as OrbColor[];
 
 interface GenreCardProps {
 	name: string;
@@ -27,7 +13,7 @@ interface GenreCardProps {
 	index?: number;
 	className?: string;
 	href: string;
-}
+};
 
 export function GenreCard({ name, count, color, index, className, href }: GenreCardProps) {
 
