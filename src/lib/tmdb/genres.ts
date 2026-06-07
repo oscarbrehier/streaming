@@ -1,6 +1,9 @@
 import { filterCurated } from "./curated";
 import { fetchtTMDB } from "./fetchTMDB";
 
+export const slugify = (str: string) => str.toLowerCase().replace(/\s+/g, '-');
+export const unslugify = (str: string) => str.toLowerCase().replace(/-/g, ' ');
+
 export const GENRES: Record<string, { id: number; description: string }> = {
 	action: { id: 28, description: "Movement, impact, and momentum. Action cinema at its best turns physical spectacle into something visceral — car chases, fight sequences, and set pieces that make your pulse quicken. From classic Hollywood blockbusters to Hong Kong martial arts, the genre spans a remarkable range of styles and sensibilities." },
 	adventure: { id: 12, description: "Cinema as a ticket to somewhere else. Adventure films follow characters into the unknown — jungles, oceans, distant planets, ancient ruins. The best ones make you feel the scale of the world and the pull of the horizon, whether the journey is literal or something more internal." },

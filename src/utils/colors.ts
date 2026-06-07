@@ -65,3 +65,33 @@ export const orbColors = {
 export type OrbColor = keyof typeof orbColors;
 
 export const orbColorKeys = Object.keys(orbColors) as OrbColor[];
+
+export const orbGradients: Record<string, { from: OrbColor; to: OrbColor }> = {
+	aurora: { from: 'mint', to: 'periwinkle' },
+	sunset: { from: 'coral', to: 'apricot' },
+	dusk: { from: 'lavender', to: 'rose' },
+	forest: { from: 'olive', to: 'mint' },
+	candy: { from: 'rose', to: 'peach' },
+	ocean: { from: 'periwinkle', to: 'mint' },
+	ember: { from: 'coral', to: 'peach' },
+	twilight: { from: 'lavender', to: 'periwinkle' },
+	bloom: { from: 'rose', to: 'lavender' },
+	meadow: { from: 'olive', to: 'peach' },
+};
+
+export const HEX_COLORS: Record<OrbColor, string> = {
+	coral: '#ff8f73',
+	lavender: '#b9a6ff',
+	peach: '#ffcaa0',
+	olive: '#c3d27a',
+	periwinkle: '#9fb4ff',
+	mint: '#93e6c4',
+	rose: '#f5a6c6',
+	apricot: '#ffb487',
+};
+
+export function buildGradient(gradientKey: string | null | undefined): string {
+	const key = gradientKey ?? Object.keys(orbGradients)[0];
+	const gradient = orbGradients[key] ?? orbGradients[Object.keys(orbGradients)[0]];
+	return `linear-gradient(145deg, ${HEX_COLORS[gradient.from]}, ${HEX_COLORS[gradient.to]})`;
+};

@@ -1,5 +1,5 @@
 import { constructImg } from "@/lib/tmdb/constructImg";
-import { GENRES, getMoviesByGenre } from "@/lib/tmdb/genres";
+import { GENRES, getMoviesByGenre, unslugify } from "@/lib/tmdb/genres";
 import { orbColorKeys, orbColors } from "@/utils/colors";
 import Image from "next/image";
 
@@ -34,7 +34,7 @@ export default async function Page({
 
 				<div className="space-y-2">
 					<p className={`uppercase font-jet-mono text-sm tracking-wider`} style={{ color: orbColors[resolvedColor] }}>genre</p>
-					<p className="text-7xl font-bold capitalize">{genreName}</p>
+					<p className="text-7xl font-bold capitalize">{unslugify(genreName)}</p>
 				</div>
 
 				<p className="text-ink/70 w-full max-w-2xl tracking-wide">

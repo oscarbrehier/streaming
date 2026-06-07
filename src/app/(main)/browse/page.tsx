@@ -1,6 +1,7 @@
 import { getGenres } from "@/lib/tmdb/api";
 import { constructImg } from "@/lib/tmdb/constructImg";
 import { fetchtTMDB } from "@/lib/tmdb/fetchTMDB";
+import { slugify } from "@/lib/tmdb/genres";
 
 import { cn } from "@/lib/utils";
 import { OrbColor, orbColorKeys, orbColors } from "@/utils/colors";
@@ -107,7 +108,7 @@ export default async function Page() {
 				<div className="grid grid-cols-6 gap-4">
 
 					{genres.result?.map((genre, i) => (
-						<GenreCard key={genre.id} href={`browse/${genre.name.toLocaleLowerCase()}`} name={genre.name} index={i} />
+						<GenreCard key={genre.id} href={`browse/${slugify(genre.name)}`} name={genre.name} index={i} />
 					))}
 
 				</div>
