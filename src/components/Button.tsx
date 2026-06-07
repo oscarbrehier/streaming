@@ -5,7 +5,7 @@ import { glass } from "@/styles";
 interface ButtonProps {
 	label?: string;
 	icon?: React.ReactNode;
-	variant?: "solid" | "glass" | "secondary";
+	variant?: "solid" | "glass" | "secondary" | "outline" | "destructive";
 	href?: string;
 	onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
 	className?: string;
@@ -14,10 +14,12 @@ interface ButtonProps {
 
 export function Button({ label, icon, variant = "solid", href, onClick, className, disabled }: ButtonProps) {
 	const base = cn(
-		"capitalize text-md h-12 px-6 rounded-full flex items-center justify-center sm:space-x-4",
+		"capitalize text-md h-12 px-6 rounded-full flex items-center justify-center sm:space-x-4 transition-all ease-in-out",
 		variant === "solid" && "bg-neutral-200 text-black",
 		variant === "glass" && glass("active"),
-		variant === "secondary" && "bg-panel border border-ink/10",
+		variant === "secondary" && "bg-panel2",
+		variant === "destructive" && "border border-destructive/10 text-destructive hover:bg-destructive/10",
+		variant === "outline" && "bg-panel border border-ink/10",
 		disabled
 			? "opacity-40 cursor-not-allowed pointer-events-none"
 			: "cursor-pointer",

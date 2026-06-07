@@ -71,6 +71,8 @@ export async function createViewingProfile({
 
 	const supabase = await createClient();
 
+	console.log(pin)
+
 	const { data: { user } } = await supabase.auth.getUser();
 	if (!user) return { error: "Not authenticated" };
 
@@ -103,6 +105,8 @@ export async function verifyProfilePin(profileId: string, pin: string): Promise<
 
 	const supabase = await createClient();
 
+	console.log(pin)
+
 	const { data, error } = await supabase
 		.from("user_profiles")
 		.select("pin_hash")
@@ -110,6 +114,55 @@ export async function verifyProfilePin(profileId: string, pin: string): Promise<
 		.single();
 
 	if (error || !data?.pin_hash) return false;
-	return bcrypt.compare(pin, data.pin_hash);
+
+	const result = await bcrypt.compare(pin, data.pin_hash);
+	return result;
+
+};
+
+export async function updateViewingProfile(
+	profileId: string,
+	data: { name: string; color: string; pin: string | null }
+): Promise<{ success?: boolean; error?: string }> {
+
+	const supabase = await createClient();
+
+	const { data: { user } } = await supabase.auth.getUser();
+	if (!user) return { error: "Not authenticated" };
+
+	const pinHash = data.pin ? await bcrypt.hash(data.pin, 10) : undefined;
+
+	const { error } = await supabase
+		.from("user_profiles")
+		.update({
+			name: data.name,
+			avatar_url: data.color,
+			...(pinHash !== undefined && { pin_hash: pinHash }),
+		})
+		.eq("id", profileId)
+		.eq("user_id", user.id);
+
+	if (error) return { error: error.message };
+
+	return { success: true };
+
+};
+
+export async function deleteViewingProfile(profileId: string): Promise<{ success?: boolean; error?: string }> {
+
+	const supabase = await createClient();
+
+	const { data: { user } } = await supabase.auth.getUser();
+	if (!user) return { error: "Not authenticated" };
+
+	const { error } = await supabase
+		.from("user_profiles")
+		.delete()
+		.eq("id", profileId)
+		.eq("user_id", user.id);
+
+	if (error) return { error: error.message };
+
+	return { success: true };
 
 };

@@ -5,11 +5,10 @@ import { Bookmark, Home, LayoutGrid, Lock, Pencil, Search, Settings, SunMedium, 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { User } from "@supabase/supabase-js";
-import { avatar } from "@/utils/avatar";
-import { useBridge } from "@/context/BridgeContext";
 import { useEffect, useRef, useState } from "react";
 import { buildGradient } from "@/utils/colors";
 import { setActiveProfile } from "@/utils/profiles";
+import { ProfilePinDialog } from "./ProfilePinDialog";
 
 interface NavbarProps {
 	user: Pick<User, "user_metadata" | "email"> | null;
@@ -25,7 +24,7 @@ const links = [
 ];
 
 
-function ProfileChip({ profile, size = "size-8", text = "text-sm", className }: { profile: ViewingProfile; size?: string; text?: string; className?: string; }) {
+export function ProfileChip({ profile, size = "size-8", text = "text-sm", className }: { profile: ViewingProfile; size?: string; text?: string; className?: string; }) {
 	return (
 		<div
 			className={cn("rounded-xl flex items-center justify-center shrink-0", size, className)}
@@ -41,9 +40,9 @@ export function Navbar({ user, activeProfile, profiles }: NavbarProps) {
 	const pathname = usePathname();
 	const router = useRouter();
 
-	const { status } = useBridge();
-
+	const [pinDialog, setPinDialog] = useState<ViewingProfile | null>(null);
 	const [profileOpen, setProfileOpen] = useState(false);
+
 	const ref = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
@@ -63,6 +62,16 @@ export function Navbar({ user, activeProfile, profiles }: NavbarProps) {
 		await setActiveProfile(profileId);
 		setProfileOpen(false);
 		router.refresh();
+	};
+
+	async function handleProfileClick(profile: ViewingProfile) {
+
+		if (profile.pin_hash) {
+			setPinDialog(profile);
+		} else {
+			await switchProfile(profile.id);
+		};
+
 	};
 
 	const otherProfiles = profiles.filter(p => p.id !== activeProfile?.id);
@@ -93,18 +102,6 @@ export function Navbar({ user, activeProfile, profiles }: NavbarProps) {
 
 			<div className="flex flex-col items-center space-y-6">
 
-				{/* <Tooltip>
-					<TooltipTrigger>
-						<div className={cn(
-							"size-3 animate-pulse rounded-full flex items-center justify-center",
-							BRIDGE_UI_CONFIG.STATUS[status].color
-						)} />
-					</TooltipTrigger>
-					<TooltipContent>
-						{BRIDGE_UI_CONFIG.STATUS[status].message}
-					</TooltipContent>
-				</Tooltip> */}
-
 				{
 					user && (
 
@@ -112,7 +109,7 @@ export function Navbar({ user, activeProfile, profiles }: NavbarProps) {
 
 							<div
 								onClick={() => setProfileOpen(prev => !prev)}
-								className="size-10 rounded-full overflow-hidden bg-cover bg-center flex items-center justify-center"
+								className="size-10 rounded-full overflow-hidden bg-cover bg-center flex items-center justify-center select-none cursor-pointer"
 								style={{ background: buildGradient(activeProfile?.avatar_url) }}
 							>
 								{activeProfile && (
@@ -150,7 +147,7 @@ export function Navbar({ user, activeProfile, profiles }: NavbarProps) {
 												{otherProfiles.map(p => (
 													<button
 														key={p.id}
-														onClick={() => switchProfile(p.id)}
+														onClick={() => handleProfileClick(p)}
 														className="w-full flex items-center gap-3 px-2.5 py-2 rounded-xl hover:bg-ink/10 transition-colors text-left"
 													>
 
@@ -202,6 +199,13 @@ export function Navbar({ user, activeProfile, profiles }: NavbarProps) {
 				}
 
 			</div>
+
+			<ProfilePinDialog
+				profile={pinDialog}
+				open={!!pinDialog}
+				onClose={() => setPinDialog(null)}
+				onSuccess={(id) => { switchProfile(id); setPinDialog(null); }}
+			/>
 
 		</div>
 

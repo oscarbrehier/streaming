@@ -4,6 +4,7 @@ import { Plus } from "lucide-react";
 import { Profile } from "./Profile";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { AddProfileButton } from "./AddProfileButton";
 
 export default async function Page() {
 
@@ -26,27 +27,18 @@ export default async function Page() {
 
 				))}
 
-				<Link
-					href={"/profiles/new"}
-					className="flex flex-col items-center space-y-4 select-none cursor-pointer transition-transform duration-300 hover:-translate-y-1.5"
-				>
-
-					<div className="size-40 rounded-2xl flex items-center justify-center border-4 border-ink/10 border-dotted">
-						<Plus className="" size={40} />
-					</div>
-
-					<p className="text-ink/70">Add profile</p>
-
-				</Link>
+				<AddProfileButton />
 
 			</div>
 
-			<button className={cn(
-				"capitalize text-md h-12 px-6 rounded-full cursor-pointer flex items-center justify-center sm:space-x-4",
-				"bg-panel border border-ink/10"
-			)}>
+			<Link
+				href="/profiles/manage"
+				className={cn(
+					"capitalize text-md h-12 px-6 rounded-full cursor-pointer flex items-center justify-center sm:space-x-4",
+					"bg-panel border border-ink/10"
+				)}>
 				manage profiles
-			</button>
+			</Link>
 
 		</div>
 
