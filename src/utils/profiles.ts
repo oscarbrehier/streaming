@@ -101,22 +101,56 @@ export async function createViewingProfile({
 
 };
 
-export async function verifyProfilePin(profileId: string, pin: string): Promise<boolean> {
+export async function verifyProfilePin(profileId: string, pin: string): Promise<{ success: boolean; locked?: boolean; attemptsLeft?: number }> {
 
 	const supabase = await createClient();
 
-	console.log(pin)
-
 	const { data, error } = await supabase
 		.from("user_profiles")
-		.select("pin_hash")
+		.select("pin_hash, pin_attempts, pin_locked_until")
 		.eq("id", profileId)
 		.single();
 
-	if (error || !data?.pin_hash) return false;
+	if (error || !data?.pin_hash) return { success: false };
+
+	if (data.pin_locked_until && new Date(data.pin_locked_until) > new Date()) {
+		return { success: false, locked: true };
+	}
+
+	const MAX_ATTEMPTS = 5;
+	const LOCKOUT_MINUTES = 15;
 
 	const result = await bcrypt.compare(pin, data.pin_hash);
-	return result;
+
+	if (!result) {
+
+		const attempts = data.pin_attempts + 1;
+		const isLocked = attempts >= MAX_ATTEMPTS;
+
+		await supabase
+			.from("user_profiles")
+			.update({
+				pin_attempts: isLocked ? 0 : attempts,
+				pin_locked_until: isLocked
+					? new Date(Date.now() + LOCKOUT_MINUTES * 60 * 1000).toISOString()
+					: null,
+			})
+			.eq("id", profileId);
+
+		return {
+			success: false,
+			locked: isLocked,
+			attemptsLeft: MAX_ATTEMPTS - attempts,
+		};
+
+	};
+
+	await supabase
+		.from("user_profiles")
+		.update({ pin_attempts: 0, pin_locked_until: null })
+		.eq("id", profileId);
+
+	return { success: true };
 
 };
 

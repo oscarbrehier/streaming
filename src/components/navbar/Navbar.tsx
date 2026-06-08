@@ -8,7 +8,7 @@ import { User } from "@supabase/supabase-js";
 import { useEffect, useRef, useState } from "react";
 import { buildGradient } from "@/utils/colors";
 import { setActiveProfile } from "@/utils/profiles";
-import { ProfilePinDialog } from "./ProfilePinDialog";
+import { ProfilePinDialog } from "../profiles/ProfilePinDialog";
 
 interface NavbarProps {
 	user: Pick<User, "user_metadata" | "email"> | null;
@@ -119,7 +119,7 @@ export function Navbar({ user, activeProfile, profiles }: NavbarProps) {
 
 							{profileOpen && (
 
-								<div className="absolute bottom-0 right-16 w-76	 bg-[rgba(22,22,28,0.92)] backdrop-blur-xl border border-white/10 rounded-[18px] p-2.5 shadow-[0_30px_70px_-20px_rgba(0,0,0,0.85)]">
+								<div className="absolute bottom-0 right-16 w-76	 bg-[rgba(22,22,28,0.92)] backdrop-blur-xl border border-ink/10 rounded-3xl p-2.5 shadow-[0_30px_70px_-20px_rgba(0,0,0,0.85)]">
 
 									{activeProfile && (
 

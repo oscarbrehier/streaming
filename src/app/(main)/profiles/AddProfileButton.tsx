@@ -29,7 +29,7 @@ export function AddProfileButton({
 			className="flex flex-col items-center space-y-4 select-none cursor-pointer transition-transform duration-300 hover:-translate-y-1.5"
 		>
 
-			<div className="size-40 rounded-2xl flex items-center justify-center border-4 border-panel border-dotted">
+			<div className="size-40 rounded-2xl flex items-center justify-center border-4 border-panel2 border-dotted">
 				<Plus className="text-ink2" size={40} />
 			</div>
 
