@@ -3,6 +3,7 @@
 
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
+import { ProfileChip } from "@/components/profiles/ProfileChip";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
@@ -48,16 +49,15 @@ export function ProfileForm({ initialValues, onSubmit, onCancel, onDelete, submi
 
 			<div className="flex flex-col items-center space-y-4 select-none">
 
-				<div
-					className="size-60 rounded-3xl flex items-center justify-center"
-					style={{ background: buildGradient(profile.color) }}
-				>
-
-					<p className="text-7xl font-bold text-ink uppercase">
-						{profile.name ? profile.name.slice(0, 1) : "?"}
-					</p>
-
-				</div>
+				<ProfileChip
+					profile={{
+						name: profile.name.trim() ? profile.name : "?",
+						avatar_url: profile.color
+					}}
+					size="size-60"
+					className="rounded-4xl"
+					text="text-7xl"
+				/>
 
 				<p className="text-ink/50 uppercase font-jet-mono text-xs">live preview</p>
 

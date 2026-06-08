@@ -172,7 +172,7 @@ export function ManageProfileForm({
 
 					))}
 
-					<AddProfileButton onSelect={openCreate} />
+					<AddProfileButton onSelect={openCreate} profilesNum={profiles.length} />
 
 				</div>
 

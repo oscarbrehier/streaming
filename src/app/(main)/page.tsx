@@ -42,31 +42,27 @@ export default async function Page({
 
 	return (
 
-		<BlobBackground>
+		<div className="h-auto w-full pb-8 dark flex flex-col items-center">
 
-			<div className="h-auto w-full pb-8 dark flex flex-col items-center">
+			<HeroBanner items={heroBannerItems} />
 
-				<HeroBanner items={heroBannerItems} />
+			<CategorySelector />
 
-				<CategorySelector />
+			<div className="w-full flex flex-col items-center space-y-16 mt-20 px-40">
 
-				<div className="w-full flex flex-col items-center space-y-16 mt-20 px-40">
-
-					{carousels.map((item, idx) => (
-						item.data.length > 0 && <Carousel
-							key={idx}
-							data={item.data}
-							Card={item.Card}
-							title={item.title}
-							ranked={item.ranked}
-						/>
-					))}
-
-				</div>
+				{carousels.map((item, idx) => (
+					item.data.length > 0 && <Carousel
+						key={idx}
+						data={item.data}
+						Card={item.Card}
+						title={item.title}
+						ranked={item.ranked}
+					/>
+				))}
 
 			</div>
 
-		</BlobBackground>
+		</div>
 
 	);
 

@@ -2,7 +2,6 @@ import { Open_Sans, Bodoni_Moda, Hanken_Grotesk, JetBrains_Mono } from "next/fon
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Suspense } from "react";
-import { BridgeProvider } from "@/context/BridgeContext";
 
 export const bodoni = Bodoni_Moda({
 	subsets: ["latin"],
@@ -41,12 +40,10 @@ export default function RootLayout({
 					enableSystem={false}
 					disableTransitionOnChange
 				>
-
-					<BridgeProvider>
-						<Suspense>
-							{children}
-						</Suspense>
-					</BridgeProvider>
+					
+					<Suspense>
+						{children}
+					</Suspense>
 
 				</ThemeProvider>
 

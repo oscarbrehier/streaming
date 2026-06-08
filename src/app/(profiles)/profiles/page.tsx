@@ -5,6 +5,7 @@ import { Profile } from "./Profile";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { AddProfileButton } from "./AddProfileButton";
+import { MAX_USER_PROFILES } from "@/utils/constants";
 
 export default async function Page() {
 
@@ -27,7 +28,7 @@ export default async function Page() {
 
 				))}
 
-				<AddProfileButton />
+				<AddProfileButton profilesNum={profiles.length} />
 
 			</div>
 

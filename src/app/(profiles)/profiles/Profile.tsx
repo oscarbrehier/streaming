@@ -1,5 +1,6 @@
 "use client"
 
+import { ProfileChip } from "@/components/profiles/ProfileChip";
 import { ProfilePinDialog } from "@/components/profiles/ProfilePinDialog";
 import { buildGradient, orbGradients } from "@/utils/colors";
 import { setActiveProfile } from "@/utils/profiles";
@@ -75,14 +76,12 @@ export function Profile({
 
 				)}
 
-				<div
-					className="size-40 rounded-3xl flex items-center justify-center"
-					style={{
-						background: buildGradient(profile.avatar_url)
-					}}
-				>
-					<p className="text-7xl font-bold text-ink uppercase">{profile.name.slice(0, 1)}</p>
-				</div>
+				<ProfileChip
+					size="size-40"
+					text="text-7xl"
+					className="rounded-3xl"
+					profile={profile}
+				/>
 
 				<p className="text-ink/70">{profile.name}</p>
 

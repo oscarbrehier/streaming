@@ -1,4 +1,5 @@
 import { MovieInfo, TvInfo } from "./tmdb";
+import { v4 as uuid } from "uuid";
 
 async function hashString(str: string) {
 
@@ -75,7 +76,7 @@ export async function getLookmovie(media: MovieInfo): Promise<MediaSources> {
 
 		if (url) {
 			data.files.push({
-				id: "0",
+				id: uuid(),
 				file: url as string,
 				type: "hls",
 				lang: "en"
@@ -87,13 +88,11 @@ export async function getLookmovie(media: MovieInfo): Promise<MediaSources> {
 	if (!library.subtitles || library.subtitles.length === 0) return data;
 
 	data.subtitles = library.subtitles.map((track: any) => ({
-		id: "0",
+		id: uuid(),
 		url: `https://www.lookmovie2.to/${track.file}`,
 		lang: track.language,
 		type: "vtt"
 	}));
-
-	console.log("[Lookmovie] ", data);
 
 	return data;
 

@@ -9,6 +9,8 @@ import { useEffect, useRef, useState } from "react";
 import { buildGradient } from "@/utils/colors";
 import { setActiveProfile } from "@/utils/profiles";
 import { ProfilePinDialog } from "../profiles/ProfilePinDialog";
+import { ProfileChip } from "../profiles/ProfileChip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 interface NavbarProps {
 	user: Pick<User, "user_metadata" | "email"> | null;
@@ -17,23 +19,12 @@ interface NavbarProps {
 };
 
 const links = [
-	{ icon: Home, path: "/" },
-	{ icon: Search, path: "/search" },
-	{ icon: LayoutGrid, path: "/browse" },
-	{ icon: Bookmark, path: "/watchlist" },
+	{ icon: Home, path: "/", tooltip: "home" },
+	{ icon: Search, path: "/search", tooltip: "search" },
+	{ icon: LayoutGrid, path: "/browse", tooltip: "browse" },
+	{ icon: Bookmark, path: "/watchlist", tooltip: "watchlist" },
 ];
 
-
-export function ProfileChip({ profile, size = "size-8", text = "text-sm", className }: { profile: ViewingProfile; size?: string; text?: string; className?: string; }) {
-	return (
-		<div
-			className={cn("rounded-xl flex items-center justify-center shrink-0", size, className)}
-			style={{ background: buildGradient(profile.avatar_url) }}
-		>
-			<p className={cn("uppercase font-bold text-ink", text)}>{profile.name.slice(0, 1)}</p>
-		</div>
-	);
-};
 
 export function Navbar({ user, activeProfile, profiles }: NavbarProps) {
 
@@ -44,6 +35,7 @@ export function Navbar({ user, activeProfile, profiles }: NavbarProps) {
 	const [profileOpen, setProfileOpen] = useState(false);
 
 	const ref = useRef<HTMLDivElement>(null);
+	const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
 	useEffect(() => {
 
@@ -74,6 +66,15 @@ export function Navbar({ user, activeProfile, profiles }: NavbarProps) {
 
 	};
 
+	function handleMouseEnter() {
+		if (hoverTimer.current) clearTimeout(hoverTimer.current);
+		setProfileOpen(true);
+	};
+
+	function handleMouseLeave() {
+		hoverTimer.current = setTimeout(() => setProfileOpen(false), 300);
+	};
+
 	const otherProfiles = profiles.filter(p => p.id !== activeProfile?.id);
 
 	return (
@@ -84,17 +85,28 @@ export function Navbar({ user, activeProfile, profiles }: NavbarProps) {
 
 				{links.map((link, idx) => (
 
-					<Link
-						href={link.path}
-						key={idx}
-						className={cn(
-							"size-10 rounded-full flex items-center justify-center text-ink",
-							"hover:bg-neutral-800",
-							link.path !== pathname && "text-muted-foreground hover:text-foreground"
-						)}
-					>
-						<link.icon />
-					</Link>
+					<Tooltip key={idx}>
+
+						<TooltipTrigger asChild>
+
+							<Link
+								href={link.path}
+								className={cn(
+									"size-10 rounded-full flex items-center justify-center text-ink",
+									"hover:bg-neutral-800",
+									link.path !== pathname && "text-muted-foreground hover:text-foreground"
+								)}
+							>
+								<link.icon />
+							</Link>
+
+						</TooltipTrigger>
+
+						<TooltipContent side="left" className="dark">
+							<p className="capitalize">{link.tooltip}</p>
+						</TooltipContent>
+
+					</Tooltip>
 
 				))}
 
@@ -105,27 +117,39 @@ export function Navbar({ user, activeProfile, profiles }: NavbarProps) {
 				{
 					user && (
 
-						<div ref={ref} className="relative">
+						<div
+							ref={ref}
+							className="relative"
+							onMouseEnter={handleMouseEnter}
+							onMouseLeave={handleMouseLeave}
+						>
 
 							<div
 								onClick={() => setProfileOpen(prev => !prev)}
 								className="size-10 rounded-full overflow-hidden bg-cover bg-center flex items-center justify-center select-none cursor-pointer"
-								style={{ background: buildGradient(activeProfile?.avatar_url) }}
+
 							>
 								{activeProfile && (
-									<p className={cn("uppercase font-bold text-ink")}>{activeProfile.name.slice(0, 1)}</p>
+									<ProfileChip
+										profile={activeProfile}
+										className="rounded-none h-full w-full"
+									/>
 								)}
 							</div>
 
 							{profileOpen && (
 
-								<div className="absolute bottom-0 right-16 w-76	 bg-[rgba(22,22,28,0.92)] backdrop-blur-xl border border-ink/10 rounded-3xl p-2.5 shadow-[0_30px_70px_-20px_rgba(0,0,0,0.85)]">
+								<div
+									onMouseEnter={handleMouseEnter}
+									onMouseLeave={handleMouseLeave}
+									className="absolute bottom-0 right-16 w-76	 bg-[rgba(22,22,28,0.92)] backdrop-blur-xl border border-ink/10 rounded-3xl p-2.5 shadow-[0_30px_70px_-20px_rgba(0,0,0,0.85)]"
+								>
 
 									{activeProfile && (
 
 										<div className="flex items-center gap-3 px-2.5 pt-2 pb-3">
 
-											<ProfileChip profile={activeProfile} size="size-10" text="text-base" />
+											<ProfileChip profile={activeProfile} size="size-10" text="text-base" className="rounded-xl" />
 
 											<div className="min-w-0">
 												<p className="text-[14.5px] font-bold tracking-tight">{activeProfile.name}</p>

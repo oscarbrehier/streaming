@@ -1,14 +1,9 @@
 "use client"
 
-import { Info, Play, Plus } from "lucide-react";
-import Link from "next/link";
+import { Info, Play } from "lucide-react";
 import { MovieOverview } from "./MovieOverview";
 import { cn } from "@/lib/utils";
-import { glass } from "@/styles";
 import { useEffect, useState } from "react";
-import { useBridge } from "@/context/BridgeContext";
-import { BRIDGE_UI_CONFIG } from "@/utils/constants";
-import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import { Button } from "./Button";
 import { AddToWatchlist } from "@/app/(main)/(media)/movie/[id]/AddToWatchlist";
 

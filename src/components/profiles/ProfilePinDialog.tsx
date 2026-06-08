@@ -13,6 +13,7 @@ import { buildGradient } from "@/utils/colors";
 import { verifyProfilePin } from "@/utils/profiles";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { ProfileChip } from "./ProfileChip";
 
 interface ProfilePinDialogProps {
 	profile: ViewingProfile | null;
@@ -88,12 +89,12 @@ export function ProfilePinDialog({ profile, open, onClose, onSuccess }: ProfileP
 					{profile && (
 						<div className="flex flex-col items-center space-y-6">
 
-							<div
-								className="size-16 rounded-2xl flex items-center justify-center select-none"
-								style={{ background: buildGradient(profile.avatar_url) }}
-							>
-								<p className="text-2xl font-bold text-panel2 uppercase">{profile.name.slice(0, 1)}</p>
-							</div>
+							<ProfileChip
+								profile={profile}
+								size="size-16"
+								text="text-2xl"
+								className="rounded-2xl"
+							/>
 
 							<div className="space-y-3 text-center">
 								<p className="uppercase font-jet-mono text-xs tracking-wider text-lavender">profile locked</p>

@@ -71,7 +71,9 @@ export default async function Page({ params }: PageProps) {
 	const supabase = await createClient();
 	const { data: { user } } = await supabase.auth.getUser();
 
-	if (!user) return <MediaNotFound />;
+	const profileId = await getActiveProfileId();
+
+	if (!user || !profileId) return <MediaNotFound />;
 
 	const mediaStatus = await updateUserMediaStatus(supabase, user.id, id);
 	if (!mediaStatus) {
@@ -92,6 +94,7 @@ export default async function Page({ params }: PageProps) {
 			title={movie.title}
 			mediaId={id}
 			userId={user.id}
+			profileId={profileId}
 			mediaStatus={mediaStatus}
 			sources={sources}
 		/>

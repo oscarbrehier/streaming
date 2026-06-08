@@ -39,7 +39,7 @@ export default function Page() {
 				<span className="font-medium">Back</span>
 			</button>
 
-			<p className="uppercase font-jet-mono text-sm tracking-wider text-lavender">new profile</p>
+			<p className="uppercase font-jet-mono text-sm tracking-wider text-lavender mt-10">new profile</p>
 
 			<p className="text-5xl font-bold text-ink">Create a profile</p>
 

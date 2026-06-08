@@ -3,6 +3,7 @@
 import { cookies } from "next/headers";
 import { createClient } from "./supabase/server";
 import bcrypt from "bcryptjs";
+import { MAX_USER_PROFILES } from "./constants";
 
 export async function getActiveProfileId(): Promise<string | null> {
 	const cookieStore = await cookies();
@@ -71,8 +72,6 @@ export async function createViewingProfile({
 
 	const supabase = await createClient();
 
-	console.log(pin)
-
 	const { data: { user } } = await supabase.auth.getUser();
 	if (!user) return { error: "Not authenticated" };
 
@@ -80,6 +79,10 @@ export async function createViewingProfile({
 		.from("user_profiles")
 		.select("id")
 		.eq("user_id", user.id);
+
+	if (existing && existing.length >= MAX_USER_PROFILES) {
+		return { error: `Maximum of ${MAX_USER_PROFILES} profiles reached.` };
+	}
 
 	const isDefault = !existing || existing.length === 0;
 

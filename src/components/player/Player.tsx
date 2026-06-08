@@ -21,15 +21,12 @@ import { glass } from "@/styles";
 import { useMediaSources } from "@/hooks/player/useMediaSources";
 import { useSubtitles } from "@/hooks/player/useSubtitles";
 import { Loader2 } from "lucide-react";
-import { useBridge } from "@/context/BridgeContext";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../ui/dialog";
-import { Button } from "../ui/button";
-import { BridgeDisconnectDialog } from "./BridgeDisconnectDialog";
 
 const supabase = createClient();
 
 interface VideoPlayerProps {
 	userId: string;
+	profileId: string;
 	mediaId: string;
 	title?: string;
 	showRating?: boolean;
@@ -47,6 +44,7 @@ const ratings = [
 
 export default function VideoPlayer({
 	userId,
+	profileId,
 	mediaId,
 	title,
 	showRating = true,
@@ -54,9 +52,7 @@ export default function VideoPlayer({
 	sources
 }: VideoPlayerProps) {
 
-	const { status } = useBridge();
-
-	const { updateRating, setMediaDuration } = new MediaService(supabase, mediaId, userId);
+	const { updateRating, setMediaDuration } = new MediaService(supabase, mediaId, userId, profileId);
 
 	const router = useRouter();
 
@@ -393,18 +389,6 @@ export default function VideoPlayer({
 
 	}, [currentTrack]);
 
-	// useEffect(() => {
-
-	// 	if (status === "DISCONNECTED" && isPlaying) {
-
-	// 		videoRef.current?.pause();
-	// 		setIsPlaying(false);
-	// 		handleProgressUpdate();
-
-	// 	};
-
-	// }, [status, isPlaying, handleProgressUpdate])
-
 	return (
 		<div className="h-auto w-auto relative bg-black" ref={playerRef}>
 
@@ -421,8 +405,6 @@ export default function VideoPlayer({
 
 				}}
 			/>
-
-			{/* <BridgeDisconnectDialog /> */}
 
 			<div className={`h-screen w-full absolute flex flex-col justify-between z-2147483640 transition-opacity duration-300 ${controls ? 'opacity-100' : 'opacity-0'}`}>
 
