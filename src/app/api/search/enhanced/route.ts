@@ -66,6 +66,8 @@ export async function GET(req: NextRequest) {
 
 				const batches: { results: any[]; label: string }[] = [];
 
+				const isMovementQuery = intent.movements.length > 0 && intent.directors.length > 0;
+
 				const allSearches = [
 					...intent.directors.slice(0, 4).map(d =>
 						searchByPerson(d, type).then(async results => {
@@ -85,7 +87,7 @@ export async function GET(req: NextRequest) {
 							}
 						})
 					),
-					...intent.keywords.slice(0, 3).map(k =>
+					...(isMovementQuery ? [] : intent.keywords.slice(0, 3).map(k =>
 						searchByKeyword(k, type).then(async results => {
 							const filtered = strict ? await filterCurated(results) : results;
 							if (filtered.length > 0) {
@@ -93,8 +95,8 @@ export async function GET(req: NextRequest) {
 								send({ type: "append", results: filtered, label: k });
 							}
 						})
-					),
-					...intent.movements.slice(0, 2).map(m =>
+					)),
+					...(isMovementQuery ? [] : intent.movements.slice(0, 2).map(m =>
 						searchByKeyword(m, type).then(async results => {
 							const filtered = strict ? await filterCurated(results) : results;
 							if (filtered.length > 0) {
@@ -102,7 +104,7 @@ export async function GET(req: NextRequest) {
 								send({ type: "append", results: filtered, label: m });
 							}
 						})
-					),
+					)),
 				];
 
 				await Promise.allSettled(allSearches);

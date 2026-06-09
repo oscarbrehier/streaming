@@ -10,7 +10,8 @@ const PROMPT = `You are an expert film scholar and cinephile with deep knowledge
 Your job is to parse natural language search queries into structured data for a film discovery platform.
 
 Guidelines:
-- For cinema movements (French New Wave, Italian Neorealism, German Expressionism, Iranian New Wave, Romanian New Wave, Dogme 95, Japanese New Wave, American New Wave, British Kitchen Sink, etc.), extract ALL major associated directors
+- For cinema movements (French New Wave, Italian Neorealism, German Expressionism, Iranian New Wave, Romanian New Wave, Dogme 95, Japanese New Wave, American New Wave, British Kitchen Sink, etc.), extract ALL major associated directors, prefer directors over keywords — keywords often match unrelated modern films
+- Only include keywords that are highly specific to the movement, not general themes
 - For directors, extract their full names exactly as they appear in international databases (e.g. "Jean-Luc Godard" not "Godard")
 - For vague queries like "70s paranoia thrillers" or "slow cinema", extract relevant keywords AND directors known for that style
 - For periods, be generous: "70s" means 1970-1979, "post-war" means 1945-1960, "silent era" means 1895-1930

@@ -18,7 +18,7 @@ export function Input({ value, onChange, placeholder, className, type = "text" }
 			placeholder={placeholder}
 			className={cn(
 				"h-12 px-6 rounded-2xl",
-				"bg-panel/50 border border-ink/10 text-ink/70",
+				"bg-panel/50 border border-ink/10 text-ink",
 				"placeholder:text-ink/30",
 				"outline-none focus:border-ink/25",
 				"transition-colors",

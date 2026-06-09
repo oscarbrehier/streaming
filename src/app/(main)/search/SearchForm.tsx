@@ -58,12 +58,12 @@ export function SearchForm({
 	query,
 	type,
 	strict,
-	data
+	data = null
 }: {
 	query: string | null;
 	type: "all" | "movie" | "tv" | null;
 	strict: boolean;
-	data: TMDBSearchResponse | null;
+	data?: TMDBSearchResponse | null;
 }) {
 
 	const router = useRouter();
@@ -79,6 +79,8 @@ export function SearchForm({
 	const [progress, setProgress] = useState(0);
 	const [phase, setPhase] = useState<SearchPhase | null>(null);
 	const [intentChips, setIntentChips] = useState<{ label: string; value: string }[]>([]);
+
+	const [searchTriggered, setSearchTriggered] = useState(false);
 
 	const displayResults = enhancedResults ?? data?.results ?? [];
 
@@ -152,6 +154,7 @@ export function SearchForm({
 
 							if (data.type === "results") {
 
+								setSearchTriggered(true);
 								setPhase({ ...SEARCH_PHASES.title });
 								setProgress(20);
 
@@ -206,7 +209,7 @@ export function SearchForm({
 								});
 
 								setProgress(100);
-								// setTimeout(() => setProgress(0), 600);
+								setTimeout(() => setProgress(0), 600);
 								setIsEnhancing(false);
 
 							};
@@ -264,6 +267,7 @@ export function SearchForm({
 					<SearchBar
 						value={searchQuery ?? ""}
 						onChange={(v) => handleSearch(v)}
+						thinking={isEnhancing}
 					/>
 
 					{/* <div className="flex items-center space-x-4">
@@ -358,7 +362,10 @@ export function SearchForm({
 
 					{intentChips?.map((chip, i) => (
 
-						<div key={i} className="flex items-center space-x-4 bg-panel border border-panel2 py-2 px-4 rounded-full transition-transform -transl">
+						<div
+							key={i}
+							className="flex items-center space-x-4 bg-panel border border-panel2 py-2 px-4 rounded-full animate-in fade-in slide-in-from-bottom-2 duration-300"
+						>
 							<p className="uppercase font-jet-mono text-olive text-xs">{chip.label}</p>
 							<p className="text-sm text-ink2">{chip.value}</p>
 						</div>
@@ -374,36 +381,39 @@ export function SearchForm({
 			<div className="w-full flex flex-col space-y-2">
 
 				{phase && (
-
-					<div className="w-full flex items-center justify-between">
+					<div
+						key={phase.title}
+						className="w-full flex items-center justify-between animate-in fade-in duration-200"
+					>
 
 						<div>
 							<p className="text-ink text-sm font-medium">{phase.title}</p>
 							<p className="text-ink3 text-sm">{phase.description}</p>
 						</div>
 
-						<p className="uppercase text-ink3 font-jet-mono text-sm">{progress} %</p>
+						{progress !== 0 && <p className="uppercase text-ink3 font-jet-mono text-sm">{progress} %</p>}
 
 					</div>
 
 				)}
 
-				<div className="w-full h-0.5">
-					<div
-						className={cn(
-							"h-full rounded-full bg-linear-to-r from-mint to-lavender transition-all duration-300 ease-out",
-							progress === 0 ? "opacity-0" : "opacity-100",
-							progress === 100 && "transition-opacity duration-500"
-						)}
-						style={{ width: `${progress}%` }}
-					/>
-				</div>
+				{progress !== 0 && (
+					<div className="w-full h-0.5">
+						<div
+							className={cn(
+								"h-full rounded-full bg-linear-to-r from-mint to-lavender transition-all duration-500 ease-out",
+								progress === 0 ? "opacity-0" : "opacity-100",
+							)}
+							style={{ width: `${progress}%` }}
+						/>
+					</div>
+				)}
 
 			</div>
 
-			{!isEnhancing && displayResults.length === 0 && query && (
+			{!isEnhancing && searchTriggered && displayResults.length === 0 && query && (
 
-				<div className="flex-1 w-full flex items-center justify-center">
+				<div className="flex-1 w-full flex items-center justify-center animate-in fade-in slide-in-from-bottom-4 duration-500">
 
 					<div className="flex flex-col items-center space-y-8">
 
@@ -476,7 +486,7 @@ export function SearchForm({
 				isEnhancing && "opacity-50"
 			)}>
 
-				{displayResults.map((item) => {
+				{displayResults.map((item, i) => {
 
 					const posterUrl = item.poster_path ? constructImg(item.poster_path) : null;
 					const date = item.release_date || item.first_air_date;
@@ -486,7 +496,8 @@ export function SearchForm({
 
 						<div
 							key={item.id}
-							className="flex flex-col"
+							className="flex flex-col animate-in fade-in slide-in-from-bottom-2 duration-300"
+							style={{ animationDelay: `${Math.min(i * 30, 300)}ms` }}
 						>
 
 							<a href={`/${item.type || mediaType}/${item.id}`} className="relative w-full rounded-2xl overflow-hidden grid grid-cols-1 grid-rows-1">
