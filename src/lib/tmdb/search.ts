@@ -70,7 +70,7 @@ const responseFormat: ResponseFormat = {
 	} as any
 };
 
-async function parseSearchIntent(query: string): Promise<SearchIntent> {
+export async function parseSearchIntent(query: string): Promise<SearchIntent> {
 
 	const cacheKey = `search_intent:${query.toLowerCase().trim()}`;
 	const cachedData = await getCache(cacheKey);
@@ -106,7 +106,7 @@ async function parseSearchIntent(query: string): Promise<SearchIntent> {
 
 };
 
-async function searchByPerson(name: string, type: "all" | "movie" | "tv") {
+export async function searchByPerson(name: string, type: "all" | "movie" | "tv") {
 
 	const personRes = await fetchtTMDB(
 		`/search/person?query=${encodeURIComponent(name)}&language=en-US`,
@@ -129,7 +129,7 @@ async function searchByPerson(name: string, type: "all" | "movie" | "tv") {
 
 };
 
-async function searchByKeyword(keyword: string, type: "all" | "movie" | "tv") {
+export async function searchByKeyword(keyword: string, type: "all" | "movie" | "tv") {
 
 	const kwRes = await fetchtTMDB(
 		`/search/keyword?query=${encodeURIComponent(keyword)}`,
@@ -148,7 +148,7 @@ async function searchByKeyword(keyword: string, type: "all" | "movie" | "tv") {
 
 };
 
-async function searchByTitle(query: string, type: "all" | "movie" | "tv") {
+export async function searchByTitle(query: string, type: "all" | "movie" | "tv") {
 
 	if (type === "all") {
 
@@ -169,7 +169,7 @@ async function searchByTitle(query: string, type: "all" | "movie" | "tv") {
 
 };
 
-function deduplicateAndSort(results: any[]): any[] {
+export function deduplicateAndSort(results: any[]): any[] {
 
 	const seen = new Set<number>();
 	const merged: any[] = [];
@@ -189,6 +189,10 @@ function deduplicateAndSort(results: any[]): any[] {
 		return scoreB - scoreA;
 	});
 
+};
+
+export async function searchTMDBFast(query: string, type: "all" | "movie" | "tv") {
+    return searchByTitle(query, type);
 };
 
 export async function searchTMDB(

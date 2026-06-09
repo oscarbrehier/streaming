@@ -1,9 +1,7 @@
-"use server"
-
 export async function getCache(key: string): Promise<string | null> {
 
 	const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cache/${key}`, {
-		method: "HEAD",
+		method: "GET",
 		headers: {
 			'Authorization': `Bearer ${process.env.API_INTERNAL_KEY}`
 		}
@@ -11,8 +9,10 @@ export async function getCache(key: string): Promise<string | null> {
 
 	if (!res.ok) return null;
 
-	const data = await res.json();
-	return data;
+	if (!res.ok) return null;
+
+	const json = await res.json();
+	return json.data ?? null;
 
 };
 
@@ -21,7 +21,8 @@ export async function setCache(key: string, value: string): Promise<string | nul
 	const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cache`, {
 		method: "POST",
 		headers: {
-			'Authorization': `Bearer ${process.env.API_INTERNAL_KEY}`
+			'Authorization': `Bearer ${process.env.API_INTERNAL_KEY}`,
+			'Content-Type': 'application/json',
 		},
 		body: JSON.stringify({
 			key,

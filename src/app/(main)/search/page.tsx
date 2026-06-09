@@ -1,5 +1,5 @@
 import { SearchForm } from "./SearchForm";
-import { searchTMDB } from "@/lib/tmdb/search";
+import { searchTMDB, searchTMDBFast } from "@/lib/tmdb/search";
 
 export default async function Page({
 	searchParams
@@ -13,13 +13,18 @@ export default async function Page({
 	const allowedTypes = ["all", "movie", "tv"] as const;
 	const mediaType = allowedTypes.includes(type as any) ? (type as "all" | "movie" | "tv") : null;
 
-	let data: any | null;
+	let fastData: any  = null;
 
 	if (query) {
 
 		try {
 
-			data = await searchTMDB(query, mediaType, 1, strict);
+			const results = await searchTMDBFast(query, mediaType ?? "all");
+			fastData = {
+				results,
+				total_results: results.length,
+				total_page: 1
+			};
 
 		} catch (err) {
 
@@ -35,7 +40,7 @@ export default async function Page({
 			query={query ?? null}
 			type={mediaType ?? null}
 			strict={strict}
-			data={data}
+			data={fastData}
 		/>
 
 	);

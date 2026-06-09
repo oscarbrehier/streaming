@@ -11,6 +11,7 @@ import { SearchBar } from "./SearchBar";
 import { Pill } from "@/components/Pill";
 import { Button } from "@/components/Button";
 import { Switch } from "@/components/ui/switch";
+import { deduplicateAndSort } from "@/lib/tmdb/search";
 
 export interface TMDBMovie {
 	id: number;
@@ -32,7 +33,26 @@ export interface TMDBSearchResponse {
 	total_results: number;
 };
 
-const CATEGORIES = ["all", "movie", "tv"] as const;
+const CATEGORIES = [
+	{ label: "all", path: "all" },
+	{ label: "movies", path: "movie" },
+	{ label: "series", path: "tv" },
+] as const;
+
+type MediaType = "all" | "movie" | "tv";
+
+interface SearchPhase {
+	title: string;
+	description?: string;
+};
+
+const SEARCH_PHASES = {
+	start: { title: "Searching", description: "Looking through the catalogue..." },
+	title: { title: "First results in", description: "Direct matches found" },
+	intent: { title: "Understanding query", description: "Identifying directors, movements, periods..." },
+	append: { title: "Expanding search", description: "Finding related titles..." },
+	done: { title: "Search complete", description: null },
+} as const;
 
 export function SearchForm({
 	query,
@@ -52,6 +72,16 @@ export function SearchForm({
 	const [searchQuery, setSearchQuery] = useState<string | null>(query ?? null);
 	const [mediaType, setMediaType] = useState<"all" | "movie" | "tv">(type ?? "all");
 
+	const [isEnhancing, setIsEnhancing] = useState(false);
+	const [enhancedResults, setEnhancedResults] = useState<TMDBMovie[] | null>(null);
+	const enhanceController = useRef<AbortController | null>(null);
+
+	const [progress, setProgress] = useState(0);
+	const [phase, setPhase] = useState<SearchPhase | null>(null);
+	const [intentChips, setIntentChips] = useState<{ label: string; value: string }[]>([]);
+
+	const displayResults = enhancedResults ?? data?.results ?? [];
+
 	function handleSearch(value: string) {
 
 		setSearchQuery(value);
@@ -66,12 +96,146 @@ export function SearchForm({
 
 	useEffect(() => {
 
+		if (!query) {
+			setEnhancedResults(null);
+			setIsEnhancing(false);
+			setIntentChips([]);
+			return;
+		};
+
+		enhanceController.current?.abort();
+		enhanceController.current = new AbortController();
+
+		setIsEnhancing(true);
+		setEnhancedResults(null);
+		setProgress(5);
+		setPhase({ ...SEARCH_PHASES.start });
+		setIntentChips([]);
+
+		const seen = new Set<number>();
+		let accumulated: TMDBMovie[] = [];
+
+		const timer = setTimeout(async () => {
+
+			try {
+
+				const res = await fetch(
+					`/api/search/enhanced?query=${encodeURIComponent(query)}&type=${type ?? "all"}&strict=${strict}`,
+					{ signal: enhanceController.current?.signal }
+				);
+
+				const reader = res.body?.getReader();
+				const decoder = new TextDecoder();
+
+				if (!reader) return;
+
+				const buffer = { current: "" };
+
+				while (true) {
+
+					const { done, value } = await reader.read();
+					if (done) break;
+
+					buffer.current += decoder.decode(value, { stream: true });
+					const parts = buffer.current.split("\n\n");
+
+					buffer.current = parts.pop() ?? "";
+
+					for (const part of parts) {
+
+						const line = part.trim();
+						if (!line.startsWith("data: ")) continue;
+
+						try {
+
+							const data = JSON.parse(line.slice(6));
+
+							if (data.type === "results") {
+
+								setPhase({ ...SEARCH_PHASES.title });
+								setProgress(20);
+
+								accumulated = data.results;
+								data.results.forEach((r: TMDBMovie) => seen.add(r.id));
+
+								setEnhancedResults([...accumulated]);
+
+							};
+
+							if (data.type === "intent") {
+								setPhase({ ...SEARCH_PHASES.intent });
+								setProgress(35);
+
+								const chips: { label: string; value: string }[] = [];
+
+								if (data.intent.directors?.length) chips.push({ label: "DIRECTOR", value: data.intent.directors.slice(0, 3).join(", ") });
+								if (data.intent.actors?.length) chips.push({ label: "ACTOR", value: data.intent.actors.slice(0, 2).join(", ") });
+								if (data.intent.genres?.length) chips.push({ label: "GENRE", value: data.intent.genres.slice(0, 2).join(", ") });
+								if (data.intent.movements?.length) chips.push({ label: "MOVEMENT", value: data.intent.movements[0] });
+								if (data.intent.keywords?.length) chips.push({ label: "MOOD", value: data.intent.keywords.slice(0, 2).join(", ") });
+								if (data.intent.period) chips.push({ label: "ERA", value: `${data.intent.period.from}–${data.intent.period.to}` });
+
+								chips.forEach((chip, i) => {
+									setTimeout(() => {
+										setIntentChips(prev => [...prev, chip]);
+									}, i * 150);
+								});
+							};
+
+							if (data.type === "append") {
+
+								setPhase({ ...SEARCH_PHASES.append });
+								setProgress(prev => Math.min(prev + 10, 90));
+
+								const newItems = data.results.filter((r: TMDBMovie) => !seen.has(r.id));
+
+								newItems.forEach((r: TMDBMovie) => seen.add(r.id));
+								accumulated = deduplicateAndSort([...accumulated, ...newItems]);
+
+								setEnhancedResults([...accumulated]);
+
+							};
+
+							if (data.type === "done") {
+
+								setPhase({
+									...SEARCH_PHASES.done,
+									description: accumulated.length === 0
+										? "Nothing found"
+										: `${accumulated.length} title${accumulated.length === 1 ? "" : "s"} found`
+								});
+
+								setProgress(100);
+								// setTimeout(() => setProgress(0), 600);
+								setIsEnhancing(false);
+
+							};
+
+						} catch { }
+
+					};
+
+				};
+
+			} catch (e: any) {
+				if (e.name !== "AbortError") console.error(e);
+				setIsEnhancing(false);
+			};
+
+		}, 500);
+
+		return () => {
+			clearTimeout(timer);
+			enhanceController.current?.abort();
+		};
+
+	}, [query, type, strict]);
+
+	useEffect(() => {
 		const path = searchQuery
 			? `/search?query=${encodeURIComponent(searchQuery)}&type=${mediaType}`
 			: `/search?type=${mediaType}`;
-
 		router.replace(path);
-
 	}, [mediaType]);
 
 	useEffect(() => {
@@ -92,7 +256,7 @@ export function SearchForm({
 
 	return (
 
-		<div className="flex-1 w-full flex flex-col p-20">
+		<div className="flex-1 w-full flex flex-col p-20 space-y-10">
 
 			<div className="w-full flex items-center justify-between ">
 
@@ -119,32 +283,29 @@ export function SearchForm({
 					</div> */}
 
 				</div>
-
+				{/* 				
 				{data?.results && (
 					<p className="shrink-0 uppercase text-ink3 font-jet-mono text-sm">{data.results.length} results</p>
-				)}
+				)} */}
 
 			</div>
 
-			<div className="h-px w-full bg-ink4/38 my-6" />
+			<div className="h-px w-full bg-ink4/38 my-6 mt-0" />
 
 			<div className="flex items-center justify-between space-x-4">
 
-				<div className="space-x-4">
+				<div className="flex space-x-2">
 
 					{CATEGORIES.map((c, i) => (
 
-						<button
+						<Button
 							key={i}
-							onClick={() => setMediaType(c)}
-							className={cn(
-								"ring-1 h-8 px-4 rounded-full text-sm capitalize",
-								"transition-all ease-in-out",
-								c === mediaType ? "ring-ink/20 bg-panel2" : "bg-panel ring-ink/10 hover:ring-ink/20"
-							)}
-						>
-							{c}
-						</button>
+							label={c.label}
+							size="md"
+							variant={c.path === mediaType ? "secondary" : "outline"}
+							onClick={() => setMediaType(c.path as MediaType)}
+							className={cn(c.path !== mediaType && "text-ink2 hover:text-ink")}
+						/>
 
 					))}
 
@@ -152,7 +313,7 @@ export function SearchForm({
 
 				<div className={cn(
 					"flex items-center space-x-4 p-2 pl-3 rounded-full text-sm border",
-					strict ? "bg-lavender/20 border-lavender/80" : "bg-panel"
+					strict ? "bg-lavender/10 border-lavender/20" : "bg-panel"
 				)}>
 
 					<div className="flex items-center space-x-2">
@@ -184,9 +345,65 @@ export function SearchForm({
 
 			</div>
 
-			{data?.results.length === 0 && (
 
-				<div className="flex-1 w-full mt-10 flex items-center justify-center">
+
+			<div className="w-full rounded-2xl flex flex-col justify-center space-y-2">
+
+				<div className="flex items-center space-x-2">
+					<div className="size-1 rounded-full bg-olive animate-pulse" />
+					<p className="uppercase font-jet-mono text-sm text-ink3">{intentChips ? "Looking for" : "Reading you search"}</p>
+				</div>
+
+				<div className="flex items-center space-x-4 ">
+
+					{intentChips?.map((chip, i) => (
+
+						<div key={i} className="flex items-center space-x-4 bg-panel border border-panel2 py-2 px-4 rounded-full transition-transform -transl">
+							<p className="uppercase font-jet-mono text-olive text-xs">{chip.label}</p>
+							<p className="text-sm text-ink2">{chip.value}</p>
+						</div>
+
+					))}
+
+				</div>
+
+			</div>
+
+
+
+			<div className="w-full flex flex-col space-y-2">
+
+				{phase && (
+
+					<div className="w-full flex items-center justify-between">
+
+						<div>
+							<p className="text-ink text-sm font-medium">{phase.title}</p>
+							<p className="text-ink3 text-sm">{phase.description}</p>
+						</div>
+
+						<p className="uppercase text-ink3 font-jet-mono text-sm">{progress} %</p>
+
+					</div>
+
+				)}
+
+				<div className="w-full h-0.5">
+					<div
+						className={cn(
+							"h-full rounded-full bg-linear-to-r from-mint to-lavender transition-all duration-300 ease-out",
+							progress === 0 ? "opacity-0" : "opacity-100",
+							progress === 100 && "transition-opacity duration-500"
+						)}
+						style={{ width: `${progress}%` }}
+					/>
+				</div>
+
+			</div>
+
+			{!isEnhancing && displayResults.length === 0 && query && (
+
+				<div className="flex-1 w-full flex items-center justify-center">
 
 					<div className="flex flex-col items-center space-y-8">
 
@@ -254,9 +471,12 @@ export function SearchForm({
 
 			)}
 
-			<div className="w-full mt-10 overflow-y-auto grid lg:grid-cols-8 md:grid-cols-4 sm:grid-cols-2 gap-12 auto-rows-min">
+			<div className={cn(
+				"w-full overflow-y-auto grid lg:grid-cols-8 md:grid-cols-4 sm:grid-cols-2 gap-y-12 gap-x-6 auto-rows-min",
+				isEnhancing && "opacity-50"
+			)}>
 
-				{data?.results?.map((item) => {
+				{displayResults.map((item) => {
 
 					const posterUrl = item.poster_path ? constructImg(item.poster_path) : null;
 					const date = item.release_date || item.first_air_date;
