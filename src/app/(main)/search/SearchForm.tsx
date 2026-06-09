@@ -482,8 +482,8 @@ export function SearchForm({
 			)}
 
 			<div className={cn(
-				"w-full overflow-y-auto grid lg:grid-cols-8 md:grid-cols-4 sm:grid-cols-2 gap-y-12 gap-x-6 auto-rows-min",
-				isEnhancing && "opacity-50"
+				"w-full grid lg:grid-cols-8 md:grid-cols-4 sm:grid-cols-2 gap-y-12 gap-x-6 auto-rows-min transition-all duration-500",
+				isEnhancing ? "opacity-60 scale-[0.99]" : "opacity-100 scale-100"
 			)}>
 
 				{displayResults.map((item, i) => {

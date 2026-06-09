@@ -47,7 +47,7 @@ export function SearchBar({
 			/>
 
 			<div className={cn(
-				"absolute bottom-0 left-3 right-3 h-[2px] overflow-hidden rounded-full pointer-events-none transition-opacity duration-300",
+				"absolute bottom-0 left-3 right-3 h-0.5 overflow-hidden rounded-full pointer-events-none transition-opacity duration-300",
 				thinking ? "opacity-100" : "opacity-0"
 			)}>
 				{/* The traveling indicator strip */}
