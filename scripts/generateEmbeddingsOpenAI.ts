@@ -74,16 +74,37 @@ Respond with only the enriched description, nothing else.`
 
 }
 
+async function enrichWithRetry(film: any, credits: any, keywords: any, retries = 3): Promise<string> {
+
+	for (let i = 0; i < retries; i++) {
+
+		try {
+			return await enrichFilmText(film, credits, keywords);
+		} catch (err: any) {
+			if (err?.statusCode === 429 && i < retries - 1) {
+				console.log(`Rate limited, waiting 60s...`);
+				await new Promise(r => setTimeout(r, 60000));
+			} else {
+				throw err;
+			}
+		}
+
+	}
+
+	return "";
+
+}
+
 async function embedBatch(texts: string[]): Promise<number[][]> {
 
-    const res = await openai.embeddings.create({
-        model: "text-embedding-3-large",
-        input: texts,
-    });
+	const res = await openai.embeddings.create({
+		model: "text-embedding-3-large",
+		input: texts,
+	});
 
-    return res.data
-        .sort((a: { index: number }, b: { index: number }) => a.index - b.index)
-        .map((d: { embedding: number[] }) => d.embedding);
+	return res.data
+		.sort((a: { index: number }, b: { index: number }) => a.index - b.index)
+		.map((d: { embedding: number[] }) => d.embedding);
 
 }
 
@@ -115,11 +136,13 @@ async function processPage(
 		})
 	);
 
-	const texts = await Promise.all(
-		withData.map(({ film, credits, keywords }) =>
-			enrichFilmText(film, credits, keywords)
-		)
-	);
+	const texts: string[] = [];
+
+	for (const { film, credits, keywords } of withData) {
+		const text = await enrichWithRetry(film, credits, keywords);
+		texts.push(text);
+		await new Promise(r => setTimeout(r, 1500));
+	}
 
 	const embeddings = await embedBatch(texts);
 
@@ -140,13 +163,20 @@ async function processPage(
 
 }
 
-async function runPass(supabase: any, queryParams: string, limits: { movie: number; tv: number }) {
+async function runPass(
+	supabase: any,
+	queryParams: string,
+	limits: { movie: number; tv: number },
+	startPages: { movie: number; tv: number } = { movie: 1, tv: 1 }
+) {
 
 	for (const mediaType of ["movie", "tv"] as const) {
 
-		console.log(`Processing ${mediaType}s — ${queryParams}`);
+		const startPage = startPages[mediaType];
 
-		for (let page = 1; page <= limits[mediaType]; page++) {
+		console.log(`Processing ${mediaType}s from page ${startPage} — ${queryParams}`);
+
+		for (let page = startPage; page <= limits[mediaType]; page++) {
 
 			try {
 
@@ -178,9 +208,18 @@ async function run() {
 		process.env.SUPABASE_SERVICE_ROLE_SECRET!
 	);
 
-	await runPass(supabase, `sort_by=vote_count.desc&vote_count.gte=50`, { movie: 500, tv: 200 });
+	await runPass(
+		supabase,
+		`sort_by=vote_count.desc&vote_count.gte=50`,
+		{ movie: 500, tv: 200 },
+		{ movie: 70, tv: 1 }
+	);
 
-	await runPass(supabase, `sort_by=vote_average.desc&vote_count.gte=200`, { movie: 500, tv: 200 });
+	await runPass(
+		supabase,
+		`sort_by=vote_average.desc&vote_count.gte=200`,
+		{ movie: 500, tv: 200 }
+	);
 
 }
 
