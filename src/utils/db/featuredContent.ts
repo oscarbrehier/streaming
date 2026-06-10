@@ -3,6 +3,7 @@
 import { getMovie } from "@/lib/tmdb/movie";
 import { createClient } from "../supabase/server";
 import { createAuditLog } from "./createAuditLog"
+import { getFeaturedFilm } from "@/lib/tmdb/editorial";
 
 export async function addFeaturedContent(options: Partial<FeaturedContent>): Promise<{ success: boolean, error?: string }> {
 
@@ -85,6 +86,13 @@ export async function getFeaturedContent(options: Partial<FeaturedContent> & { s
 
 export async function getHeroBannerItems(): Promise<MovieDetailsWithImages[]> {
 
+	const featured = await getFeaturedFilm();
+	if (featured) {
+
+		const movie = await getMovie(String(featured.id));
+		return [movie];
+
+	};
 
 	const data = await getFeaturedContent({
 		feature_type: "hero",

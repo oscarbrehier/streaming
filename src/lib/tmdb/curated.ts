@@ -1,26 +1,34 @@
-import { fetchtTMDB } from "./fetchTMDB";
+import { fetchTMDB } from "./fetchTMDB";
 
-export async function getTopRatedIds(): Promise<Set<number>> {
-	const pages = await Promise.all(
-		Array.from({ length: 10 }, (_, i) =>
-			fetchtTMDB(`/movie/top_rated?language=en-US&page=${i + 1}`, { next: { revalidate: 86400 } })
-		)
-	);
-	const ids = new Set<number>();
-	pages.forEach(page => page.results.forEach((m: any) => ids.add(m.id)));
-	return ids;
-};
+const CANONICAL_IDS: Set<number> = new Set([]);
+
+const EXCLUDED_GENRES = new Set([10763, 10764, 10766, 10767]);
+
+const MAJOR_LANGUAGES = new Set([
+	"en", "fr", "it", "ja", "de", "ko", "es", "pt", "ru", "zh", "sv", "da", "pl", "hu", "fa", "tr"
+]);
 
 export async function filterCurated(results: any[]): Promise<any[]> {
-	const topRatedIds = await getTopRatedIds();
+
 	return results.filter(item => {
+
 		if (!item.poster_path) return false;
-		if (topRatedIds.has(item.id)) return true;
-		if (item.vote_count < 50) return false;
-		if (item.vote_average < 6.0) return false;
 		if (item.adult) return false;
-		const majorLanguages = ["en", "fr", "it", "ja", "de", "ko", "es", "pt", "ru", "zh"];
-		if (!majorLanguages.includes(item.original_language) && item.vote_average < 7.0) return false;
+
+		if (CANONICAL_IDS.has(item.id)) return true;
+
+		const genreIds: number[] = item.genre_ids ?? item.genres?.map((g: any) => g.id) ?? [];
+		if (genreIds.some(id => EXCLUDED_GENRES.has(id))) return false;
+
+		if (item.vote_count < 200) return false;
+		if (item.vote_average < 6.5) return false;
+
+		if (!MAJOR_LANGUAGES.has(item.original_language)) {
+			if (item.vote_average < 7.5 || item.vote_count < 500) return false;
+		};
+
 		return true;
+
 	});
+
 };

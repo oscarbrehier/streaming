@@ -1,6 +1,6 @@
 import z from "zod";
 import { filterCurated } from "./curated";
-import { fetchtTMDB } from "./fetchTMDB";
+import { fetchTMDB } from "./fetchTMDB";
 import { Mistral } from "@mistralai/mistralai";
 import { ResponseFormat } from "@mistralai/mistralai/models/components";
 import { getCache, setCache } from "../api/cache";
@@ -21,12 +21,16 @@ Guidelines:
 - If the query is clearly just a title (e.g. "Inception", "The Godfather"), put it in directTitleSearch and leave others empty
 - For queries about styles or themes (e.g. "films about loneliness", "surrealist cinema"), extract directors known for that style and relevant keywords
 - Always be exhaustive with directors for movements — better to include too many than too few
+- For queries that are just a director's name or surname (e.g. "bergman", "tarkovsky", "wong kar-wai", "fassbinder"), put the full name in directors[] and leave directTitleSearch null
+- Common director surnames to recognize: Bergman→Ingmar Bergman, Tarkovsky→Andrei Tarkovsky, Kubrick→Stanley Kubrick, Fellini→Federico Fellini, Godard→Jean-Luc Godard, Truffaut→François Truffaut
 
 Examples:
 - "french new wave" → directors: [Godard, Truffaut, Rivette, Rohmer, Chabrol, Varda, Malle], keywords: ["nouvelle vague", "alienation", "jump cut"], period: {from: 1958, to: 1973}
 - "slow cinema" → directors: [Tarkovsky, Béla Tarr, Chantal Akerman, Apichatpong Weerasethakul, Carlos Reygadas], keywords: ["slow cinema", "contemplative", "long take"]
 - "70s american paranoia" → keywords: ["paranoia", "conspiracy", "watergate"], period: {from: 1970, to: 1979}, genres: ["Thriller", "Drama"]
-- "films like tarkovsky" → directors: ["Andrei Tarkovsky"], keywords: ["spiritual", "contemplative", "long take", "nature"]`;
+- "films like tarkovsky" → directors: ["Andrei Tarkovsky"], keywords: ["spiritual", "contemplative", "long take", "nature"]
+- "japanese new wave" → directors: [Nagisa Oshima, Masahiro Shinoda, Shūji Terayama, Seijun Suzuki, Hiroshi Teshigahara, Yoshishige Yoshida]
+`;
 
 interface SearchIntent {
 	directors: string[];
@@ -110,7 +114,7 @@ export async function parseSearchIntent(query: string): Promise<SearchIntent> {
 
 export async function searchByPerson(name: string, type: "all" | "movie" | "tv") {
 
-	const personRes = await fetchtTMDB(
+	const personRes = await fetchTMDB(
 		`/search/person?query=${encodeURIComponent(name)}&language=en-US`,
 		{ next: { revalidate: 300 } }
 	);
@@ -118,14 +122,16 @@ export async function searchByPerson(name: string, type: "all" | "movie" | "tv")
 	const person = personRes.results?.[0];
 	if (!person) return [];
 
-	const credits = await fetchtTMDB(
+	const credits = await fetchTMDB(
 		`/person/${person.id}/combined_credits`,
 		{ next: { revalidate: 300 } }
 	);
 
-	const results = [];
-	if (type !== "tv") results.push(...(credits.cast?.filter((c: any) => c.media_type === "movie") ?? []), ...(credits.crew?.filter((c: any) => c.media_type === "movie" && c.job === "Director") ?? []));
-	if (type !== "movie") results.push(...(credits.cast?.filter((c: any) => c.media_type === "tv") ?? []), ...(credits.crew?.filter((c: any) => c.media_type === "tv") ?? []));
+	const crew = credits.crew ?? [];
+	const results = crew.filter((c: any) =>
+		c.job === "Director" &&
+		(type === "all" || c.media_type === type)
+	);
 
 	return results;
 
@@ -133,7 +139,7 @@ export async function searchByPerson(name: string, type: "all" | "movie" | "tv")
 
 export async function searchByKeyword(keyword: string, type: "all" | "movie" | "tv") {
 
-	const kwRes = await fetchtTMDB(
+	const kwRes = await fetchTMDB(
 		`/search/keyword?query=${encodeURIComponent(keyword)}`,
 		{ next: { revalidate: 3600 } }
 	);
@@ -142,8 +148,8 @@ export async function searchByKeyword(keyword: string, type: "all" | "movie" | "
 	if (!kwId) return [];
 
 	const endpoints = [];
-	if (type !== "tv") endpoints.push(fetchtTMDB(`/discover/movie?with_keywords=${kwId}&sort_by=vote_average.desc&vote_count.gte=100`, { next: { revalidate: 3600 } }));
-	if (type !== "movie") endpoints.push(fetchtTMDB(`/discover/tv?with_keywords=${kwId}&sort_by=vote_average.desc&vote_count.gte=100`, { next: { revalidate: 3600 } }));
+	if (type !== "tv") endpoints.push(fetchTMDB(`/discover/movie?with_keywords=${kwId}&sort_by=vote_average.desc&vote_count.gte=100`, { next: { revalidate: 3600 } }));
+	if (type !== "movie") endpoints.push(fetchTMDB(`/discover/tv?with_keywords=${kwId}&sort_by=vote_average.desc&vote_count.gte=100`, { next: { revalidate: 3600 } }));
 
 	const results = await Promise.all(endpoints);
 	return results.flatMap(r => r.results ?? []);
@@ -155,8 +161,8 @@ export async function searchByTitle(query: string, type: "all" | "movie" | "tv")
 	if (type === "all") {
 
 		const [movies, tv] = await Promise.all([
-			fetchtTMDB(`/search/movie?query=${encodeURIComponent(query)}&language=en-US`, { next: { revalidate: 120 } }),
-			fetchtTMDB(`/search/tv?query=${encodeURIComponent(query)}&language=en-US`, { next: { revalidate: 120 } }),
+			fetchTMDB(`/search/movie?query=${encodeURIComponent(query)}&language=en-US`, { next: { revalidate: 120 } }),
+			fetchTMDB(`/search/tv?query=${encodeURIComponent(query)}&language=en-US`, { next: { revalidate: 120 } }),
 		]);
 
 		return [
@@ -166,35 +172,66 @@ export async function searchByTitle(query: string, type: "all" | "movie" | "tv")
 
 	};
 
-	const data = await fetchtTMDB(`/search/${type}?query=${encodeURIComponent(query)}&language=en-US`, { next: { revalidate: 120 } });
+	const data = await fetchTMDB(`/search/${type}?query=${encodeURIComponent(query)}&language=en-US`, { next: { revalidate: 120 } });
 	return data.results ?? [];
 
 };
 
+const SOURCE_PRIORITY: Record<string, number> = {
+	semantic: 0,
+};
+
+function sourcePriority(source: string | undefined): number {
+	if (!source) return 99;
+	if (source === "semantic") return 0;
+	if (source.startsWith("director:")) return 1;
+	if (source.startsWith("actor:")) return 2;
+	if (source.startsWith("keyword:")) return 3;
+	if (source.startsWith("movement:")) return 4;
+	if (source === "title") return 5;
+	return 99;
+};
+
+const SOURCE_WEIGHT: Record<number, number> = {
+	0: 2.0,
+	1: 1.6,
+	2: 1.4,
+	3: 0.7,
+	4: 0.7,
+	5: 0.5,
+};
+
 export function deduplicateAndSort(results: any[]): any[] {
 
-	const seen = new Set<number>();
-	const merged: any[] = [];
+	const seen = new Map<number, any>();
 
 	for (const item of results) {
+		const existing = seen.get(item.id);
+		if (!existing) {
+			seen.set(item.id, item);
+		} else {
+			if (sourcePriority(item._source) < sourcePriority(existing._source)) {
+				seen.set(item.id, { ...existing, _source: item._source });
+			}
+		}
+	}
 
-		if (!seen.has(item.id)) {
-			seen.add(item.id);
-			merged.push(item);
-		};
+	return Array.from(seen.values()).sort((a, b) => {
+		const priorityA = sourcePriority(a._source);
+		const priorityB = sourcePriority(b._source);
+		const weightA = SOURCE_WEIGHT[priorityA] ?? 1.0;
+		const weightB = SOURCE_WEIGHT[priorityB] ?? 1.0;
 
-	};
+		const scoreA = (a.vote_average ?? 0) * Math.log10(Math.max(a.vote_count ?? 1, 1)) * weightA;
+		const scoreB = (b.vote_average ?? 0) * Math.log10(Math.max(b.vote_count ?? 1, 1)) * weightB;
 
-	return merged.sort((a, b) => {
-		const scoreA = (a.vote_average ?? 0) * Math.log10(Math.max(a.vote_count ?? 1, 1));
-		const scoreB = (b.vote_average ?? 0) * Math.log10(Math.max(b.vote_count ?? 1, 1));
 		return scoreB - scoreA;
 	});
 
 };
 
 export async function searchTMDBFast(query: string, type: "all" | "movie" | "tv") {
-    return searchByTitle(query, type);
+	return searchByTitle(query, type);
 };
 
 export async function searchTMDB(

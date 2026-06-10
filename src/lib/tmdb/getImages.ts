@@ -1,4 +1,4 @@
-import { fetchtTMDB } from "./fetchTMDB";
+import { fetchTMDB } from "./fetchTMDB";
 
 export async function getImages(mediaId: string, tv?: boolean): Promise<Images> {
 
@@ -6,7 +6,7 @@ export async function getImages(mediaId: string, tv?: boolean): Promise<Images> 
 		? `/tv/${mediaId}/images`
 		: `/movie/${mediaId}/images`
 
-	const data = await fetchtTMDB(`${endpoint}?include_image_language=en`, { next: { revalidate: 86400 } });
+	const data = await fetchTMDB(`${endpoint}?include_image_language=en`, { next: { revalidate: 86400 } });
 
 	return data;
 

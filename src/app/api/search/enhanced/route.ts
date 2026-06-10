@@ -1,7 +1,12 @@
 import { getCache, setCache } from "@/lib/api/cache";
 import { filterCurated } from "@/lib/tmdb/curated";
 import { parseSearchIntent, searchByKeyword, searchByPerson, searchByTitle } from "@/lib/tmdb/search";
+import { semanticSearchWithDetails } from "@/lib/tmdb/semanticSearch";
 import { NextRequest, NextResponse } from "next/server";
+
+function tagSource(results: any[], source: string): any[] {
+	return results.map(r => ({ ...r, _source: source }));
+}
 
 export async function GET(req: NextRequest) {
 
@@ -16,9 +21,7 @@ export async function GET(req: NextRequest) {
 	const encoder = new TextEncoder();
 
 	const stream = new ReadableStream({
-
 		async start(controller) {
-
 			let closed = false;
 
 			const send = (data: any) => {
@@ -26,7 +29,6 @@ export async function GET(req: NextRequest) {
 					controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
 				} catch { }
 			};
-
 
 			const close = () => {
 				if (!closed) {
@@ -37,44 +39,48 @@ export async function GET(req: NextRequest) {
 
 			try {
 
-				const cachedData = await getCache(cacheKey);
-
-				if (cachedData) {
-
-					const parsed = JSON.parse(cachedData);
-					send({ type: "results", results: parsed.results });
-
-					if (parsed.intent) send({ type: "intent", intent: parsed.intent });
-					for (const batch of parsed.batches ?? []) {
-						send({ type: "append", results: batch.results, label: batch.label });
-					};
-
-					send({ type: "done" });
-					close();
-
-					return;
-
-				};
-
 				const titleResults = await searchByTitle(query, type);
 				const filteredTitle = strict ? await filterCurated(titleResults) : titleResults;
-
-				send({ type: "results", results: filteredTitle });
+				send({ type: "results", results: tagSource(filteredTitle, "title") });
 
 				const intent = await parseSearchIntent(query);
 				send({ type: "intent", intent });
 
+				console.log('[intent]', JSON.stringify(intent, null, 2));
+
+				const semanticResults = await semanticSearchWithDetails(query, type, strict, intent);
 				const batches: { results: any[]; label: string }[] = [];
 
+				if (semanticResults.length > 0) {
+					const tagged = tagSource(semanticResults, "semantic");
+					batches.push({ results: tagged, label: "semantic" });
+					send({ type: "append", results: tagged, label: "semantic" });
+				}
+
 				const isMovementQuery = intent.movements.length > 0 && intent.directors.length > 0;
+
+				const OVERBROAD_KEYWORDS = new Set([
+					"historical drama",
+					"mourning",
+					"period drama",
+					"epic",
+					"biography",
+					"loss",
+					"war",
+				]);
+
+				const filteredKeywords = intent.keywords.filter(
+					(k: string) => !OVERBROAD_KEYWORDS.has(k.toLowerCase())
+				);
 
 				const allSearches = [
 					...intent.directors.slice(0, 4).map(d =>
 						searchByPerson(d, type).then(async results => {
 							const filtered = strict ? await filterCurated(results) : results;
 							if (filtered.length > 0) {
-								batches.push({ results: filtered, label: d });
-								send({ type: "append", results: filtered, label: d });
+								const tagged = tagSource(filtered, `director:${d}`);
+								batches.push({ results: tagged, label: d });
+								send({ type: "append", results: tagged, label: d });
 							}
 						})
 					),
@@ -82,17 +88,19 @@ export async function GET(req: NextRequest) {
 						searchByPerson(a, type).then(async results => {
 							const filtered = strict ? await filterCurated(results) : results;
 							if (filtered.length > 0) {
-								batches.push({ results: filtered, label: a });
-								send({ type: "append", results: filtered, label: a });
+								const tagged = tagSource(filtered, `actor:${a}`);
+								batches.push({ results: tagged, label: a });
+								send({ type: "append", results: tagged, label: a });
 							}
 						})
 					),
-					...(isMovementQuery ? [] : intent.keywords.slice(0, 3).map(k =>
+					...(isMovementQuery ? [] : filteredKeywords.slice(0, 3).map(k =>
 						searchByKeyword(k, type).then(async results => {
 							const filtered = strict ? await filterCurated(results) : results;
 							if (filtered.length > 0) {
-								batches.push({ results: filtered, label: k });
-								send({ type: "append", results: filtered, label: k });
+								const tagged = tagSource(filtered, `keyword:${k}`);
+								batches.push({ results: tagged, label: k });
+								send({ type: "append", results: tagged, label: k });
 							}
 						})
 					)),
@@ -100,17 +108,15 @@ export async function GET(req: NextRequest) {
 						searchByKeyword(m, type).then(async results => {
 							const filtered = strict ? await filterCurated(results) : results;
 							if (filtered.length > 0) {
-								batches.push({ results: filtered, label: m });
-								send({ type: "append", results: filtered, label: m });
+								const tagged = tagSource(filtered, `movement:${m}`);
+								batches.push({ results: tagged, label: m });
+								send({ type: "append", results: tagged, label: m });
 							}
 						})
 					)),
 				];
 
 				await Promise.allSettled(allSearches);
-
-				const cacheResult = await setCache(cacheKey, JSON.stringify({ results: filteredTitle, intent, batches }));
-				console.log("cache set result:", cacheResult);
 
 				send({ type: "done" });
 
@@ -121,7 +127,7 @@ export async function GET(req: NextRequest) {
 
 			} finally {
 				close();
-			};
+			}
 
 		}
 	});

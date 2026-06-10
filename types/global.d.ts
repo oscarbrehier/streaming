@@ -297,6 +297,7 @@ declare global {
 
 	type MovieSearchResponse = PaginatedResponse<MovieSummary>;
 	type TvSearchResponse = PaginatedResponse<TvSummary>;
+	type PersonSearchResponse = PaginatedResponse<PersonDetails>;
 
 	type UserRole = "member" | "admin";
 

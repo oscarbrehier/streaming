@@ -1,11 +1,12 @@
 import { PostCardItem } from "@/components/movie-cards/Poster";
-import { fetchtTMDB } from "./fetchTMDB";
+import { fetchTMDB, fetchUntilEnough } from "./fetchTMDB";
+import { filterCurated } from "./curated";
 
 export async function getGenres(): Promise<{ result: Genre[] | null, error: string | null }> {
 
 	try {
 
-		const res = await fetchtTMDB<{ genres: Genre[] }>(`/genre/movie/list`);
+		const res = await fetchTMDB<{ genres: Genre[] }>(`/genre/movie/list`);
 		return { result: res.genres, error: null };
 
 	} catch (err) {
@@ -14,9 +15,23 @@ export async function getGenres(): Promise<{ result: Genre[] | null, error: stri
 
 };
 
-export async function getTopToday<T = MovieSearchResponse | TvSearchResponse>(mediaType?: MediaType): Promise<PostCardItem[]> {
-	const type = mediaType ?? "movie";
-	const data = await fetchtTMDB<{ results: PostCardItem[] }>(`/discover/${type}?include_adult=false&include_video=false&language=en-US&page=1&sort_by=popularity.desc`);
+export async function getTopToday<T = MovieSearchResponse | TvSearchResponse>(mediaType: MediaType = "movie"): Promise<PostCardItem[]> {
 
-	return data.results.map(item => ({ ...item, mediaType: type })) ?? [];
+	const randomPage = Math.floor(Math.random() * 8) + 1;
+
+	return fetchUntilEnough(
+		page => `/discover/${mediaType}?include_adult=false&language=en-US&page=${page}&sort_by=vote_average.desc&vote_count.gte=1000&vote_count.lte=150000&vote_average.gte=7.2`,
+		mediaType,
+		16,
+		5,
+		randomPage
+	);
+
+};
+
+export async function getPerson(query: string): Promise<PersonDetails[]> {
+
+	const res = await fetchTMDB<PersonSearchResponse>(`/search/person?query=${query}`);
+	return res.results ?? [];
+
 };

@@ -1,10 +1,10 @@
-import { fetchtTMDB } from "./fetchTMDB";
+import { fetchTMDB } from "./fetchTMDB";
 
 export async function getTrailer(movieId: string): Promise<string | null> {
 	
 	try {
 
-		const { results = [] } = await fetchtTMDB(`/movie/${movieId}/videos`);
+		const { results = [] } = await fetchTMDB(`/movie/${movieId}/videos`);
 
 		const trailers = results.filter((v: any) => v.type === "Trailer" && v.site === "YouTube");
 

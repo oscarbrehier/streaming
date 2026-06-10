@@ -1,5 +1,5 @@
 import { filterCurated } from "./curated";
-import { fetchtTMDB } from "./fetchTMDB";
+import { fetchTMDB } from "./fetchTMDB";
 
 export const slugify = (str: string) => str.toLowerCase().replace(/\s+/g, '-');
 export const unslugify = (str: string) => str.toLowerCase().replace(/-/g, ' ');
@@ -29,7 +29,7 @@ export const GENRES: Record<string, { id: number; description: string }> = {
 export async function getMoviesByGenre(genreId: number, page: number = 1) {
 
 	const [movies] = await Promise.all([
-		fetchtTMDB<MovieSearchResponse>(
+		fetchTMDB<MovieSearchResponse>(
 			`/discover/movie?with_genres=${genreId}&sort_by=vote_average.desc&vote_count.gte=200&language=en-US&page=${page}`,
 			{ next: { revalidate: 3600 } }
 		),

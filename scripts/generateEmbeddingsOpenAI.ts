@@ -4,7 +4,7 @@ config({ path: ".env.local" });
 import OpenAI from "openai";
 import { Mistral } from "@mistralai/mistralai";
 import { createClient } from "@supabase/supabase-js";
-import { fetchtTMDB } from "@/lib/tmdb/fetchTMDB";
+import { fetchTMDB } from "@/lib/tmdb/fetchTMDB";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -115,7 +115,7 @@ async function processPage(
 	queryParams: string = `sort_by=vote_count.desc&vote_count.gte=50`
 ) {
 
-	const data = await fetchtTMDB(
+	const data = await fetchTMDB(
 		`/discover/${mediaType}?${queryParams}&page=${page}&language=en-US`
 	);
 
@@ -126,8 +126,8 @@ async function processPage(
 		films.map(async (film: any) => {
 			try {
 				const [credits, keywords] = await Promise.all([
-					fetchtTMDB(`/${mediaType}/${film.id}/credits`),
-					fetchtTMDB(`/${mediaType}/${film.id}/keywords`),
+					fetchTMDB(`/${mediaType}/${film.id}/credits`),
+					fetchTMDB(`/${mediaType}/${film.id}/keywords`),
 				]);
 				return { film, credits, keywords };
 			} catch {

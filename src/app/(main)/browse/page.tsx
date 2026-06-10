@@ -1,6 +1,6 @@
 import { getGenres } from "@/lib/tmdb/api";
 import { constructImg } from "@/lib/tmdb/constructImg";
-import { fetchtTMDB } from "@/lib/tmdb/fetchTMDB";
+import { fetchTMDB } from "@/lib/tmdb/fetchTMDB";
 import { slugify } from "@/lib/tmdb/genres";
 
 import { cn } from "@/lib/utils";
@@ -73,7 +73,7 @@ async function getNewReleasesThisWeek() {
 
 	const fmt = (d: Date) => d.toISOString().split('T')[0];
 
-	const data = await fetchtTMDB<{ results: any[] }>(
+	const data = await fetchTMDB<{ results: any[] }>(
 		`/discover/movie`
 		+ `?sort_by=vote_average.desc`
 		+ `&primary_release_date.gte=${fmt(thirtyDaysAgo)}`

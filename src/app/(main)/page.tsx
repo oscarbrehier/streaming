@@ -3,16 +3,11 @@ import { HeroBanner } from "@/components/HeroBanner";
 import { PostCardItem, PosterCard } from "@/components/movie-cards/Poster";
 import { getRecentlyWatched } from "@/utils/supabase/queries/userMedia";
 import { createClient } from "@/utils/supabase/server";
-import { fetchtTMDB } from "@/lib/tmdb/fetchTMDB";
 import { redirect } from "next/navigation";
 import { getWatchlist } from "@/utils/db/watchlist";
 import { getHeroBannerItems } from "@/utils/db/featuredContent";
-import { Search } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { glass } from "@/styles";
 import { CategorySelector } from "./CategorySelector";
-import { BlobBackground } from "@/components/BlobBackground";
-import { getTopToday } from "@/lib/tmdb/api";
+import { getClassics, getCurrentCountryDecade, getCurrentDirector, getDirectorsEssential, getFeaturedFilm, getFromCountry, getHiddenGems, getRecentAcclaimed, getWorldCinema } from "@/lib/tmdb/editorial";
 
 export default async function Page({
 	searchParams
@@ -30,12 +25,21 @@ export default async function Page({
 
 	const heroBannerItems = await getHeroBannerItems();
 
-	const topToday = await getTopToday(mediaType);
 	const watchlist = await getWatchlist(mediaType);
 	const recentlyWatched = await getRecentlyWatched(user.id);
 
+	const director = getCurrentDirector();
+	const directorsEssential = await getDirectorsEssential(director);
+
+	const classics = await getClassics();
+
+	const { country, decade, label } = getCurrentCountryDecade();
+	const fromCountry = await getFromCountry(country, decade);
+
 	const carousels: CarouselItem<PostCardItem>[] = [
-		{ data: topToday.slice(0, 10), Card: PosterCard, title: "Top 10 Today", ranked: true },
+		{ data: directorsEssential?.items ?? [], Card: PosterCard, title: `Essential ${directorsEssential?.director ?? director}` },
+		{ data: classics, Card: PosterCard, title: "Classics" },
+		{ data: fromCountry, Card: PosterCard, title: label },
 		{ data: watchlist, Card: PosterCard, title: "Watchlist" },
 		{ data: recentlyWatched, Card: PosterCard, title: "Continue Watching" },
 	];
