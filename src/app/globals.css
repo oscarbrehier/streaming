@@ -44,27 +44,27 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
 
-  --color-bg: #0a0a0d;
-  --color-bg-warm: #0c0b0e;
-  --color-panel: #131318;
-  --color-panel2: #1a1a20;
+  --color-bg: #171615;
+  --color-bg-warm: #1c1b1a;
+  --color-panel: #222120;
+  --color-panel2: #2c2a29;
 
   --color-line: rgba(255, 255, 255, 0.085);
   --color-line-soft: rgba(255, 255, 255, 0.05);
 
-  --color-ink: #f5f3ef;
-  --color-ink2: rgba(245, 243, 239, 0.60);
-  --color-ink3: rgba(245, 243, 239, 0.38);
-  --color-ink4: rgba(245, 243, 239, 0.22);
+  --color-ink: #f4f2ed;
+  --color-ink2: #9c9a97;
+  --color-ink3: #6f6e6b;
+  --color-ink4: #4c4b49;
 
-  --color-coral: #ff8f73;
-  --color-lavender: #b9a6ff;
-  --color-peach: #ffcaa0;
-  --color-olive: #c3d27a;
-  --color-periwinkle: #9fb4ff;
-  --color-mint: #93e6c4;
-  --color-rose: #f5a6c6;
-  --color-apricot: #ffb487;
+  --color-coral: #e3957f;
+  --color-lavender: #b8aae1;
+  --color-peach: #f4cdac;
+  --color-olive: #c6cf8f;
+  --color-periwinkle: #a9b4e2;
+  --color-mint: #aae0c5;
+  --color-rose: #e3acbf;
+  --color-apricot: #ecb896;
 }
 
 :root {

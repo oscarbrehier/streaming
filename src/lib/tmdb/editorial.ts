@@ -164,3 +164,34 @@ export async function getFeaturedFilm(): Promise<MovieDetails | null> {
 	return data[0] ?? null;
 
 };
+
+const COLLECTIONS: Record<string, {
+	label: string;
+	buildUrl: (page: number) => string;
+	mediaType: "movie" | "tv";
+}> = {
+
+
+};
+
+export async function getCollection(key: string): Promise<{
+	label: string;
+	items: MovieDetails[];
+} | null> {
+
+	const collection = COLLECTIONS[key];
+	if (!collection) return null;
+
+	const items = await fetchUntilEnough<MovieDetails>(
+		collection.buildUrl,
+		collection.mediaType,
+		8,
+		3
+	);
+
+	return {
+		label: collection.label,
+		items,
+	};
+
+};

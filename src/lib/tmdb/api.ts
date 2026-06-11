@@ -1,4 +1,4 @@
-import { PostCardItem } from "@/components/movie-cards/Poster";
+import { PostCardItem } from "@/components/cards/Poster";
 import { fetchTMDB, fetchUntilEnough } from "./fetchTMDB";
 import { filterCurated } from "./curated";
 

@@ -1,8 +1,8 @@
 "use server"
 
-import { getSerie } from "@/lib/tmdb/series";
+import { getSerie, getSeriesCredits } from "@/lib/tmdb/series";
 import { createClient } from "../supabase/server"
-import { getMovie } from "@/lib/tmdb/movie";
+import { getMovie, getMovieCredits } from "@/lib/tmdb/movie";
 import { getActiveProfileId } from "../profiles";
 
 export async function addToWatchlist(mediaId: string, mediaType?: "movie" | "tv"): Promise<{ success?: boolean, error?: string }> {
@@ -101,5 +101,53 @@ export async function isInWatchlist(
 	if (error) return false;
 
 	return !!data;
+
+};
+
+export async function getWatchlistWithProgress(mediaType?: MediaType): Promise<((MovieDetailsWithImages | TvDetailsWithImages) & { progress?: UserMediaStatus; director?: string })[]> {
+
+	const supabase = await createClient();
+
+	const { data: watchlistEntries, error } = await getWatchlistEntries({ mediaType });
+	if (error || watchlistEntries.length === 0) return [];
+
+	const mediaIds = watchlistEntries.map(i => i.media_id);
+
+	const { data: statusEntries } = await supabase
+		.from("user_media_status")
+		.select("*")
+		.in("media_id", mediaIds);
+
+	const statusMap = new Map<string, UserMediaStatus>(
+		(statusEntries ?? []).map(s => [s.media_id, s])
+	);
+
+	const movies = watchlistEntries.filter(i => i.media_type === "movie");
+	const series = watchlistEntries.filter(i => i.media_type === "tv");
+
+	const [movieResults, seriesResults] = await Promise.all([
+		Promise.all(movies.map(async item => {
+			const [data, credits] = await Promise.all([
+				getMovie<MovieDetailsWithImages>(item.media_id),
+				getMovieCredits(item.media_id),
+			]);
+			return { data, credits };
+		})),
+		Promise.all(series.map(async item => {
+			const [data, credits] = await Promise.all([
+				getSerie<TvDetailsWithImages>(item.media_id),
+				getSeriesCredits(item.media_id),
+			]);
+			return { data, credits };
+		})),
+	]);
+
+	return [...movieResults, ...seriesResults]
+		.filter(({ data }) => Boolean(data))
+		.map(({ data, credits }) => ({
+			...data!,
+			progress: statusMap.get(String(data!.id)),
+			director: credits?.crew?.find((c: any) => c.job === "Director")?.name,
+		}));
 
 };

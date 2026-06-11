@@ -22,7 +22,7 @@ const links = [
 	{ icon: Home, path: "/", tooltip: "home" },
 	{ icon: Search, path: "/search", tooltip: "search" },
 	{ icon: LayoutGrid, path: "/browse", tooltip: "browse" },
-	{ icon: Bookmark, path: "/watchlist", tooltip: "watchlist" },
+	{ icon: Bookmark, path: "/list", tooltip: "my list" },
 ];
 
 

@@ -94,14 +94,14 @@ export default async function Page() {
 
 	return (
 
-		<div className="p-20">
+		<div className="p-20 space-y-20">
 
 			<div>
 				<p className="text-5xl font-bold">Browse</p>
-				<p className="text-neutral-300 mt-4">Find something by mood, genre, or format.</p>
+				<p className="text-ink2 mt-4">Find something by mood, genre, or format.</p>
 			</div>
 
-			<div className="mt-20">
+			<div className="">
 
 				<p className="text-2xl font-semibold mb-8">Genres</p>
 
@@ -116,7 +116,7 @@ export default async function Page() {
 			</div>
 
 
-			<div className="mt-20">
+			<div className="">
 
 				<div className="flex items-end space-x-4">
 					<p className="text-2xl font-semibold mb-8">New this week</p>

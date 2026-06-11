@@ -51,39 +51,6 @@ declare global {
 		original_language: string;
 	};
 
-	interface MovieDetails {
-		adult: boolean;
-		backdrop_path: string | null;
-		belongs_to_collection: null | {
-			id: number;
-			name: string;
-			poster_path: string;
-			backdrop_path: string;
-		};
-		budget: number;
-		genres: Genre[];
-		homepage: string | null;
-		id: number;
-		imdb_id: string | null;
-		original_language: string;
-		original_title: string;
-		overview: string;
-		popularity: number;
-		poster_path: string | null;
-		production_companies: ProductionCompany[];
-		production_countries: ProductionCountry[];
-		release_date: string;
-		revenue: number;
-		runtime: number | null;
-		spoken_languages: SpokenLanguage[];
-		status: string;
-		tagline: string | null;
-		title: string;
-		video: boolean;
-		vote_average: number;
-		vote_count: number;
-	};
-
 	interface VideoResult {
 		id: string;
 		iso_639_1: string;
@@ -166,31 +133,6 @@ declare global {
 		name: string;
 		logo_path: string | null;
 		origin_country: string;
-	};
-
-	interface TvDetails {
-		id: number;
-		name: string;
-		original_name: string;
-		overview: string;
-		poster_path: string | null;
-		backdrop_path: string | null;
-		production_companies: ProductionCompany[];
-		production_countries: ProductionCountry[];
-		first_air_date: string;
-		last_air_date: string;
-		number_of_seasons: number;
-		number_of_episodes: number;
-		seasons: Season[];
-		genres: Genre[];
-		vote_average: number;
-		vote_count: number;
-		popularity: number;
-		created_by: Creator[];
-		networks: Network[];
-		in_production: boolean;
-		original_language: string;
-		origin_country: string[];
 	};
 
 	interface EpisodeCrew {
@@ -285,6 +227,60 @@ declare global {
 		backdrops: Record<string, any>[];
 		logos: Record<string, any>[];
 		posters: Record<string, any>[];
+	}
+
+	interface MediaBase {
+		id: number;
+		backdrop_path: string | null;
+		poster_path: string | null;
+		overview: string;
+		vote_average: number;
+		vote_count: number;
+		popularity: number;
+		original_language: string;
+		genres: Genre[];
+		production_companies: ProductionCompany[];
+		production_countries: ProductionCountry[];
+		origin_country: string[];
+		mediaType?: "movie" | "tv";
+		title?: string;
+		name?: string;
+		release_date?: string;
+		first_air_date?: string;
+	}
+
+	interface MovieDetails extends MediaBase {
+		adult: boolean;
+		belongs_to_collection: null | {
+			id: number;
+			name: string;
+			poster_path: string;
+			backdrop_path: string;
+		};
+		budget: number;
+		homepage: string | null;
+		imdb_id: string | null;
+		original_title: string;
+		revenue: number;
+		runtime: number | null;
+		spoken_languages: SpokenLanguage[];
+		status: string;
+		tagline: string | null;
+		title: string;
+		video: boolean;
+	}
+
+	interface TvDetails extends MediaBase {
+		name: string;
+		original_name: string;
+		last_air_date: string;
+		number_of_seasons: number;
+		number_of_episodes: number;
+		seasons: Season[];
+		created_by: Creator[];
+		networks: Network[];
+		in_production: boolean;
+		origin_country: string[];
 	}
 
 	interface MovieDetailsWithImages extends MovieDetails {

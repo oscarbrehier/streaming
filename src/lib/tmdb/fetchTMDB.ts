@@ -1,6 +1,6 @@
 "use server"
 
-import { PostCardItem } from "@/components/movie-cards/Poster";
+import { PostCardItem } from "@/components/cards/Poster";
 import { filterCurated } from "./curated";
 
 export async function fetchTMDB<T = any>(endpoint: string, options: RequestInit = {}) {
