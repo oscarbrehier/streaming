@@ -2,17 +2,16 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 
-const MAX_ITEMS_PER_SLIDE = 8;
+const MAX_ITEMS_PER_SLIDE = 4;
 
 export type CarouselCard<T extends { id: number }> = (props: { media: T, loading: "eager" | "lazy" }) => React.ReactNode;
 
 export type CarouselItem<T extends { id: number }> = {
-    data: T[],
-    Card: CarouselCard<T>,
-    title: string,
-    ranked?: boolean
+	data: T[],
+	Card: CarouselCard<T>,
+	title: string,
+	ranked?: boolean
 };
-
 
 export function Carousel<T extends { id: number }>({
 	data,
@@ -46,8 +45,7 @@ export function Carousel<T extends { id: number }>({
 
 	const maxIndex = data.length - itemsPerSlide;
 	const itemWidthPercent = 100 / itemsPerSlide;
-	const gapPx = 16;
-	const translateX = currentIndex * (itemWidthPercent / 100);
+	const gapPx = 4;
 
 	const handleNext = () => setCurrentIndex((prev) => Math.min(prev + itemsPerSlide, maxIndex));
 	const handlePrev = () => setCurrentIndex((prev) => Math.max(prev - itemsPerSlide, 0));
@@ -59,9 +57,9 @@ export function Carousel<T extends { id: number }>({
 
 		<div className="relative w-full overflow-x-clip flex flex-col space-y-2">
 
-			<p className="text-3xl font-semibold">{title}</p>
+			<p className="font-semibold uppercase">{title}</p>
 
-			<div className="w-full overflow-hidden mt-8">
+			<div className="w-full overflow-hidden">
 
 				<div
 					ref={sliderRef}
@@ -71,26 +69,21 @@ export function Carousel<T extends { id: number }>({
 						transform: `translateX(calc(-${currentIndex} * (${itemWidthPercent}% + ${gapPx - gapPx / itemsPerSlide}px)))`,
 					}}
 				>
-
 					{data.map((movie, idx) => (
-
 						<div
 							key={movie.id}
-							className="shrink-0 relative aspect-2/3"
+							className="shrink-0 relative aspect-video"
 							style={{ width: `calc(${itemWidthPercent}% - ${gapPx * (itemsPerSlide - 1) / itemsPerSlide}px)` }}
 						>
 							<Card media={movie} loading={idx < itemsPerSlide ? "eager" : "lazy"} />
 						</div>
-
 					))}
-
 				</div>
 
 			</div>
 
 			{data.length > itemsPerSlide && (
 				<>
-
 					{canGoPrev && (
 						<button
 							onClick={handlePrev}
@@ -107,7 +100,6 @@ export function Carousel<T extends { id: number }>({
 							<ChevronRight />
 						</button>
 					)}
-
 				</>
 			)}
 

@@ -1,3 +1,5 @@
+"use client"
+
 import { constructImg } from "@/lib/tmdb/constructImg";
 import { cn } from "@/lib/utils";
 import { getCountryName } from "@/utils/format";
@@ -5,11 +7,13 @@ import { Play, Check } from "lucide-react";
 import Link from "next/link";
 
 export function BackdropCard({
-	data,
+	media,
+	loading = "lazy",
 	progress,
 	director
 }: {
-	data: MovieDetailsWithImages | TvDetailsWithImages;
+	media: MovieDetailsWithImages | TvDetailsWithImages;
+	loading?: "eager" | "lazy";
 	progress?: UserMediaStatus;
 	director?: string;
 }) {
@@ -18,18 +22,18 @@ export function BackdropCard({
 		? Math.round((progress.progress_sec / progress.duration_sec) * 100)
 		: null;
 
-	const releaseYear = (data.release_date ?? data.first_air_date)?.split("-")[0];
-	const country = getCountryName(data.origin_country?.[0] ?? data.production_countries?.[0]?.iso_3166_1);
+	const releaseYear = (media.release_date ?? media.first_air_date)?.split("-")[0];
+	const country = getCountryName(media.origin_country?.[0] ?? media.production_countries?.[0]?.iso_3166_1);
 
 	return (
 
-		<Link href={`/${data.mediaType}/${data.id}`} className="flex flex-col group">
+		<Link href={`/${media.mediaType}/${media.id}`} className="flex flex-col group">
 
 			<div
 				className={cn(
 					"aspect-video overflow-hidden relative bg-cover bg-center bg-no-repeat"
 				)}
-				style={{ backgroundImage: `url(${constructImg(data.backdrop_path)})` }}
+				style={{ backgroundImage: `url(${constructImg(media.backdrop_path)})` }}
 			>
 				
 				<div className={cn(
@@ -63,7 +67,7 @@ export function BackdropCard({
 
 				<div className="absolute left-4 bottom-4">
 
-					<p className="text-ink text-xl font-semibold truncate uppercase leading-tight">{data.title ?? data.name}</p>
+					<p className="text-ink text-xl font-semibold truncate uppercase leading-tight">{media.title ?? media.name}</p>
 					<div className="flex space-x-2">
 						{director && <p className="uppercase text-sm font-bold">{director}</p>}
 						{country && <p className="uppercase text-sm">{country}</p>}

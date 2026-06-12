@@ -46,16 +46,17 @@ export async function GET(req: NextRequest) {
 				const intent = await parseSearchIntent(query);
 				send({ type: "intent", intent });
 
-				console.log('[intent]', JSON.stringify(intent, null, 2));
-
 				const semanticResults = await semanticSearchWithDetails(query, type, strict, intent);
 				const batches: { results: any[]; label: string }[] = [];
 
 				if (semanticResults.length > 0) {
+
 					const tagged = tagSource(semanticResults, "semantic");
+
 					batches.push({ results: tagged, label: "semantic" });
 					send({ type: "append", results: tagged, label: "semantic" });
-				}
+
+				};
 
 				const isMovementQuery = intent.movements.length > 0 && intent.directors.length > 0;
 
@@ -67,6 +68,9 @@ export async function GET(req: NextRequest) {
 					"biography",
 					"loss",
 					"war",
+					"revolution",
+					"political intrigue",
+					"upheaval",
 				]);
 
 				const filteredKeywords = intent.keywords.filter(

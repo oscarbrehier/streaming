@@ -8,6 +8,7 @@ import { getWatchlist } from "@/utils/db/watchlist";
 import { getHeroBannerItems } from "@/utils/db/featuredContent";
 import { CategorySelector } from "./CategorySelector";
 import { getClassics, getCollection, getCurrentCountryDecade, getCurrentDirector, getDirectorsEssential, getFeaturedFilm, getFromCountry, getHiddenGems, getRecentAcclaimed, getWorldCinema } from "@/lib/tmdb/editorial";
+import { BackdropCard } from "@/components/cards/Backdrop";
 
 export default async function Page({
 	searchParams
@@ -38,14 +39,15 @@ export default async function Page({
 
 	const collection = await getCollection("french_new_wave");
 
-	const carousels: CarouselItem<PostCardItem>[] = [
-		{ data: directorsEssential?.items ?? [], Card: PosterCard, title: `Essential ${directorsEssential?.director ?? director}` },
-		{ data: classics, Card: PosterCard, title: "Classics" },
-		{ data: fromCountry, Card: PosterCard, title: label },
-		...(collection ? [{ data: collection.items, Card: PosterCard, title: collection.label }] : []),
-		{ data: watchlist, Card: PosterCard, title: "Watchlist" },
-		{ data: recentlyWatched, Card: PosterCard, title: "Continue Watching" },
+	const carousels: CarouselItem<any>[] = [
+		{ data: directorsEssential?.items ?? [], Card: BackdropCard, title: `Essential ${directorsEssential?.director ?? director}` },
+		{ data: classics, Card: BackdropCard, title: "Classics" },
+		{ data: fromCountry, Card: BackdropCard, title: label },
+		...(collection ? [{ data: collection.items, Card: BackdropCard, title: collection.label }] : []),
+		{ data: watchlist, Card: BackdropCard, title: "Watchlist" },
+		{ data: recentlyWatched, Card: BackdropCard, title: "Continue Watching" },
 	];
+
 
 	return (
 
@@ -55,16 +57,18 @@ export default async function Page({
 
 			{/* <CategorySelector /> */}
 
-			<div className="w-full flex flex-col items-center space-y-16 mt-20 px-40 pb-40">
+			<div className="w-full flex flex-col items-center mt-20 px-40 pb-20 space-y-12">
 
 				{carousels.map((item, idx) => (
-					item.data.length > 0 && <Carousel
-						key={idx}
-						data={item.data}
-						Card={item.Card}
-						title={item.title}
-						ranked={item.ranked}
-					/>
+					item.data.length > 0 && (
+						<Carousel
+							key={idx}
+							data={item.data}
+							Card={item.Card}
+							title={item.title}
+							ranked={item.ranked}
+						/>
+					)
 				))}
 
 			</div>

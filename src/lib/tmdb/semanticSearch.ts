@@ -1,8 +1,10 @@
+import OpenAI from "openai";
 import { Mistral } from "@mistralai/mistralai";
 import { createClient } from "@supabase/supabase-js";
 import { fetchTMDB } from "./fetchTMDB";
 import { filterCurated } from "./curated";
 
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const mistral = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
 
 async function expandQuery(query: string, intent?: any): Promise<string> {
@@ -21,20 +23,18 @@ async function expandQuery(query: string, intent?: any): Promise<string> {
 		messages: [{
 			role: "user",
 			content: `You are helping match a film search query to a database of films. Each film in the database is described like this:
-				"[Title]. [Plot overview]. Directed by [directors]. Starring [cast]. Genres: [genres]. Language: [language code]. Released: [year]."
+"[Title]. [Plot overview]. Directed by [directors]. Starring [cast]. Genres: [genres]. Language: [language code]. Released: [year]."
 
-				Your job: rewrite the user's search query as a fake film description that would be similar to what they're looking for. Use the same format. Be specific about filmmaking style, themes, aesthetics. 2-3 sentences max.
+Your job: rewrite the user's search query as a fake film description that would be similar to what they're looking for. Use the same format. Be specific about filmmaking style, themes, aesthetics. 2-3 sentences max.
 
-				Query: "${query}"
-				${context ? `Additional context: ${context}` : ""}
+Query: "${query}"
+${context ? `Additional context: ${context}` : ""}
 
-				Respond with only the fake film description, nothing else.`
+Respond with only the fake film description, nothing else.`
 		}]
 	});
 
 	const expanded = (res.choices?.[0]?.message?.content as string ?? "").trim();
-	console.log(`[semantic] expanded: "${expanded}"`);
-
 	return expanded || query;
 
 };
@@ -53,28 +53,29 @@ export async function semanticSearch(
 
 	const queryText = await expandQuery(query, intent);
 
-	const res = await mistral.embeddings.create({
-		model: "mistral-embed",
-		inputs: [queryText]
+	const res = await openai.embeddings.create({
+		model: "text-embedding-3-large",
+		input: queryText,
+		dimensions: 1536,
 	});
 
 	const embedding = res.data[0].embedding;
 
 	const { data, error } = await supabase.rpc("search_films", {
 		query_embedding: embedding,
-		match_count: limit,
+		match_count: 20,
 		...(type !== "all" && { filter_media_type: type }),
 	});
 
 	if (error) throw error;
 
-	return (data as any[])
-		.filter((r: any) => r.similarity >= 0.68)
-		.map((r: any) => ({
-			tmdb_id: r.tmdb_id,
-			media_type: r.media_type,
-			similarity: r.similarity
-		}));
+	const filtered = (data as any[]).filter((r: any) => r.similarity >= 0.60);
+
+	return filtered.map((r: any) => ({
+		tmdb_id: r.tmdb_id,
+		media_type: r.media_type,
+		similarity: r.similarity
+	}));
 
 };
 
@@ -94,16 +95,9 @@ export async function semanticSearchWithDetails(
 
 	const hasFactualKeywords = intent?.keywords?.some((k: string) => {
 		const lower = k.toLowerCase();
-		return lower.includes("revolution") ||
-			lower.includes("war") ||
-			lower.includes("historical") ||
-			lower.includes("period");
+		return lower.includes("war") &&
+			intent?.genres?.some((g: string) => g === "War");
 	});
-
-	const hasHistoricalPeriod = intent?.period !== null &&
-		intent?.genres?.some((g: string) =>
-			["History", "War"].includes(g)
-		);
 
 	const hasSpecificKeywords = intent?.keywords?.some((k: string) => {
 		const lower = k.toLowerCase();
@@ -113,9 +107,9 @@ export async function semanticSearchWithDetails(
 			lower.includes("mourning");
 	});
 
-	if (hasStrongDirectorSignal || hasFactualKeywords || hasHistoricalPeriod || hasSpecificKeywords) {
+	if (hasStrongDirectorSignal || hasFactualKeywords || hasSpecificKeywords) {
 		return [];
-	};
+	}
 
 	const tmdbIds = await semanticSearch(query, type, 40, intent);
 
@@ -134,8 +128,9 @@ export async function semanticSearchWithDetails(
 	);
 
 	const valid = results.filter(Boolean);
+
 	const languageHints: Record<string, string> = {
-		japanese: "ja", korean: "ko", french: "fr",
+		japanese: "ja", korean: "ko",
 		italian: "it", spanish: "es", german: "de",
 	};
 
@@ -147,6 +142,7 @@ export async function semanticSearchWithDetails(
 		? valid.filter(r => r.original_language === requiredLanguage)
 		: valid;
 
-	return strict ? filterCurated(languageFiltered) : languageFiltered;
-	
+	const curated = await filterCurated(languageFiltered);
+	return strict ? curated : languageFiltered;
+
 };

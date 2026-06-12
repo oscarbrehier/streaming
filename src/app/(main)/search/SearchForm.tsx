@@ -2,13 +2,11 @@
 
 import { cn } from "@/lib/utils";
 import { constructImg } from "@/lib/tmdb/constructImg";
-import { Search, Sparkle } from "lucide-react";
+import { Sparkle } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Input } from "@/components/Input";
 import { SearchBar } from "./SearchBar";
-import { Pill } from "@/components/Pill";
 import { Button } from "@/components/Button";
 import { Switch } from "@/components/ui/switch";
 import { deduplicateAndSort } from "@/lib/tmdb/search";
@@ -82,6 +80,7 @@ export function SearchForm({
 
 	const [searchTriggered, setSearchTriggered] = useState(false);
 
+	const intentRef = useRef<any>(null);
 	const intentPeriodRef = useRef<{ from: number; to: number } | null>(null);
 	const intentLanguageRef = useRef<string[] | null>(null);
 
@@ -99,33 +98,6 @@ export function SearchForm({
 
 	};
 
-	function logSearchSummary(query: string, results: any[], sourceBreakdown: Record<string, number>) {
-		const total = results.length;
-
-		const breakdown = Object.entries(sourceBreakdown)
-			.sort((a, b) => b[1] - a[1])
-			.map(([src, count]) => `${src}: ${count} (${Math.round(count / total * 100)}%)`)
-			.join(" | ");
-
-		const top15 = results.slice(0, 15).map((r, i) => ({
-			rank: i + 1,
-			title: r.title ?? r.name,
-			year: (r.release_date || r.first_air_date)?.split("-")[0] ?? "?",
-			source: r._source ?? "unknown",
-			similarity: r._similarity ? r._similarity.toFixed(3) : "-",
-			score: ((r.vote_average ?? 0) * Math.log10(Math.max(r.vote_count ?? 1, 1))).toFixed(2),
-			vote_average: r.vote_average,
-			vote_count: r.vote_count,
-			language: r.original_language,
-		}));
-
-		console.log(
-			`\n${"=".repeat(60)}\nQUERY: "${query}"\nTOTAL: ${total} results\nSOURCES: ${breakdown}\n\nTOP 15:\n${top15.map(r =>
-				`  ${String(r.rank).padStart(2)}. [${r.source}] ${r.title} (${r.year}) | lang:${r.language} | sim:${r.similarity} | score:${r.score} | ⭐${r.vote_average} (${r.vote_count} votes)`
-			).join("\n")}\n${"=".repeat(60)}`
-		);
-	}
-
 	useEffect(() => {
 
 		if (!query) {
@@ -139,6 +111,7 @@ export function SearchForm({
 		enhanceController.current = new AbortController();
 		intentPeriodRef.current = null;
 		intentLanguageRef.current = null;
+		intentRef.current = null;
 
 		setIsEnhancing(true);
 		setEnhancedResults(null);
@@ -200,22 +173,12 @@ export function SearchForm({
 							};
 
 							if (data.type === "intent") {
+
 								setPhase({ ...SEARCH_PHASES.intent });
 								setProgress(35);
 
+								intentRef.current = data.intent;
 								intentPeriodRef.current = data.intent.period ?? null;
-
-								const impliedLanguage = (() => {
-									const kws = (data.intent.keywords ?? []).join(" ").toLowerCase();
-									const q = query?.toLowerCase() ?? "";
-									if (kws.includes("hong kong") || q.includes("hong kong")) return ["cn", "zh"];
-									if (q.includes("japanese") || kws.includes("japan")) return ["ja"];
-									if (q.includes("french") || kws.includes("french")) return ["fr"];
-									if (q.includes("korean") || kws.includes("korea")) return ["ko"];
-									if (q.includes("italian") || kws.includes("italian")) return ["it"];
-									return null;
-								})();
-								intentLanguageRef.current = impliedLanguage;
 
 								const chips: { label: string; value: string }[] = [];
 
@@ -231,6 +194,7 @@ export function SearchForm({
 										setIntentChips(prev => [...prev, chip]);
 									}, i * 150);
 								});
+
 							};
 
 							if (data.type === "append") {
@@ -240,38 +204,29 @@ export function SearchForm({
 
 								let newItems = data.results.filter((r: TMDBMovie) => !seen.has(r.id));
 
-								if (intentPeriodRef.current) {
+								if (intentPeriodRef.current && (intentRef.current?.directors?.length > 0 || intentRef.current?.movements?.length > 0)) {
+
+									const { from, to } = intentPeriodRef.current;
+									
 									newItems = newItems.filter((r: any) => {
 										const date = r.release_date || r.first_air_date;
 										const year = date ? parseInt(date.split("-")[0]) : null;
-										return year === null ||
-											(year >= intentPeriodRef.current!.from &&
-												year <= intentPeriodRef.current!.to);
+										if (!year) return true;
+										if (from && year < from) return false;
+										if (to && year > to) return false;
+										return true;
 									});
-								}
+
+								};
 
 								if (intentLanguageRef.current) {
 									newItems = newItems.filter((r: any) =>
 										intentLanguageRef.current!.includes(r.original_language)
 									);
-								}
+								};
 
 								newItems.forEach((r: TMDBMovie) => seen.add(r.id));
 								accumulated = deduplicateAndSort([...accumulated, ...newItems]);
-
-								const sourceCounts = accumulated.reduce((acc, r) => {
-									const src = (r as any)._source ?? "unknown";
-									acc[src] = (acc[src] ?? 0) + 1;
-									return acc;
-								}, {} as Record<string, number>);
-
-								const total = accumulated.length;
-								const breakdown = Object.entries(sourceCounts)
-									.sort((a, b) => b[1] - a[1])
-									.map(([src, count]) => `${src}: ${count} (${Math.round(count / total * 100)}%)`)
-									.join(" | ");
-
-								console.log(`[search:append] ${total} results — ${breakdown}`);
 
 								setEnhancedResults([...accumulated]);
 
@@ -284,8 +239,6 @@ export function SearchForm({
 									acc[src] = (acc[src] ?? 0) + 1;
 									return acc;
 								}, {} as Record<string, number>);
-
-								logSearchSummary(query, accumulated, sourceCounts);
 
 								setPhase({
 									...SEARCH_PHASES.done,
@@ -356,27 +309,7 @@ export function SearchForm({
 						thinking={isEnhancing}
 					/>
 
-					{/* <div className="flex items-center space-x-4">
-						<p className={cn(
-							"text-sm w-28 text-right",
-							strict ? "text-lavender" : "text-ink/50 "
-						)}>
-							Curated only
-						</p>
-						<Switch
-							checked={strict}
-							onCheckedChange={(val) => router.replace(
-								`?query=${searchQuery ?? ""}&type=${type ?? "all"}&strict=${val}`,
-								{ scroll: false }
-							)}
-						/>
-					</div> */}
-
 				</div>
-				{/* 				
-				{data?.results && (
-					<p className="shrink-0 uppercase text-ink3 font-jet-mono text-sm">{data.results.length} results</p>
-				)} */}
 
 			</div>
 
@@ -613,7 +546,6 @@ export function SearchForm({
 							<div className="mt-2">
 								<p className="font-semibold">{item.title ?? item.name}</p>
 								<p className="uppercase text-ink3 font-jet-mono text-sm">{releaseYear}</p>
-								<p className="uppercase text-ink3 font-jet-mono text-sm">{item._source}</p>
 							</div>
 
 						</div>

@@ -193,10 +193,10 @@ function sourcePriority(source: string | undefined): number {
 };
 
 const SOURCE_WEIGHT: Record<number, number> = {
-	0: 2.0,
+	0: 1.5,
 	1: 1.6,
 	2: 1.4,
-	3: 0.7,
+	3: 1.2,
 	4: 0.7,
 	5: 0.5,
 };

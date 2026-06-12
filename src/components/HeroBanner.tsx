@@ -65,7 +65,7 @@ export function HeroBanner({
 
 			})}
 
-			<div className="absolute inset-0 bg-linear-to-t from-background to-transparent z-10" />
+			<div className="absolute inset-0 bg-linear-to-t from-bg to-transparent z-10" />
 
 			{item && (
 

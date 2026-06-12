@@ -27,7 +27,7 @@ export default async function Page() {
 
 					<BackdropCard
 						key={item.id}
-						data={item}
+						media={item}
 						progress={item.progress}
 						director={item.director}
 					/>

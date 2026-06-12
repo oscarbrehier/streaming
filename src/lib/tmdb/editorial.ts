@@ -7,16 +7,11 @@ const COUNTRY_DECADES = [
 	{ country: "KR", decade: 2000, label: "Korea, 2000s" },
 	{ country: "SE", decade: 1960, label: "Sweden, 1960s" },
 	{ country: "JP", decade: 1960, label: "Japan, 1960s" },
-	{ country: "DE", decade: 1970, label: "Germany, 1970s" },
 	{ country: "IR", decade: 1990, label: "Iran, 1990s" },
 	{ country: "US", decade: 1970, label: "America, 1970s" },
 	{ country: "PL", decade: 1960, label: "Poland, 1960s" },
-	{ country: "CN", decade: 1980, label: "China, 1980s" },
 	{ country: "DK", decade: 1990, label: "Denmark, 1990s" },
-	{ country: "RU", decade: 1960, label: "Russia, 1960s" },
 	{ country: "BR", decade: 1960, label: "Brazil, 1960s" },
-	{ country: "TW", decade: 1980, label: "Taiwan, 1980s" },
-	{ country: "HU", decade: 1960, label: "Hungary, 1960s" },
 ];
 
 const ESSENTIAL_DIRECTORS = [
