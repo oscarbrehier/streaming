@@ -89,7 +89,7 @@ export async function getHeroBannerItems(): Promise<MovieDetailsWithImages[]> {
 	const featured = await getFeaturedFilm();
 	if (featured) {
 
-		const movie = await getMovie(String(featured.id));
+		const movie = await getMovie(String(featured.id), { credits: true });
 		return [movie];
 
 	};

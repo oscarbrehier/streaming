@@ -97,6 +97,14 @@ declare global {
 		crew: CrewMember[];
 	};
 
+	interface CreditEntry {
+		id: number;
+		name: string;
+		profile_path: string | null;
+		role: string;
+		department: string;
+	};
+
 	interface TvSummary {
 		id: number;
 		name: string;
@@ -209,7 +217,7 @@ declare global {
 		known_for: Array<MovieSummary | TvSummary>;
 		popularity: number;
 	};
-
+	
 	interface PersonDetails {
 		id: number;
 		name: string;
@@ -219,8 +227,32 @@ declare global {
 		gender: number;
 		place_of_birth: string | null;
 		profile_path: string | null;
+		known_for_department: string;
 		also_known_as: string[];
 		popularity: number;
+	};
+
+	interface PersonCastCredit extends MovieSummary, Partial<TvSummary> {
+		media_type: "movie" | "tv";
+		character: string;
+		credit_id: string;
+		order: number;
+	};
+
+	interface PersonCrewCredit extends MovieSummary, Partial<TvSummary> {
+		media_type: "movie" | "tv";
+		job: string;
+		department: string;
+		credit_id: string;
+	};
+
+	interface CombinedCredits {
+		cast: PersonCastCredit[];
+		crew: PersonCrewCredit[];
+	};
+
+	interface PersonDetailsWithCredits extends PersonDetails {
+		combined_credits: CombinedCredits;
 	};
 
 	interface Images {
@@ -247,7 +279,12 @@ declare global {
 		name?: string;
 		release_date?: string;
 		first_air_date?: string;
-	}
+		credits?: CreditsResponse;
+	};
+
+	type SearchResult = MediaBase & Partial<MovieDetails> & Partial<TvDetails> & {
+		images?: Images;
+	};
 
 	interface MovieDetails extends MediaBase {
 		adult: boolean;

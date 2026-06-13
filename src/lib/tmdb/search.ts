@@ -156,7 +156,7 @@ export async function searchByKeyword(keyword: string, type: "all" | "movie" | "
 
 };
 
-export async function searchByTitle(query: string, type: "all" | "movie" | "tv") {
+export async function searchByTitle(query: string, type: "all" | "movie" | "tv"): Promise<SearchResult[]> {
 
 	if (type === "all") {
 
@@ -165,15 +165,56 @@ export async function searchByTitle(query: string, type: "all" | "movie" | "tv")
 			fetchTMDB(`/search/tv?query=${encodeURIComponent(query)}&language=en-US`, { next: { revalidate: 120 } }),
 		]);
 
-		return [
+		const results: any[] = [
 			...movies.results.map((r: any) => ({ ...r, mediaType: "movie" })),
 			...tv.results.map((r: any) => ({ ...r, mediaType: "tv" })),
 		];
 
+		return Promise.all(
+			results.map(async r => {
+
+				try {
+
+					const detail = await fetchTMDB(
+						`/${r.mediaType}/${r.id}?language=en-US&append_to_response=credits`,
+						{ next: { revalidate: 604800 } }
+					);
+
+					return { ...r, ...detail, mediaType: r.mediaType };
+
+				} catch {
+					return r;
+				};
+
+			})
+		);
+
 	};
 
-	const data = await fetchTMDB(`/search/${type}?query=${encodeURIComponent(query)}&language=en-US`, { next: { revalidate: 120 } });
-	return data.results ?? [];
+	const data = await fetchTMDB(
+		`/search/${type}?query=${encodeURIComponent(query)}&language=en-US`,
+		{ next: { revalidate: 120 } }
+	);
+
+	const results = (data.results ?? []).map((r: any) => ({ ...r, mediaType: type }));
+
+	return Promise.all(
+		results.map(async (r: any) => {
+
+			try {
+				const detail = await fetchTMDB(
+					`/${type}/${r.id}?language=en-US&append_to_response=credits`,
+					{ next: { revalidate: 604800 } }
+				);
+
+				return { ...r, ...detail, mediaType: type };
+
+			} catch {
+				return r;
+			};
+
+		})
+	);
 
 };
 
@@ -217,8 +258,13 @@ export function deduplicateAndSort(results: any[]): any[] {
 	}
 
 	return Array.from(seen.values()).sort((a, b) => {
+
 		const priorityA = sourcePriority(a._source);
 		const priorityB = sourcePriority(b._source);
+
+		if (a._source === "title" && b._source !== "title") return -1;
+		if (b._source === "title" && a._source !== "title") return 1;
+
 		const weightA = SOURCE_WEIGHT[priorityA] ?? 1.0;
 		const weightB = SOURCE_WEIGHT[priorityB] ?? 1.0;
 
@@ -226,6 +272,7 @@ export function deduplicateAndSort(results: any[]): any[] {
 		const scoreB = (b.vote_average ?? 0) * Math.log10(Math.max(b.vote_count ?? 1, 1)) * weightB;
 
 		return scoreB - scoreA;
+
 	});
 
 };

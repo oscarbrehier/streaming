@@ -76,11 +76,12 @@ export function HeroBanner({
 					key={item!.id}
 				>
 
-					<MovieOverview movie={item}>
+					<MovieOverview data={item}>
 
 						<div className="flex space-x-4 mt-8">
 
 							<Button
+								size="sm"
 								href={`/watch/${item!.id}`}
 								label="Play"
 								icon={<Play className="text-black mt-0.5" fill="#000" size={16} />}
@@ -89,6 +90,7 @@ export function HeroBanner({
 							<AddToWatchlist mediaId={String(item!.id)} />
 
 							<Button
+								size="sm"
 								href={`/movie/${item!.id}`}
 								label="Details"
 								icon={<Info className="text-neutral-200 mt-0.5" size={16} />}

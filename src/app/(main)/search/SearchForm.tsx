@@ -10,6 +10,7 @@ import { SearchBar } from "./SearchBar";
 import { Button } from "@/components/Button";
 import { Switch } from "@/components/ui/switch";
 import { deduplicateAndSort } from "@/lib/tmdb/search";
+import { BackdropCard } from "@/components/cards/Backdrop";
 
 export interface TMDBMovie {
 	id: number;
@@ -71,7 +72,7 @@ export function SearchForm({
 	const [mediaType, setMediaType] = useState<"all" | "movie" | "tv">(type ?? "all");
 
 	const [isEnhancing, setIsEnhancing] = useState(false);
-	const [enhancedResults, setEnhancedResults] = useState<TMDBMovie[] | null>(null);
+	const [enhancedResults, setEnhancedResults] = useState<SearchResult[] | null>(null);
 	const enhanceController = useRef<AbortController | null>(null);
 
 	const [progress, setProgress] = useState(0);
@@ -80,11 +81,13 @@ export function SearchForm({
 
 	const [searchTriggered, setSearchTriggered] = useState(false);
 
+	const [hasAnyResults, setHasAnyResults] = useState(false);
+
 	const intentRef = useRef<any>(null);
 	const intentPeriodRef = useRef<{ from: number; to: number } | null>(null);
 	const intentLanguageRef = useRef<string[] | null>(null);
 
-	const displayResults = enhancedResults ?? data?.results ?? [];
+	const displayResults: SearchResult[] = enhancedResults ?? (data?.results as unknown as SearchResult[]) ?? [];
 
 	function handleSearch(value: string) {
 
@@ -118,6 +121,7 @@ export function SearchForm({
 		setProgress(5);
 		setPhase({ ...SEARCH_PHASES.start });
 		setIntentChips([]);
+		setHasAnyResults(false);
 
 		const seen = new Set<number>();
 		let accumulated: TMDBMovie[] = [];
@@ -165,6 +169,8 @@ export function SearchForm({
 								setPhase({ ...SEARCH_PHASES.title });
 								setProgress(20);
 
+								setHasAnyResults(true);
+
 								accumulated = data.results;
 								data.results.forEach((r: TMDBMovie) => seen.add(r.id));
 
@@ -207,7 +213,7 @@ export function SearchForm({
 								if (intentPeriodRef.current && (intentRef.current?.directors?.length > 0 || intentRef.current?.movements?.length > 0)) {
 
 									const { from, to } = intentPeriodRef.current;
-									
+
 									newItems = newItems.filter((r: any) => {
 										const date = r.release_date || r.first_air_date;
 										const year = date ? parseInt(date.split("-")[0]) : null;
@@ -233,12 +239,6 @@ export function SearchForm({
 							};
 
 							if (data.type === "done") {
-
-								const sourceCounts = accumulated.reduce((acc, r) => {
-									const src = (r as any)._source ?? "unknown";
-									acc[src] = (acc[src] ?? 0) + 1;
-									return acc;
-								}, {} as Record<string, number>);
 
 								setPhase({
 									...SEARCH_PHASES.done,
@@ -501,55 +501,20 @@ export function SearchForm({
 			)}
 
 			<div className={cn(
-				"w-full grid lg:grid-cols-8 md:grid-cols-4 sm:grid-cols-2 gap-y-12 gap-x-6 auto-rows-min transition-all duration-500",
-				isEnhancing ? "opacity-60 scale-[0.99]" : "opacity-100 scale-100"
+				"w-full grid lg:grid-cols-5 md:grid-cols-3 sm:grid-cols-1 gap-1 auto-rows-min transition-all duration-500",
+				isEnhancing && !hasAnyResults ? "opacity-60 scale-[0.99]" : "opacity-100 scale-100"
 			)}>
 
 				{displayResults.map((item, i) => {
 
-					const posterUrl = item.poster_path ? constructImg(item.poster_path) : null;
-					const date = item.release_date || item.first_air_date;
-					const releaseYear = date && new Date(date).getFullYear().toString();
+					const director = item.credits?.crew?.find(c => c.job === "Director")?.name;
 
 					return (
-
-						<div
+						<BackdropCard
 							key={item.id}
-							className="flex flex-col animate-in fade-in slide-in-from-bottom-2 duration-300"
-							style={{ animationDelay: `${Math.min(i * 30, 300)}ms` }}
-						>
-
-							<a href={`/${item.type || mediaType}/${item.id}`} className="relative w-full rounded-2xl overflow-hidden grid grid-cols-1 grid-rows-1">
-
-								<div className="relative w-full col-start-1 row-start-1" style={{ paddingBottom: '150%' }}>
-
-									{posterUrl ? (
-										<Image
-											src={posterUrl}
-											alt={item.title || item.name || "Poster"}
-											fill
-											className="object-cover"
-											sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 12vw"
-										/>
-
-									) : (
-
-										<div className="absolute inset-0 bg-neutral-900 flex items-center justify-center text-white text-sm">
-											{item.title || item.name}
-										</div>
-
-									)}
-								</div>
-
-							</a>
-
-							<div className="mt-2">
-								<p className="font-semibold">{item.title ?? item.name}</p>
-								<p className="uppercase text-ink3 font-jet-mono text-sm">{releaseYear}</p>
-							</div>
-
-						</div>
-
+							media={item}
+							director={director}
+						/>
 					);
 
 				})}

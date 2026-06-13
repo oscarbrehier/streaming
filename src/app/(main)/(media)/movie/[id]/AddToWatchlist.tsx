@@ -59,6 +59,7 @@ export function AddToWatchlist({
 	return (
 
 		<Button
+			size="sm"
 			label={loading ? undefined : label}
 			icon={icon}
 			variant="glass"

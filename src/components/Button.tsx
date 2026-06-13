@@ -32,7 +32,7 @@ export function Button({ label, icon, variant = "solid", size = "lg", href, onCl
 
 	const content = (
 		<>
-			{icon}
+			<span className="mb-0.5">{icon}</span>
 			{label && <span className="sm:block hidden">{label}</span>}
 		</>
 	);

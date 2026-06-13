@@ -117,7 +117,7 @@ export async function semanticSearchWithDetails(
 		tmdbIds.map(async ({ tmdb_id, media_type, similarity }) => {
 			try {
 				const data = await fetchTMDB(
-					`/${media_type}/${tmdb_id}?language=en-US`,
+					`/${media_type}/${tmdb_id}?language=en-USs&include_image_language=en,null&append_to_response=credits`,
 					{ next: { revalidate: 86400 } }
 				);
 				return { ...data, mediaType: media_type, _similarity: similarity };
