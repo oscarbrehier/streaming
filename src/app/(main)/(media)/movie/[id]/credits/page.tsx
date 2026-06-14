@@ -27,7 +27,7 @@ export default async function Page({
 
 			<div className="absolute top-10 left-40 z-40">
 				<Link href={`/movie/${id}`}>
-					<span className="uppercase text-xs text-ink/70">{"<"} back to movie page</span>
+					<span className="uppercase text-xs text-ink">{"<"} back to movie page</span>
 				</Link>
 			</div>
 

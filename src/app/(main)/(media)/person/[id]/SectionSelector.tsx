@@ -24,7 +24,7 @@ export function SectionSelector({
 
 	return (
 
-		<div className="mt-20 space-y-12">
+		<div className="space-y-6 p-20">
 
 			<div className="flex space-x-4">
 

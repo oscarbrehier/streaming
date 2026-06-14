@@ -2,6 +2,7 @@ import { constructImg } from "@/lib/tmdb/constructImg";
 import { GenreTags } from "./GenreTags";
 import React from "react";
 import { getCountryName } from "@/utils/format";
+import Link from "next/link";
 
 export function MovieOverview({
 	data,
@@ -12,7 +13,7 @@ export function MovieOverview({
 }) {
 
 	const logo = data.images.logos[0];
-	const director = data.credits?.crew?.find(c => c.job === "Director")?.name;
+	const director = data.credits?.crew?.find(c => c.job === "Director");
 	const releaseYear = (data.release_date ?? data.first_air_date)?.split("-")[0];
 	const country = getCountryName(data.origin_country?.[0] ?? data.production_countries?.[0]?.iso_3166_1);
 
@@ -31,7 +32,7 @@ export function MovieOverview({
 			)}
 
 			<div className="flex space-x-4 mt-2">
-				{director && <p className="uppercase text-sm font-bold">{director}</p>}
+				{director && <Link href={`/person/${director.id}`} className="uppercase text-sm font-bold hover:underline">{director.name}</Link>}
 				{country && <p className="uppercase text-sm">{country}</p>}
 				{releaseYear && <p className="text-sm">{releaseYear}</p>}
 			</div>
