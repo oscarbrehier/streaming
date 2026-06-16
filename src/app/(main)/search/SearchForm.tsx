@@ -324,7 +324,7 @@ export function SearchForm({
 						<Button
 							key={i}
 							label={c.label}
-							size="md"
+							size="sm"
 							variant={c.path === mediaType ? "secondary" : "outline"}
 							onClick={() => setMediaType(c.path as MediaType)}
 							className={cn(c.path !== mediaType && "text-ink2 hover:text-ink")}

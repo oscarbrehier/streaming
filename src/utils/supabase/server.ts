@@ -1,3 +1,5 @@
+"use server"
+
 import { BASE_PATH } from '@/lib/basePath';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';

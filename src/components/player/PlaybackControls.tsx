@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { FaPause, FaPlay } from "react-icons/fa";
 import { PlayerState } from "./Player";
+import { Volume, Volume1, Volume2, VolumeX } from "lucide-react";
 
 export function PlaybackControls({
 	playerState,
@@ -41,8 +42,10 @@ export function PlaybackControls({
 	}
 
 	return (
-		<div className="flex items-center space-x-4">
+		<div className="flex items-center space-x-8">
+
 			{/* Play/Pause */}
+
 			<button
 				className={cn(
 					"hover:bg-neutral-700 transition-all ease-in-out duration-200 w-8 h-8 flex items-center justify-center rounded-md",
@@ -56,35 +59,64 @@ export function PlaybackControls({
 			</button>
 
 			{/* Volume */}
-			<input
-				type="range"
-				title="Volume"
-				className={`
-				  w-20 h-1
-				  rounded-full
-				  appearance-none
-				  [&::-webkit-slider-thumb]:appearance-none 
-				  [&::-webkit-slider-thumb]:bg-purple-600
-				  [&::-webkit-slider-thumb]:hover:bg-purple-700
-				  [&::-webkit-slider-thumb]:hover:h-4  
-				  [&::-webkit-slider-thumb]:hover:w-4 
-				  [&::-webkit-slider-thumb]:h-2 
-				  [&::-webkit-slider-thumb]:w-2
-				  [&::-webkit-slider-thumb]:cursor-pointer
-				  [&::-webkit-slider-thumb]:rounded-full
-				  [&::-webkit-slider-thumb]:transition-all`}
-				style={{
-					background: `linear-gradient(to right, #9333ea ${volume * 100}%, rgb(64, 64, 64) ${volume * 100}%)`
-				}}
-				min={0}
-				max={1}
-				step={0.01}
-				value={volume}
-				onChange={(e) => onVolumeUpdate(e.currentTarget.value)}
-			/>
+			<div className="flex items-center space-x-4">
+
+				<p className="text-ink2">
+					{(() => {
+						if (volume === 0) return <VolumeX size={16} />;
+						if (volume < 0.4) return <Volume size={16} />;
+						if (volume < 0.7) return <Volume1 size={16} />;
+						return <Volume2 size={16} />;
+					})()}
+				</p>
+
+				<div className="group relative w-20 h-1 flex items-center cursor-pointer">
+
+					<div className="absolute w-full h-full bg-panel2 rounded-full" />
+
+
+					<div
+						className="absolute top-0 left-0 h-full bg-lavender rounded-full"
+						style={{ width: `${volume * 100}%` }}
+					/>
+
+					<div
+						className="
+						absolute h-2.5 w-2.5 
+						bg-white
+						rounded-full shadow-md 
+						-translate-x-1/2
+						
+						/* Hidden by default, scaled down */
+						opacity-0 scale-50 
+						
+						/* Smoothly transitions into view on hover */
+						transition-all duration-150 ease-out
+						group-hover:opacity-100 group-hover:scale-100
+					"
+						style={{ left: `${volume * 100}%` }}
+					/>
+
+					<input
+						type="range"
+						title="Volume"
+						className="
+							absolute top-0 left-0 w-full h-full
+							opacity-0 cursor-pointer z-10
+						"
+						min={0}
+						max={1}
+						step={0.01}
+						value={volume}
+						onChange={(e) => onVolumeUpdate(e.currentTarget.value)}
+					/>
+
+				</div>
+
+			</div>
 
 			{/* Time Display */}
-			<p className="text-white text-sm">{formattedTime} / {formattedDuration}</p>
+			<p className="text-ink2 text-sm font-jet-mono font-semibold">{formattedTime} <span className="text-ink3">/ {formattedDuration}</span></p>
 		</div>
 	);
 }

@@ -430,16 +430,24 @@ declare global {
 
 	type FeaturedContent = {
 		id: string;
-		movie_id: string;
-		headline?: string;
-		subheadling?: string;
+		headline?: string | null;
+		subheadline?: string | null;
 		feature_type: FeatureType;
 		is_active: boolean;
-		active_from?: Date;
-		active_to?: Date;
+		active_from?: Date | string | null;
+		active_to?: Date | string | null;
 		priority: number;
-		created_at: Date;
-		updated_at: Date;
+		created_at: Date | string;
+		updated_at: Date | string;
+		content_type: string;
+		tmdb_id?: number | null;
+		director_name?: string | null;
+		movement?: string | null;
+		keyword_id?: number | null;
+		country?: string | null;
+		decade?: number | null;
+		backdrop_path?: string | null;
+		poster_path?: string | null;
 	};
 
 	type MediaSourceFile = { id: string, file: string, type: string, lang: string };

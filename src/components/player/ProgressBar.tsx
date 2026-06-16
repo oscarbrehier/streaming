@@ -26,10 +26,14 @@ export function ProgressBar({
 				className="
                 w-full h-1
                 rounded-full
+				outline-none
+    			focus:outline-none
                 appearance-none
                 [&::-webkit-slider-thumb]:appearance-none 
-                [&::-webkit-slider-thumb]:bg-purple-500
-                [&::-webkit-slider-thumb]:hover:bg-purple-600
+				[&::-webkit-slider-thumb]:outline-none
+    			[&::-webkit-slider-thumb]:shadow-[0_0_8px_var(--color-lavender)]
+                [&::-webkit-slider-thumb]:bg-lavender
+                [&::-webkit-slider-thumb]:hover:bg-lavender
                 [&::-webkit-slider-thumb]:hover:h-4  
                 [&::-webkit-slider-thumb]:hover:w-4 
                 [&::-webkit-slider-thumb]:h-2 
@@ -37,9 +41,11 @@ export function ProgressBar({
                 [&::-webkit-slider-thumb]:cursor-pointer
                 [&::-webkit-slider-thumb]:rounded-full
                 [&::-webkit-slider-thumb]:transition-all
+				[&::-moz-range-thumb]:outline-none
+    			[&::-moz-range-thumb]:border-none
               "
 				style={{
-					background: `linear-gradient(to right, #a855f7 ${(timecode / (videoRef.current?.duration || 1)) * 100}%, rgb(64, 64, 64) ${(timecode / (videoRef.current?.duration || 1)) * 100}%)`
+					background: `linear-gradient(to right, var(--color-lavender) 0%, var(--color-periwinkle) ${(timecode / (videoRef.current?.duration || 1)) * 100}%, color-mix(in srgb, var(--color-panel2) 80%, transparent) ${(timecode / (videoRef.current?.duration || 1)) * 100}%)`
 				}}
 				type="range"
 				min="0"

@@ -17,17 +17,60 @@ export async function addFeaturedContent(options: Partial<FeaturedContent>): Pro
 		createAuditLog({
 			action: "add_failed",
 			resource: "featured_content",
-			details: {
-				error: error.message
-			}
+			details: { error: error.message }
 		});
 
-		return {
-			success: false,
-			error: error.message
-		};
+		return { success: false, error: error.message };
 
 	}
+
+	return { success: true };
+
+};
+
+export async function getAllFeaturedContent(): Promise<FeaturedContent[]> {
+
+	const supabase = await createClient();
+
+	const { data, error } = await supabase
+		.from("featured_content")
+		.select("*")
+		.order("priority", { ascending: true });
+
+	if (error || !data) {
+		console.error(error);
+		return [];
+	}
+
+	return data as FeaturedContent[];
+
+};
+
+export async function updateFeaturedContent(id: string, data: Partial<FeaturedContent>): Promise<{ success: boolean, error?: string }> {
+
+	const supabase = await createClient();
+
+	const { error } = await supabase
+		.from("featured_content")
+		.update({ ...data, updated_at: new Date().toISOString() })
+		.eq("id", id);
+
+	if (error) return { success: false, error: error.message };
+
+	return { success: true };
+
+};
+
+export async function deleteFeaturedContent(id: string): Promise<{ success: boolean, error?: string }> {
+
+	const supabase = await createClient();
+
+	const { error } = await supabase
+		.from("featured_content")
+		.delete()
+		.eq("id", id);
+
+	if (error) return { success: false, error: error.message };
 
 	return { success: true };
 
@@ -69,16 +112,12 @@ export async function getFeaturedContent(options: Partial<FeaturedContent> & { s
 		createAuditLog({
 			action: "fetch_failed",
 			resource: "featured_content",
-			details: {
-				error: error.message
-			}
+			details: { error: error.message }
 		});
 
 		return [];
 
 	};
-
-	console.log(data);
 
 	return (data ?? []) as Partial<FeaturedContent>[];
 
@@ -97,14 +136,15 @@ export async function getHeroBannerItems(): Promise<MovieDetailsWithImages[]> {
 	const data = await getFeaturedContent({
 		feature_type: "hero",
 		is_active: true,
-		select: "movie_id, priority",
+		select: "tmdb_id, priority",
 		limit: 5
 	});
 
 	const sortedByPriority = data.sort((a, b) => a.priority! - b.priority!);
 	let items = await Promise.all(sortedByPriority
 		.map(async (item) => {
-			const res = await getMovie(item.movie_id!);
+			if (!item.tmdb_id) return null;
+			const res = await getMovie(String(item.tmdb_id));
 			return res;
 		})
 		.filter(Boolean)
@@ -115,6 +155,6 @@ export async function getHeroBannerItems(): Promise<MovieDetailsWithImages[]> {
 		items = await Promise.all(defaultMovieIds.map(id => getMovie(id.toString())));
 	}
 
-	return items;
+	return items as MovieDetailsWithImages[];
 
 };

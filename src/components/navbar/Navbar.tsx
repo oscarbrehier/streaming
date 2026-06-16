@@ -19,10 +19,10 @@ interface NavbarProps {
 };
 
 const links = [
-	{ icon: Home, path: "/", tooltip: "home" },
-	{ icon: Search, path: "/search", tooltip: "search" },
-	{ icon: LayoutGrid, path: "/browse", tooltip: "browse" },
-	{ icon: Bookmark, path: "/list", tooltip: "my list" },
+	{ icon: Home, path: "/", label: "home" },
+	{ icon: Search, path: "/search", label: "search" },
+	{ icon: LayoutGrid, path: "/browse", label: "browse" },
+	{ icon: Bookmark, path: "/list", label: "my list" },
 ];
 
 
@@ -79,7 +79,7 @@ export function Navbar({ user, activeProfile, profiles }: NavbarProps) {
 
 	return (
 
-		<div className="fixed bottom-4 right-4 h-auto w-16 z-40 bg-panel border border-ink2/20 rounded-full flex flex-col items-center justify-between p-4 space-y-14">
+		<div className="fixed bottom-6 right-6 h-auto w-16 z-40 bg-bg-warm border border-ink3/20 rounded-full flex flex-col items-center justify-between p-4 space-y-14">
 
 			<div className="flex flex-col space-y-4">
 
@@ -94,7 +94,7 @@ export function Navbar({ user, activeProfile, profiles }: NavbarProps) {
 								className={cn(
 									"size-10 rounded-full flex items-center justify-center text-ink",
 									"hover:bg-neutral-800",
-									link.path !== pathname && "text-muted-foreground hover:text-foreground"
+									link.path !== pathname && "text-ink3 hover:text-ink"
 								)}
 							>
 								<link.icon />
@@ -103,7 +103,7 @@ export function Navbar({ user, activeProfile, profiles }: NavbarProps) {
 						</TooltipTrigger>
 
 						<TooltipContent side="left" className="dark">
-							<p className="capitalize">{link.tooltip}</p>
+							<p className="capitalize">{link.label}</p>
 						</TooltipContent>
 
 					</Tooltip>
@@ -142,7 +142,7 @@ export function Navbar({ user, activeProfile, profiles }: NavbarProps) {
 								<div
 									onMouseEnter={handleMouseEnter}
 									onMouseLeave={handleMouseLeave}
-									className="absolute bottom-0 right-16 w-76	 bg-[rgba(22,22,28,0.92)] backdrop-blur-xl border border-ink/10 rounded-3xl p-2.5 shadow-[0_30px_70px_-20px_rgba(0,0,0,0.85)]"
+									className="absolute bottom-0 right-16 w-76 bg-bg-warm backdrop-blur-xl border border-ink3/20 rounded-3xl p-2.5 shadow-[0_30px_70px_-20px_rgba(0,0,0,0.85)]"
 								>
 
 									{activeProfile && (

@@ -21,6 +21,7 @@ import { glass } from "@/styles";
 import { useMediaSources } from "@/hooks/player/useMediaSources";
 import { useSubtitles } from "@/hooks/player/useSubtitles";
 import { Loader2 } from "lucide-react";
+import { Button } from "../Button";
 
 const supabase = createClient();
 
@@ -406,24 +407,34 @@ export default function VideoPlayer({
 				}}
 			/>
 
-			<div className={`h-screen w-full absolute flex flex-col justify-between z-2147483640 transition-opacity duration-300 ${controls ? 'opacity-100' : 'opacity-0'}`}>
+			<div className={`h-screen w-full absolute flex flex-col justify-between z-2147483640 transition-opacity duration-300 ${controls ? 'opacity-100' : 'opacity-0'}`}
+
+				style={{
+					background: controls
+						? "radial-gradient(circle, transparent 40%, rgba(0, 0, 0, 0.5) 80%, rgba(0, 0, 0, 0.82) 100%)"
+						: "none"
+				}}>
 
 				{/* Top Bar - Back Button */}
-				<div className='h-12 w-full flex items-center px-5 pt-5 space-x-8'>
+				<div className="h-auto w-full flex items-center justify-center px-5 pt-5 relative">
 
-					<button
-						onClick={() => router.back()}
-						title="Back"
-						className={cn(
-							// "text-2xl cursor-pointer hover:bg-neutral-500/30 size-10 rounded-full flex items-center justify-center transition-colors",
-							"size-10 rounded-full text-2xl flex items-center justify-center cursor-pointer",
-							glass("on-focus")
-						)}>
-						<IoChevronBack className="text-neutral-100" size={20} />
-					</button>
+					<div className="absolute left-5">
+						<button
+							onClick={() => router.back()}
+							className={cn(
+								"bg-panel2 border border-ink3/20",
+								"h-8 px-4 rounded-full flex items-center justify-center cursor-pointer sm:space-x-2 text-ink",
+							)}
+						>
+							<IoChevronBack size={16} />
+							<span className="text-sm capitalize hidden sm:inline">back</span>
+						</button>
+					</div>
 
 					{title && (
-						<p className="font-medium text-lg mb-1">{title}</p>
+						<p className="font-medium text-xl sm:text-2xl text-white text-center drop-shadow-md select-none max-w-[60%] truncate">
+							{title}
+						</p>
 					)}
 
 				</div>

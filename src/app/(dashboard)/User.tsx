@@ -1,33 +1,25 @@
 import { avatar } from "@/utils/avatar";
-import { createClient } from "@/utils/supabase/server"
 import Image from "next/image";
-import { redirect } from "next/navigation";
 
-export async function DashboardUser() {
-
-	const supabase = await createClient();
-	const { data: { user } } = await supabase.auth.getUser();
-
-	if (!user) redirect("/login");
-
+export function DashboardUser({ name }: { name: string }) {
 	return (
+		<div className="flex items-center gap-3 min-w-0">
 
-		<div className="flex items-center space-x-4">
-
-			<p className="text-sm font-semibold">{user.user_metadata.display_name}</p>
-
-			<div className="size-8 bg-red-400 rounded-full overflow-hidden">
+			<div className="size-7 rounded-full overflow-hidden shrink-0 bg-panel2">
 				<Image
-					src={avatar(user.user_metadata.display_name)}
-					width={60}
-					height={60}
+					src={avatar(name)}
+					width={28}
+					height={28}
 					unoptimized
-					alt="user_avatar"
+					alt="avatar"
 				/>
 			</div>
 
+			<div className="min-w-0">
+				<p className="text-ink text-xs truncate leading-tight">{name}</p>
+				<p className="text-ink4 text-[9px] font-jet-mono uppercase tracking-widest mt-0.5">Admin</p>
+			</div>
+
 		</div>
-
-	)
-
-};
+	);
+}
