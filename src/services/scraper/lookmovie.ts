@@ -25,9 +25,6 @@ async function search(query: string) {
 	if (!res.ok) return null;
 
 	const data = await res.json();
-
-	console.log(data);
-
 	return data;
 
 };
@@ -37,7 +34,6 @@ async function getLibrary(mediaId: string) {
 	const cacheKey = `library-${mediaId}`;
 
 	const expiresIn = Date.now() + 2 * 60 * 60 * 1000;
-	console.log(expiresIn)
 	const res = await fetch(`https://www.lookmovie2.to/api/v1/security/movie-access?id_movie=${mediaId}&hash=B6lmTttWrm5ndieDSwvRrw&expires=${expiresIn}`, {
 		headers: {
 			'Cache-Control': "max-age=3600",

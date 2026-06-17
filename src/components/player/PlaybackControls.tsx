@@ -19,7 +19,7 @@ export function PlaybackControls({
 	isPlaying: boolean;
 	handleMediaButtons: () => void;
 	volume: number;
-	onVolumeUpdate: (volume: string) => void;
+	onVolumeUpdate: (volume: number) => void;
 	formattedTime: string;
 	formattedDuration: string;
 }) {
@@ -39,7 +39,12 @@ export function PlaybackControls({
 				<p className="text-white text-sm">0:00 / 0:00</p>
 			</div>
 		);
-	}
+	};
+
+	function handleMute() {
+		const updatedVolume = volume === 0 ? 0.5 : 0;
+		onVolumeUpdate(updatedVolume);
+	};
 
 	return (
 		<div className="flex items-center space-x-8">
@@ -61,14 +66,17 @@ export function PlaybackControls({
 			{/* Volume */}
 			<div className="flex items-center space-x-4">
 
-				<p className="text-ink2">
+				<button
+					onClick={handleMute}
+					className="text-ink2"
+				>
 					{(() => {
 						if (volume === 0) return <VolumeX size={16} />;
 						if (volume < 0.4) return <Volume size={16} />;
 						if (volume < 0.7) return <Volume1 size={16} />;
 						return <Volume2 size={16} />;
 					})()}
-				</p>
+				</button>
 
 				<div className="group relative w-20 h-1 flex items-center cursor-pointer">
 
@@ -108,7 +116,7 @@ export function PlaybackControls({
 						max={1}
 						step={0.01}
 						value={volume}
-						onChange={(e) => onVolumeUpdate(e.currentTarget.value)}
+						onChange={(e) => onVolumeUpdate(Number(e.currentTarget.value))}
 					/>
 
 				</div>

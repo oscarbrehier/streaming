@@ -48,6 +48,8 @@ export function SettingsPanel({
 
 	}, [open, onClose]);
 
+	const activePanel = panels.find(p => p.title === view);
+
 	return (
 
 		<div
@@ -55,26 +57,21 @@ export function SettingsPanel({
 			onPointerDown={(e) => e.stopPropagation()}
 			className={cn(
 				open ? "flex" : "hidden",
-				glass("active"),
-				"absolute w-120 h-auto bg-card/20 rounded-2xl bottom-14 right-0 p-4 flex-col space-y-4"
+				// glass("active"),
+				"absolute w-72 h-auto bg-bg border border-ink3/30 rounded-2xl bottom-14 right-0 flex-col overflow-hidden"
 			)}
 		>
 
-			<div className="h-10 w-full flex items-center justify-between gap-2">
+			<div className={cn(
+				"px-6 py-3",
+				"border-b border-ink/10"
+			)}>
 
-				{panels.map((pane, idx) => (
-					<SettingsOptionButton
-						key={idx}
-						onClick={() => onViewChange(pane.title)}
-						active={view === pane.title}
-					>
-						<p className="capitalize">{pane.title}</p>
-					</SettingsOptionButton>
-				))}
+				<p className="font-jet-mono text-xs text-ink2 uppercase">{activePanel?.title}</p>
 
 			</div>
 
-			<div className="h-96 w-full">
+			<div className="h-96 w-full p-2">
 				{children}
 			</div>
 
@@ -101,10 +98,9 @@ export function SettingsOptionButton({
 		<button
 			onClick={onClick}
 			className={cn(
-				"w-full py-2 rounded-md text-sm border transition-all duration-300",
-				active
-					? "bg-neutral-800/50 text-neutral-200 border-neutral-700/80"
-					: "bg-neutral-800/30 text-neutral-400 hover:text-neutral-200 border-transparent hover:border-neutral-700/80",
+				"w-full py-3 px-4 rounded-lg",
+				"flex items-center space-x-4",
+				active && "bg-panel2",
 				className
 			)}
 			{...props}

@@ -17,6 +17,15 @@ export default function QualitySelector({
 			className="h-full w-full space-y-2"
 		>
 
+			<SettingsOptionButton
+				onClick={() => onQualityChange("auto")}
+				active={currentQuality === "auto"}
+				className="flex flex-col items-start"
+			>
+				<span className="text-sm font-semibold text-ink/90">Auto</span>
+				<span className="text-xs text-ink2">Recommended - adapts to bandwitch</span>
+			</SettingsOptionButton>
+
 			{qualities.sort((a, b) => b.index - a.index).map((quality) => (
 
 				<SettingsOptionButton
@@ -29,14 +38,6 @@ export default function QualitySelector({
 				</SettingsOptionButton>
 
 			))}
-
-			<SettingsOptionButton
-				onClick={() => onQualityChange("auto")}
-				active={currentQuality === "auto"}
-				className="py-3 px-4 text-start"
-			>
-				Auto
-			</SettingsOptionButton>
 
 		</div>
 

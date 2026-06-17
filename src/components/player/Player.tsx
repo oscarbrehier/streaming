@@ -22,6 +22,7 @@ import { useMediaSources } from "@/hooks/player/useMediaSources";
 import { useSubtitles } from "@/hooks/player/useSubtitles";
 import { Loader2 } from "lucide-react";
 import { Button } from "../Button";
+import { useSubtitleCue } from "@/hooks/player/useSubtitleCue";
 
 const supabase = createClient();
 
@@ -79,9 +80,10 @@ export default function VideoPlayer({
 	const { currentSource, changeSource, nextSource } = useMediaSources(sources);
 	const { currentTrack, changeSubtitleTrack } = useSubtitles(sources.subtitles);
 	const { qualities, changeQuality, currentQuality, setupQualityListener } = useVideoQuality(hlsRef);
+	const cueText = useSubtitleCue(videoRef);
 
 	const { controls } = useVideoControls(videoRef, isPlaying);
-	const { handleProgressUpdate } = useVideoProgress(videoRef, mediaId, userId, mediaStatus.completed);
+	const { handleProgressUpdate } = useVideoProgress(videoRef, mediaId, userId, profileId, mediaStatus.completed);
 
 	function handleSourceFailover() {
 
@@ -231,6 +233,46 @@ export default function VideoPlayer({
 
 	}, [isPlaying, handleProgressUpdate]);
 
+	useEffect(() => {
+
+		const handleVisibilityChange = () => {
+			if (document.visibilityState === "hidden") {
+				handleProgressUpdate();
+			};
+		};
+
+		document.addEventListener("visibilitychange", handleVisibilityChange);
+		return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+
+	}, [handleProgressUpdate]);
+
+	useEffect(() => {
+
+		const handleBeforeUnload = () => {
+
+			const progress = videoRef.current?.currentTime;
+
+			if (!progress) return;
+			navigator.sendBeacon(`/api/progress`, JSON.stringify({
+				mediaId, userId, profileId, progress_sec: Math.floor(progress)
+			}));
+
+		};
+
+		window.addEventListener("beforeunload", handleBeforeUnload);
+		return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+
+	}, []);
+
+	useEffect(() => {
+
+		return () => {
+			handleProgressUpdate();
+		};
+
+	}, []);
+
+
 	const handleMediaButtons = async () => {
 
 		if (!videoRef.current) return;
@@ -278,14 +320,12 @@ export default function VideoPlayer({
 
 	}, []);
 
-	const changeVolume = useCallback((value: string) => {
+	const changeVolume = useCallback((value: number) => {
 
-		const volumeValue = Number(value);
-
-		setVolume(volumeValue);
+		setVolume(value);
 
 		if (videoRef.current) {
-			videoRef.current.volume = volumeValue;
+			videoRef.current.volume = value;
 		};
 
 	}, []);
@@ -366,7 +406,7 @@ export default function VideoPlayer({
 
 		const cacheBuster = `?t=${Date.now()}`;
 
-		trackElement.src = `/api${currentTrack.url}${cacheBuster}`;
+		trackElement.src = `/api/sub-proxy?url=${currentTrack.url}${cacheBuster}`;
 		trackElement.srclang = currentTrack.lang;
 		trackElement.default = true;
 
@@ -377,7 +417,7 @@ export default function VideoPlayer({
 		const handleLoad = () => {
 			requestAnimationFrame(() => {
 				if (video.textTracks[0]) {
-					video.textTracks[0].mode = 'showing';
+					video.textTracks[0].mode = 'hidden';
 				}
 			});
 		};
@@ -407,6 +447,23 @@ export default function VideoPlayer({
 				}}
 			/>
 
+			{cueText && (
+				<div
+					className={cn(
+						"absolute left-0 right-0 flex justify-center pointer-events-none z-10 transition-all duration-200",
+						controls ? "bottom-24" : "bottom-8"
+					)}
+				>
+					<p className="text-white text-3xl text-center max-w-2xl leading-relaxed px-4 whitespace-pre-line"
+						style={{
+							textShadow: "0 1px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.6)"
+						}}
+					>
+						{cueText}
+					</p>
+				</div>
+			)}
+
 			<div className={`h-screen w-full absolute flex flex-col justify-between z-2147483640 transition-opacity duration-300 ${controls ? 'opacity-100' : 'opacity-0'}`}
 
 				style={{
@@ -416,9 +473,10 @@ export default function VideoPlayer({
 				}}>
 
 				{/* Top Bar - Back Button */}
-				<div className="h-auto w-full flex items-center justify-center px-5 pt-5 relative">
+				<div className="h-auto w-full flex items-center justify-center px-6 pt-6 relative">
 
-					<div className="absolute left-5">
+					<div className="absolute left-6 flex space-x-2">
+
 						<button
 							onClick={() => router.back()}
 							className={cn(
@@ -429,6 +487,32 @@ export default function VideoPlayer({
 							<IoChevronBack size={16} />
 							<span className="text-sm capitalize hidden sm:inline">back</span>
 						</button>
+
+						<div
+							className={cn(
+								"bg-panel border border-ink3/20",
+								"h-8 px-4 rounded-full flex items-center space-x-2"
+							)}
+						>
+							{ratings.map((r, i) => (
+
+								<button
+									key={i}
+									title={r.title}
+									onClick={() => handleUpdateRating(r.value)}
+								>
+									<span className={cn(
+										"text-sm",
+										r.value === rating ? "opacity-100" : "opacity-50 hover:opacity-70"
+									)}>
+										{r.emoji}
+									</span>
+								</button>
+
+							))}
+
+						</div>
+
 					</div>
 
 					{title && (
@@ -442,7 +526,7 @@ export default function VideoPlayer({
 				<div className="flex-1 flex justify-center items-center relative">
 
 					{/* Rating (when paused and activated) */}
-					{isPlaying === false && playerState !== "loading" && showRating && (
+					{/* {isPlaying === false && playerState !== "loading" && showRating && (
 
 						<RatingOverlay
 							rating={rating}
@@ -450,7 +534,7 @@ export default function VideoPlayer({
 							ratings={ratings}
 						/>
 
-					)}
+					)} */}
 
 					{playerState === "loading" && (
 
@@ -465,7 +549,7 @@ export default function VideoPlayer({
 
 
 				{/* Bottom Controls */}
-				<div className="flex flex-col items-center px-5 pb-2">
+				<div className="flex flex-col items-center px-6 pb-2">
 
 					<ProgressBar
 						playerState={playerState}

@@ -8,10 +8,11 @@ export function useVideoProgress(
 	videoRef: RefObject<HTMLVideoElement | null>,
 	mediaId: string,
 	userId: string,
+	profileId: string,
 	completed: boolean
 ) {
 
-	const media = new MediaService(supabase, mediaId, userId);
+	const media = new MediaService(supabase, mediaId, userId, profileId);
 
 	const [isMarkedComplete, setIsMarkedComplete] = useState(completed ?? false);
 

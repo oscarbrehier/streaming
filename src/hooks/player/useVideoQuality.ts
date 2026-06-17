@@ -20,13 +20,15 @@ export function useVideoQuality(
 
 		hls.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
 
-			const levels = data.levels.map((level, index) => ({
-				index,
-				height: level.height,
-				width: level.width,
-				bitrate: level.bitrate,
-				label: `${level.height}p`
-			}));
+			const levels = data.levels
+				.map((level, index) => ({
+					index,
+					height: level.height,
+					width: level.width,
+					bitrate: level.bitrate,
+					label: `${level.height}p`
+				}))
+				.filter(level => level.height > 0);
 
 			setQualities(levels);
 

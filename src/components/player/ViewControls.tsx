@@ -1,7 +1,7 @@
 "use client"
 
 import { QualityLevel } from "@/hooks/player/useVideoQuality";
-import { Cloud, TvMinimal } from "lucide-react";
+import { ClosedCaption, Cloud, LucideProps, SunMedium, TvMinimal } from "lucide-react";
 import { BiFullscreen } from "react-icons/bi";
 import { MdOutlineSubtitles, MdSubtitles } from "react-icons/md";
 import { PointerEvent, useMemo } from "react";
@@ -9,9 +9,9 @@ import { SettingsPanel, SettingsView } from "./SettingsPanel";
 import dynamic from "next/dynamic";
 import { SubtitleSelector } from "./SubtitleSelector";
 import { useSettingsController } from "@/hooks/player/useSettingsController";
+import QualitySelector from "./QualitySelector";
 
 const MediaSourceSelector = dynamic(() => import("./MediaSourceSelector"));
-const QualitySelector = dynamic(() => import("./QualitySelector"));
 
 interface ViewControlsProps {
 	subtitles: SubtitleSource[];
@@ -63,35 +63,23 @@ export function ViewControls({
 	const settings = useSettingsController("sources");
 
 	const panelConfigs = useMemo<SettingsPanelConfig[]>(() => [
-		{
-			id: "sources",
-			title: "Sources",
-			trigger: { icon: Cloud },
-			render: () => (
-				<MediaSourceSelector
-					sources={sources.files}
-					currentSource={currentSource}
-					onSourceChange={onSourceChange}
-				/>
-			),
-		},
-		{
-			id: "quality",
-			title: "Quality",
-			trigger: { icon: TvMinimal },
-			render: () => (
-				<QualitySelector
-					qualities={qualities}
-					currentQuality={currentQuality}
-					onQualityChange={onQualityChange}
-				/>
-			),
-		},
+		// {
+		// 	id: "sources",
+		// 	title: "Sources",
+		// 	trigger: { icon: Cloud },
+		// 	render: () => (
+		// 		<MediaSourceSelector
+		// 			sources={sources.files}
+		// 			currentSource={currentSource}
+		// 			onSourceChange={onSourceChange}
+		// 		/>
+		// 	),
+		// },
 		{
 			id: "subtitles",
 			title: "Subtitles",
 			trigger: {
-				icon: captions ? MdSubtitles : MdOutlineSubtitles,
+				icon: ClosedCaption,
 				isVisible: () => sources.subtitles.length > 0,
 			},
 			render: () => (
@@ -99,6 +87,18 @@ export function ViewControls({
 					currentTrack={currentSubtitleTrack}
 					subtitles={subtitles}
 					onTrackChange={onSubtitleChange}
+				/>
+			),
+		},
+		{
+			id: "quality",
+			title: "Quality",
+			trigger: { icon: SunMedium },
+			render: () => (
+				<QualitySelector
+					qualities={qualities}
+					currentQuality={currentQuality}
+					onQualityChange={onQualityChange}
 				/>
 			),
 		},
@@ -147,7 +147,7 @@ export function ViewControls({
 				onClick={onFullscreenToggle}
 				title="Fullscreen (F)"
 				className="hover:bg-neutral-700 transition-all ease-in-out duration-200 w-8 h-8 flex items-center justify-center rounded-md text-2xl">
-				<BiFullscreen className="text-white" />
+				<BiFullscreen className="text-ink/75" size={18} />
 			</button>
 
 		</div>
@@ -163,7 +163,7 @@ function PanelTriggerItem({
 }: {
 	onClick: (e: PointerEvent<HTMLButtonElement>) => void;
 	title: string;
-	Icon: React.ComponentType<{ className?: string }>;
+	Icon: React.ComponentType<LucideProps>;
 }) {
 
 	return (
@@ -171,7 +171,7 @@ function PanelTriggerItem({
 			onPointerDown={onClick}
 			title={title}
 			className="hover:bg-neutral-700 transition-all ease-in-out duration-200 w-8 h-8 flex items-center justify-center rounded-md text-2xl">
-			{<Icon className="text-white" />}
+			{<Icon className="text-ink/75" size={18} />}
 		</button>
 	);
 

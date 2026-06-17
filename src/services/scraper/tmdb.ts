@@ -33,8 +33,6 @@ export class TmdbError extends Error {
 
 export async function getMovieFromTmdb(tmdb_id: string | number): Promise<MovieInfo> {
 
-	console.log(tmdb_id)
-
 	const response = await fetch(
 		`https://api.themoviedb.org/3/movie/${tmdb_id}?api_key=${process.env.TMDB_API_KEY}`
 	);
