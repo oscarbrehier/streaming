@@ -6,8 +6,15 @@ import { createAuditLog } from "@/utils/db/createAuditLog";
 
 export async function getStreamingSources(mediaId: string, type: "movie" | "tv"): Promise<{ sources: MediaSources | null }> {
 
-	const res = await scrape(mediaId);
-	return { sources: res };
+	try {
+
+		const res = await scrape(mediaId);
+		return { sources: res };
+
+	} catch (err) {
+		console.error(err);
+		return { sources: null };
+	};
 
 	// const { data: cached, isStale } = await checkCacheForSources(mediaId);
 

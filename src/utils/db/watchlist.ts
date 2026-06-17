@@ -151,3 +151,27 @@ export async function getWatchlistWithProgress(mediaType?: MediaType): Promise<(
 		}));
 
 };
+
+export async function removeFromWatchlist(mediaId: string, mediaType?: "movie" | "tv"): Promise<{ success?: boolean, error?: string }> {
+
+	const supabase = await createClient();
+
+	const { data: { user } } = await supabase.auth.getUser();
+	if (!user) return { error: "User not authenticated" };
+
+	const profileId = await getActiveProfileId();
+	if (!profileId) return { error: "TODO_profile_id" };
+
+	const { error } = await supabase
+		.from("watchlists")
+		.delete()
+		.eq("user_id", user.id)
+		.eq("profile_id", profileId)
+		.eq("media_id", mediaId)
+		.eq("media_type", mediaType ?? "movie");
+
+	if (error) return { error: error.message };
+
+	return { success: true };
+
+};

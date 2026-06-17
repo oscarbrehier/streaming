@@ -1,8 +1,8 @@
 "use client"
 
 import { Button } from "@/components/Button";
-import { addToWatchlist, isInWatchlist } from "@/utils/db/watchlist";
-import { Check, LoaderCircle, Plus } from "lucide-react"
+import { addToWatchlist, isInWatchlist, removeFromWatchlist } from "@/utils/db/watchlist";
+import { Check, LoaderCircle, Plus, X } from "lucide-react"
 import { MouseEvent, useEffect, useState } from "react";
 
 export function AddToWatchlist({
@@ -14,6 +14,7 @@ export function AddToWatchlist({
 	const [loading, setLoading] = useState(false);
 	const [checking, setChecking] = useState(true);
 	const [added, setAdded] = useState(false);
+	const [hovering, setHovering] = useState(false);
 
 	useEffect(() => {
 
@@ -28,32 +29,51 @@ export function AddToWatchlist({
 	async function handleAdd(e: MouseEvent<HTMLButtonElement>) {
 
 		e.preventDefault();
-		if (loading || added) return;
+		if (loading) return;
 
 		setLoading(true);
 
-		const { success, error } = await addToWatchlist(mediaId);
+		if (added) {
 
-		setLoading(false);
+			const { success, error } = await removeFromWatchlist(mediaId);
 
-		if (success) {
-			setAdded(true);
+			if (success) setAdded(false);
+			else console.error(error);
+
 		} else {
-			console.error(error);
+
+			const { success, error } = await addToWatchlist(mediaId);
+
+			if (success) setAdded(true);
+			else console.error(error);
+
 		};
 
+		setLoading(false);
+	
 	};
 
-	let label = added ? "My Wishlist" : "My Watchlist";
+	if (checking) return (
 
-	let icon = loading ? (
-		<div className="animate-spin">
-			<LoaderCircle className="text-neutral-200" size={16} />
-		</div>
+		<Button
+			size="sm"
+			icon={<div className="animate-spin"><LoaderCircle className="text-neutral-200" size={16} /></div>}
+			variant="glass"
+			disabled
+		/>
+
+	);
+
+	const label = added
+		? hovering ? "Remove" : "My Watchlist"
+		: "My Watchlist";
+
+	const icon = loading ? (
+		<div className="animate-spin"><LoaderCircle className="text-neutral-200" size={16} /></div>
 	) : added ? (
-		<Check className="text-neutral-200 mt-0.5" size={20} />
+		hovering ? <X className="text-neutral-200 mt-0.5" size={18} /> : <Check className="text-neutral-200 mt-0.5" size={18} />
 	) : (
-		<Plus className="text-neutral-200 mt-0.5" size={20} />
+		<Plus className="text-neutral-200 mt-0.5" size={18} />
 	);
 
 	return (
@@ -63,10 +83,12 @@ export function AddToWatchlist({
 			label={loading ? undefined : label}
 			icon={icon}
 			variant="glass"
-			disabled={loading || added}
+			disabled={loading}
 			onClick={handleAdd}
+			onMouseEnter={() => setHovering(true)}
+			onMouseLeave={() => setHovering(false)}
 		/>
-
+		
 	);
 
 };

@@ -3,6 +3,7 @@
 import { Input } from "@/components/Input";
 import { Loader, Search, Sparkle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useEffect, useRef, useState } from "react";
 
 interface SearchBarProps {
 	value: string;
@@ -19,6 +20,16 @@ export function SearchBar({
 	className,
 	thinking = false
 }: SearchBarProps) {
+
+	const statusRef = useRef<HTMLParagraphElement>(null);
+	const [rightPadding, setRightPadding] = useState(0);
+
+	useEffect(() => {
+		if (statusRef.current) {
+			const width = statusRef.current.offsetWidth;
+			setRightPadding(width + 40);
+		};
+	}, [thinking]);
 
 	return (
 
@@ -40,6 +51,7 @@ export function SearchBar({
 				value={value}
 				onChange={onChange}
 				placeholder={placeholder}
+				style={{ paddingRight: `${rightPadding}px` }}
 				className={cn(
 					"pl-12 w-full",
 					thinking && "border-mint/50"
@@ -50,16 +62,18 @@ export function SearchBar({
 				"absolute bottom-0 left-3 right-3 h-0.5 overflow-hidden rounded-full pointer-events-none transition-opacity duration-300",
 				thinking ? "opacity-100" : "opacity-0"
 			)}>
-				{/* The traveling indicator strip */}
 				<div className="h-full w-1/3 rounded-full bg-linear-to-r from-transparent via-mint to-transparent animate-infinite-scroll" />
 			</div>
 
 			<div className="absolute right-5 flex items-center space-x-4">
 
-				<p className={cn(
-					"text-sm font-jet-mono uppercase",
-					thinking ? "text-ink3" : "text-mint"
-				)}>
+				<p
+					ref={statusRef}
+					className={cn(
+						"text-sm font-jet-mono uppercase",
+						thinking ? "text-ink3" : "text-mint"
+					)}
+				>
 					{thinking ? "thinking" : "ready"}
 				</p>
 			</div>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { glass } from "@/styles";
+import React from "react";
 
 interface ButtonProps {
     label?: string;
@@ -13,7 +14,7 @@ interface ButtonProps {
     disabled?: boolean;
 }
 
-export function Button({ label, icon, variant = "solid", size = "lg", href, onClick, className, disabled }: ButtonProps) {
+export function Button({ label, icon, variant = "solid", size = "lg", href, onClick, className, disabled, ...props  }: ButtonProps & React.ComponentProps<"button">) {
     const base = cn(
         "capitalize flex items-center justify-center transition-all ease-in-out",
         size === "lg" && "text-md h-12 px-6 rounded-full sm:space-x-4",
@@ -42,7 +43,7 @@ export function Button({ label, icon, variant = "solid", size = "lg", href, onCl
 	}
 
 	return (
-		<button onClick={onClick} disabled={disabled} className={base}>
+		<button onClick={onClick} disabled={disabled} className={base} {...props}>
 			{content}
 		</button>
 	);

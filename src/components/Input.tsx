@@ -1,15 +1,13 @@
 "use client";
 import { cn } from "@/lib/utils";
 
-interface InputProps {
-	value: string;
-	onChange: (value: string) => void;
-	placeholder?: string;
-	className?: string;
-	type?: string;
-}
+interface InputProps extends Omit<React.ComponentProps<"input">, "onChange"> {
+    value: string;
+    onChange: (value: string) => void;
+    className?: string;
+};
 
-export function Input({ value, onChange, placeholder, className, type = "text" }: InputProps) {
+export function Input({ value, onChange, placeholder, className, type = "text", ...props }: InputProps) {
 	return (
 		<input
 			type={type}
@@ -24,6 +22,7 @@ export function Input({ value, onChange, placeholder, className, type = "text" }
 				"transition-colors",
 				className
 			)}
+			{...props}
 		/>
 	);
 };
