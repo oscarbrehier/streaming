@@ -43,7 +43,7 @@ export function MovieOverview({
 				}
 			</p>
 
-			<div className="w-full flex flex-col items-start space-y-4">
+			<div className="w-full flex flex-col items-start space-y-10">
 				{children}
 			</div>
 

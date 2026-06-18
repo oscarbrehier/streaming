@@ -13,7 +13,7 @@ export async function addToWatchlist(mediaId: string, mediaType?: "movie" | "tv"
 	if (!user) return { error: "User not authenticated" };
 
 	const profileId = await getActiveProfileId();
-	if (!profileId) return { error: "TODO_profile_id" };
+	if (!profileId) return { error: "No active profile" };
 
 	const { error } = await supabase
 		.from("watchlists")
@@ -41,7 +41,7 @@ export async function getWatchlistEntries(opts?: {
 	if (!user) return { data: [], error: "User not authenticated" };
 
 	const profileId = await getActiveProfileId();
-	if (!profileId) return { data: [], error: "TODO_profile_id" };
+	if (!profileId) return { data: [], error: "No active profile" };
 
 	let query = supabase
 		.from("watchlists")
@@ -88,7 +88,7 @@ export async function isInWatchlist(
 	const supabase = await createClient();
 
 	const profileId = await getActiveProfileId();
-	if (!profileId) throw "TODO_profile_id";
+	if (!profileId) return false;
 
 	const { data, error } = await supabase
 		.from("watchlists")
@@ -160,7 +160,7 @@ export async function removeFromWatchlist(mediaId: string, mediaType?: "movie" |
 	if (!user) return { error: "User not authenticated" };
 
 	const profileId = await getActiveProfileId();
-	if (!profileId) return { error: "TODO_profile_id" };
+	if (!profileId) return { error: "No active profile" };
 
 	const { error } = await supabase
 		.from("watchlists")

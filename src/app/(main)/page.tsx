@@ -9,6 +9,7 @@ import { getHeroBannerItems } from "@/utils/db/featuredContent";
 import { CategorySelector } from "./CategorySelector";
 import { getClassics, getCollection, getCurrentCountryDecade, getCurrentDirector, getDirectorsEssential, getFeaturedFilm, getFromCountry, getHiddenGems, getRecentAcclaimed, getWorldCinema } from "@/lib/tmdb/editorial";
 import { BackdropCard } from "@/components/cards/Backdrop";
+import { cn } from "@/lib/utils";
 
 export default async function Page({
 	searchParams
@@ -57,7 +58,10 @@ export default async function Page({
 
 			{/* <CategorySelector /> */}
 
-			<div className="w-full flex flex-col items-center mt-20 px-40 pb-20 space-y-12">
+			<div className={cn(
+				"w-full flex flex-col items-center mt-20 pb-20 space-y-12",
+				"xl:px-40 lg:px-10 px-4",
+			)}>
 
 				{carousels.map((item, idx) => (
 					item.data.length > 0 && (

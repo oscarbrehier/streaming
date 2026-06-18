@@ -14,7 +14,6 @@ export function AddToWatchlist({
 	const [loading, setLoading] = useState(false);
 	const [checking, setChecking] = useState(true);
 	const [added, setAdded] = useState(false);
-	const [hovering, setHovering] = useState(false);
 
 	useEffect(() => {
 
@@ -65,13 +64,13 @@ export function AddToWatchlist({
 	);
 
 	const label = added
-		? hovering ? "Remove" : "My Watchlist"
+		? "My Watchlist"
 		: "My Watchlist";
 
 	const icon = loading ? (
 		<div className="animate-spin"><LoaderCircle className="text-neutral-200" size={16} /></div>
 	) : added ? (
-		hovering ? <X className="text-neutral-200 mt-0.5" size={18} /> : <Check className="text-neutral-200 mt-0.5" size={18} />
+		<Check className="text-neutral-200 mt-0.5" size={18} />
 	) : (
 		<Plus className="text-neutral-200 mt-0.5" size={18} />
 	);
@@ -85,8 +84,6 @@ export function AddToWatchlist({
 			variant="glass"
 			disabled={loading}
 			onClick={handleAdd}
-			onMouseEnter={() => setHovering(true)}
-			onMouseLeave={() => setHovering(false)}
 		/>
 		
 	);

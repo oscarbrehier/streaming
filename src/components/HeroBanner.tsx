@@ -78,7 +78,7 @@ export function HeroBanner({
 
 					<MovieOverview data={item}>
 
-						<div className="flex space-x-4 mt-8">
+						<div className="flex sm:space-x-4 space-x-2 mt-8">
 
 							<Button
 								size="sm"

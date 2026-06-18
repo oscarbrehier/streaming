@@ -28,8 +28,7 @@ export function Profile({
 			router.push("/");
 
 		} catch (err) {
-			console.log("TODO_profile_id");
-
+			router.push("/profiles");
 		};
 
 	};

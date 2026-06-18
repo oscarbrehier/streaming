@@ -12,6 +12,8 @@ import { getActiveProfileId } from "@/utils/profiles";
 import { getCountryName } from "@/utils/format";
 import { MovieOverview } from "@/components/MovieOverview";
 import { CreditCard } from "@/components/cards/Credit";
+import { getMediaStatus } from "@/utils/supabase/queries/userMedia";
+import { formatTimeHuman } from "@/utils/timeFormat";
 
 interface PageProps {
 	params: Promise<{ id: string }>;
@@ -27,36 +29,28 @@ export default async function Page({
 	const { id: mediaId } = await params;
 
 	const movie = await getMovie(mediaId, { credits: true });
+
 	const credits = movie.credits;
-	const isMovieInWatchlist = await isInWatchlist(mediaId);
+	const people = getTopCredits(credits);
 
 	const videos = await getMovieVideos(mediaId);
 
-	let userMediaStatus: UserMediaStatus | null = null;
-
-	const supabase = await createClient();
-
-	const { data: { session } } = await supabase.auth.getSession();
-	if (!session) redirect("/login");
-
-	const profileId = await getActiveProfileId();
-
-	if (profileId) {
-
-		const { data, error } = await supabase
-			.from("user_media_status")
-			.select("*")
-			.eq("media_id", mediaId)
-			.eq("profile_id", profileId)
-			.single();
-
-		if (!error && data) userMediaStatus = data;
-
-	};
+	const mediaStatus = await getMediaStatus(mediaId);
+	const watchedPercent = mediaStatus && mediaStatus.duration_sec > 0
+		? Math.round((mediaStatus.progress_sec / mediaStatus.duration_sec) * 100)
+		: null;
 
 	const match = Math.round(movie.vote_average * 10);
 
-	const people = getTopCredits(credits);
+	const playLabel = mediaStatus?.completed
+		? "Watch Again"
+		: watchedPercent !== null && watchedPercent > 0
+			? "Continue"
+			: "Play";
+
+	const remainingSec = mediaStatus && mediaStatus.duration_sec > 0 && !mediaStatus.completed
+		? mediaStatus.duration_sec - mediaStatus.progress_sec
+		: null;
 
 	return (
 
@@ -88,16 +82,33 @@ export default async function Page({
 
 					<MovieOverview data={movie}>
 
+						{watchedPercent !== null && watchedPercent > 0 && (
+							<div className="space-y-2 w-full">
+								<div className="h-1 w-full max-w-md bg-neutral-700 rounded-full overflow-hidden">
+									<div
+										className="h-full rounded-full bg-linear-to-r from-periwinkle to-apricot"
+										style={{ width: `${watchedPercent}%` }}
+									/>
+								</div>
+								{remainingSec && (
+									<p className="text-xs text-ink/50 font-jet-mono uppercase">
+										{formatTimeHuman(remainingSec)} left
+									</p>
+								)}
+							</div>
+						)}
+
 						<div className="flex space-x-4">
 
 							<Button
 								href={`/watch/${mediaId}`}
-								label="Play"
+								label={playLabel}
 								size="sm"
 								icon={<Play className="text-black mt-0.5" fill="#000" size={16} />}
 							/>
 
 							<AddToWatchlist mediaId={mediaId} />
+
 						</div>
 
 					</MovieOverview>
@@ -115,12 +126,12 @@ export default async function Page({
 							<Link href={`${mediaId}/credits`} className="flex items-center space-x-2">
 								<span className="uppercase text-xs text-ink/70">show all ({(credits?.cast.length ?? 0) + (credits?.crew.length ?? 0)})</span>
 							</Link>
-						
+
 						</div>
 
 						<div className="grid grid-cols-10 gap-1">
 
-							{people.map((person, i) => (				
+							{people.map((person, i) => (
 								<CreditCard key={`${person.id}-${i}`} person={person} />
 							))}
 

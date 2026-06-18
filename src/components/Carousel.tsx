@@ -30,7 +30,8 @@ export function Carousel<T extends { id: number }>({
 
 			if (width < 450) setItemsPerSlide(1);
 			else if (width < 640) setItemsPerSlide(2);
-			else if (width < 768) setItemsPerSlide(4);
+			else if (width < 768) setItemsPerSlide(3);
+			else if (width < 1024) setItemsPerSlide(3);
 			else setItemsPerSlide(MAX_ITEMS_PER_SLIDE);
 
 		};
@@ -87,7 +88,7 @@ export function Carousel<T extends { id: number }>({
 					{canGoPrev && (
 						<button
 							onClick={handlePrev}
-							className="absolute left-4 top-1/2 -translate-y-1/2 z-50 p-3 bg-neutral-300/10 backdrop-blur-md rounded-full ring-neutral-300/30 ring-1 shadow-xl cursor-pointer"
+							className="absolute left-4 top-1/2 -translate-y-1/2 z-20 lg:p-3 p-2 bg-neutral-300/10 backdrop-blur-md rounded-full ring-neutral-300/30 ring-1 shadow-xl cursor-pointer"
 						>
 							<ChevronLeft />
 						</button>
@@ -95,7 +96,7 @@ export function Carousel<T extends { id: number }>({
 					{canGoNext && (
 						<button
 							onClick={handleNext}
-							className="absolute right-4 top-1/2 -translate-y-1/2 z-50 p-3 bg-neutral-300/10 backdrop-blur-md rounded-full ring-neutral-300/30 ring-1 shadow-xl cursor-pointer"
+							className="absolute right-4 top-1/2 -translate-y-1/2 z-20 lg:p-3 p-2 bg-neutral-300/10 backdrop-blur-md rounded-full ring-neutral-300/30 ring-1 shadow-xl cursor-pointer"
 						>
 							<ChevronRight />
 						</button>

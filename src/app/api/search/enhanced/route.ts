@@ -20,6 +20,44 @@ export async function GET(req: NextRequest) {
 	const cacheKey = `search:${query.toLowerCase().trim()}:${type}:${strict}`;
 	const encoder = new TextEncoder();
 
+	// const cached = await getCache(cacheKey);
+
+	// if (cached) {
+
+	// 	try {
+
+	// 		const { results, intent } = JSON.parse(cached);
+	
+	// 		const stream = new ReadableStream({
+	// 			start(controller) {
+
+	// 				const send = (data: any) => controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
+
+	// 				send({ type: "results", results: results.filter((r: any) => r._source === "title") });
+	// 				send({ type: "intent", intent });
+
+	// 				const nonTitle = results.filter((r: any) => r._source !== "title");
+
+	// 				if (nonTitle.length > 0) send({ type: "append", results: nonTitle, label: "cached" });
+	// 				send({ type: "done" });
+
+	// 				controller.close();
+
+	// 			}
+	// 		});
+
+	// 		return new Response(stream, {
+	// 			headers: {
+	// 				"Content-Type": "text/event-stream",
+	// 				"Cache-Control": "no-cache",
+	// 				"Connection": "keep-alive",
+	// 			}
+	// 		});
+
+	// 	} catch {};
+
+	// };
+
 	const stream = new ReadableStream({
 		async start(controller) {
 			let closed = false;
@@ -41,19 +79,23 @@ export async function GET(req: NextRequest) {
 
 				const titleResults = await searchByTitle(query, type);
 				const filteredTitle = strict ? await filterCurated(titleResults) : titleResults;
-				send({ type: "results", results: tagSource(filteredTitle, "title") });
+				const taggedTitle = tagSource(filteredTitle, "title");
+				send({ type: "results", results: taggedTitle });
 
 				const intent = await parseSearchIntent(query);
 				send({ type: "intent", intent });
 
 				const semanticResults = await semanticSearchWithDetails(query, type, strict, intent);
 				const batches: { results: any[]; label: string }[] = [];
+				const allTagged: any[] = [...taggedTitle];
 
 				if (semanticResults.length > 0) {
 
 					const tagged = tagSource(semanticResults, "semantic");
 
 					batches.push({ results: tagged, label: "semantic" });
+					allTagged.push(...tagged);
+
 					send({ type: "append", results: tagged, label: "semantic" });
 
 				};
@@ -121,6 +163,9 @@ export async function GET(req: NextRequest) {
 				];
 
 				await Promise.allSettled(allSearches);
+
+				// await setCache(cacheKey, JSON.stringify({ results: allTagged, intent }));
+
 
 				send({ type: "done" });
 

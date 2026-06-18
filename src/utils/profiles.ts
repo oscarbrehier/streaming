@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { createClient } from "./supabase/server";
 import bcrypt from "bcryptjs";
 import { MAX_USER_PROFILES } from "./constants";
+import { redirect } from "next/navigation";
 
 export async function getActiveProfileId(): Promise<string | null> {
 	const cookieStore = await cookies();
@@ -202,4 +203,10 @@ export async function deleteViewingProfile(profileId: string): Promise<{ success
 
 	return { success: true };
 
+};
+
+export async function requireActiveProfileId(): Promise<string> {
+	const profileId = await getActiveProfileId();
+	if (!profileId) redirect("/profiles");
+	return profileId;
 };

@@ -12,9 +12,10 @@ interface ButtonProps {
     onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
     className?: string;
     disabled?: boolean;
+    collapseLabel?: boolean;
 }
 
-export function Button({ label, icon, variant = "solid", size = "lg", href, onClick, className, disabled, ...props  }: ButtonProps & React.ComponentProps<"button">) {
+export function Button({ label, icon, variant = "solid", size = "lg", href, onClick, className, disabled, collapseLabel = true, ...props }: ButtonProps & React.ComponentProps<"button">) {
     const base = cn(
         "capitalize flex items-center justify-center transition-all ease-in-out",
         size === "lg" && "text-md h-12 px-6 rounded-full sm:space-x-4",
@@ -31,20 +32,20 @@ export function Button({ label, icon, variant = "solid", size = "lg", href, onCl
         className
     );
 
-	const content = (
-		<>
-			{icon && <span className="mb-0.5">{icon}</span>}
-			{label && <span className="sm:block hidden">{label}</span>}
-		</>
-	);
+    const content = (
+        <>
+            {icon && <span className="mb-0.5">{icon}</span>}
+            {label && <span className={collapseLabel ? "hidden sm:block" : undefined}>{label}</span>}
+        </>
+    );
 
-	if (href && !disabled) {
-		return <Link href={href} className={base}>{content}</Link>;
-	}
+    if (href && !disabled) {
+        return <Link href={href} className={base}>{content}</Link>;
+    }
 
-	return (
-		<button onClick={onClick} disabled={disabled} className={base} {...props}>
-			{content}
-		</button>
-	);
+    return (
+        <button onClick={onClick} disabled={disabled} className={base} {...props}>
+            {content}
+        </button>
+    );
 }

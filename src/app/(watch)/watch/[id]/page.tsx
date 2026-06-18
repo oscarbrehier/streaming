@@ -4,7 +4,7 @@ import { createClient } from "@/utils/supabase/server";
 import { getMovie } from "@/lib/tmdb/movie";
 import { connection } from "next/server";
 import { getStreamingSources } from "@/lib/api/streaming";
-import { getActiveProfileId } from "@/utils/profiles";
+import { getActiveProfileId, requireActiveProfileId } from "@/utils/profiles";
 
 interface PageProps {
 	params: Promise<{ id: string }>;
@@ -19,9 +19,7 @@ async function updateUserMediaStatus(
 
 	await connection();
 
-	let profileId = await getActiveProfileId();
-
-	if (!profileId) throw "TODO_profile_id";
+	const profileId = await requireActiveProfileId();
 
 	let { data, error } = await supabase
 		.from("user_media_status")

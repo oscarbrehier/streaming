@@ -1,9 +1,7 @@
 "use client"
 
 import { cn } from "@/lib/utils";
-import { constructImg } from "@/lib/tmdb/constructImg";
 import { Sparkle } from "lucide-react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { SearchBar } from "./SearchBar";
@@ -12,22 +10,9 @@ import { Switch } from "@/components/ui/switch";
 import { deduplicateAndSort } from "@/lib/tmdb/search";
 import { BackdropCard } from "@/components/cards/Backdrop";
 
-export interface TMDBMovie {
-	id: number;
-	title?: string;
-	name?: string;
-	overview: string;
-	poster_path: string | null;
-	backdrop_path: string | null;
-	release_date?: string;
-	first_air_date?: string;
-	vote_average: number;
-	type?: "movie" | "tv";
-};
-
 export interface TMDBSearchResponse {
 	page: number;
-	results: TMDBMovie[];
+	results: SearchResult[];
 	total_pages: number;
 	total_results: number;
 };
@@ -124,7 +109,7 @@ export function SearchForm({
 		setHasAnyResults(false);
 
 		const seen = new Set<number>();
-		let accumulated: TMDBMovie[] = [];
+		let accumulated: SearchResult[] = [];
 
 		console.log("QUERY:", query);
 
@@ -172,7 +157,7 @@ export function SearchForm({
 								setHasAnyResults(true);
 
 								accumulated = data.results;
-								data.results.forEach((r: TMDBMovie) => seen.add(r.id));
+								data.results.forEach((r: SearchResult) => seen.add(r.id));
 
 								setEnhancedResults([...accumulated]);
 
@@ -193,13 +178,9 @@ export function SearchForm({
 								if (data.intent.genres?.length) chips.push({ label: "GENRE", value: data.intent.genres.slice(0, 2).join(", ") });
 								if (data.intent.movements?.length) chips.push({ label: "MOVEMENT", value: data.intent.movements[0] });
 								if (data.intent.keywords?.length) chips.push({ label: "MOOD", value: data.intent.keywords.slice(0, 2).join(", ") });
-								if (data.intent.period) chips.push({ label: "ERA", value: `${data.intent.period.from}–${data.intent.period.to}` });
+								if (data.intent.period) chips.push({ label: "ERA", value: `${data.intent.period.from}–${data.intent.period.to ?? ""}` });
 
-								chips.forEach((chip, i) => {
-									setTimeout(() => {
-										setIntentChips(prev => [...prev, chip]);
-									}, i * 150);
-								});
+								setIntentChips(chips);
 
 							};
 
@@ -208,7 +189,7 @@ export function SearchForm({
 								setPhase({ ...SEARCH_PHASES.append });
 								setProgress(prev => Math.min(prev + 10, 90));
 
-								let newItems = data.results.filter((r: TMDBMovie) => !seen.has(r.id));
+								let newItems = data.results.filter((r: SearchResult) => !seen.has(r.id));
 
 								if (intentPeriodRef.current && (intentRef.current?.directors?.length > 0 || intentRef.current?.movements?.length > 0)) {
 
@@ -231,7 +212,7 @@ export function SearchForm({
 									);
 								};
 
-								newItems.forEach((r: TMDBMovie) => seen.add(r.id));
+								newItems.forEach((r: SearchResult) => seen.add(r.id));
 								accumulated = deduplicateAndSort([...accumulated, ...newItems]);
 
 								setEnhancedResults([...accumulated]);
@@ -298,7 +279,7 @@ export function SearchForm({
 
 	return (
 
-		<div className="flex-1 w-full flex flex-col p-20 space-y-10">
+		<div className="flex-1 w-screen flex flex-col xl:p-20 lg:p-10 p-6 space-y-10">
 
 			<div className="w-full flex items-center justify-between ">
 
@@ -315,7 +296,7 @@ export function SearchForm({
 
 			<div className="h-px w-full bg-ink4/38 my-6 mt-0" />
 
-			<div className="flex items-center justify-between space-x-4">
+			<div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
 
 				<div className="flex space-x-2">
 
@@ -328,6 +309,7 @@ export function SearchForm({
 							variant={c.path === mediaType ? "secondary" : "outline"}
 							onClick={() => setMediaType(c.path as MediaType)}
 							className={cn(c.path !== mediaType && "text-ink2 hover:text-ink")}
+							collapseLabel={false}
 						/>
 
 					))}
@@ -335,7 +317,7 @@ export function SearchForm({
 				</div>
 
 				<div className={cn(
-					"flex items-center space-x-4 p-2 pl-3 rounded-full text-sm border",
+					"flex items-center space-x-4 h-8 px-2 pl-3 rounded-full text-sm border",
 					strict ? "bg-lavender/10 border-lavender/20" : "bg-panel"
 				)}>
 
@@ -369,33 +351,30 @@ export function SearchForm({
 			</div>
 
 
+			{query && intentChips.length > 0 && (
 
-			<div className="w-full rounded-2xl flex flex-col justify-center space-y-2">
+				<div className="w-full flex flex-col justify-center space-y-2">
 
-				<div className="flex items-center space-x-2">
-					<div className="size-1 rounded-full bg-olive animate-pulse" />
-					<p className="uppercase font-jet-mono text-sm text-ink3">{intentChips ? "Looking for" : "Reading you search"}</p>
+					<div className="flex items-center space-x-2">
+						<div className="size-1 rounded-full bg-olive animate-pulse" />
+						<p className="uppercase font-jet-mono text-sm text-ink3">Looking for</p>
+					</div>
+
+					<div className="flex flex-wrap gap-2">
+						{intentChips.map((chip, i) => (
+							<div
+								key={i}
+								className="flex items-center space-x-2 bg-panel border border-panel2 py-1.5 px-3 rounded-full animate-in fade-in slide-in-from-bottom-2 duration-300"
+							>
+								<p className="uppercase font-jet-mono text-olive text-xs">{chip.label}</p>
+								<p className="text-xs sm:text-sm text-ink2 capitalize">{chip.value}</p>
+							</div>
+						))}
+					</div>
+
 				</div>
 
-				<div className="flex items-center space-x-4 ">
-
-					{intentChips?.map((chip, i) => (
-
-						<div
-							key={i}
-							className="flex items-center space-x-4 bg-panel border border-panel2 py-2 px-4 rounded-full animate-in fade-in slide-in-from-bottom-2 duration-300"
-						>
-							<p className="uppercase font-jet-mono text-olive text-xs">{chip.label}</p>
-							<p className="text-sm text-ink2">{chip.value}</p>
-						</div>
-
-					))}
-
-				</div>
-
-			</div>
-
-
+			)}
 
 			<div className="w-full flex flex-col space-y-2">
 
@@ -434,7 +413,7 @@ export function SearchForm({
 
 				<div className="flex-1 w-full flex items-center justify-center animate-in fade-in slide-in-from-bottom-4 duration-500">
 
-					<div className="flex flex-col items-center space-y-8">
+					<div className="w-full flex flex-col items-center space-y-8">
 
 						{strict ? (
 
@@ -442,7 +421,7 @@ export function SearchForm({
 								<p className="text-3xl font-bold text-center">
 									No curated results for
 									<br />
-									<span className="text-lavender">"{query}"</span>
+									<span className="inline-block max-w-70 sm:max-w-100 truncate align-bottom text-lavender">{query}</span>
 								</p>
 
 								<div className="text-center">
@@ -501,7 +480,7 @@ export function SearchForm({
 			)}
 
 			<div className={cn(
-				"w-full grid lg:grid-cols-5 md:grid-cols-3 sm:grid-cols-1 gap-1 auto-rows-min transition-all duration-500",
+				"w-full grid 2xl:grid-cols-5 xl:grid-cols-4 lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1 gap-1 auto-rows-min transition-all duration-500",
 				isEnhancing && !hasAnyResults ? "opacity-60 scale-[0.99]" : "opacity-100 scale-100"
 			)}>
 
