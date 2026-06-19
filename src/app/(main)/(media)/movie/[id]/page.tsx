@@ -14,6 +14,7 @@ import { MovieOverview } from "@/components/MovieOverview";
 import { CreditCard } from "@/components/cards/Credit";
 import { getMediaStatus } from "@/utils/supabase/queries/userMedia";
 import { formatTimeHuman } from "@/utils/timeFormat";
+import { CreditsGrid } from "../../CreditsGrid";
 
 interface PageProps {
 	params: Promise<{ id: string }>;
@@ -31,7 +32,7 @@ export default async function Page({
 	const movie = await getMovie(mediaId, { credits: true });
 
 	const credits = movie.credits;
-	const people = getTopCredits(credits);
+	const people = getTopCredits(credits, 10);
 
 	const videos = await getMovieVideos(mediaId);
 
@@ -83,22 +84,27 @@ export default async function Page({
 					<MovieOverview data={movie}>
 
 						{watchedPercent !== null && watchedPercent > 0 && (
+
 							<div className="space-y-2 w-full">
+
 								<div className="h-1 w-full max-w-md bg-neutral-700 rounded-full overflow-hidden">
 									<div
 										className="h-full rounded-full bg-linear-to-r from-periwinkle to-apricot"
 										style={{ width: `${watchedPercent}%` }}
 									/>
 								</div>
+
 								{remainingSec && (
 									<p className="text-xs text-ink/50 font-jet-mono uppercase">
 										{formatTimeHuman(remainingSec)} left
 									</p>
 								)}
+
 							</div>
+
 						)}
 
-						<div className="flex space-x-4">
+						<div className="flex sm:space-x-4 space-x-2 ">
 
 							<Button
 								href={`/watch/${mediaId}`}
@@ -115,7 +121,7 @@ export default async function Page({
 
 				</section>
 
-				<section className="px-40 pt-10 pb-20 relative space-y-20">
+				<section className="xl:px-40 lg:px-10 px-4 pt-10 pb-20 relative space-y-20">
 
 					<div className="space-y-2">
 
@@ -129,13 +135,7 @@ export default async function Page({
 
 						</div>
 
-						<div className="grid grid-cols-10 gap-1">
-
-							{people.map((person, i) => (
-								<CreditCard key={`${person.id}-${i}`} person={person} />
-							))}
-
-						</div>
+						<CreditsGrid people={people} />
 
 					</div>
 
@@ -143,7 +143,7 @@ export default async function Page({
 
 						<p className="font-semibold uppercase">Trailers & extras</p>
 
-						<div className="flex space-x-4">
+						<div className="grid xl:grid-cols-4 grid-cols-2 gap-1">
 
 							{videos
 								.sort((a, b) => {
@@ -161,7 +161,7 @@ export default async function Page({
 										className=""
 									>
 
-										<div className="relative h-52 aspect-video overflow-hidden">
+										<div className="relative aspect-video overflow-hidden">
 											<img
 												src={`https://img.youtube.com/vi/${v.key}/hqdefault.jpg`}
 												alt={v.name}
