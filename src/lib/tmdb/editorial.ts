@@ -1,4 +1,5 @@
 import { getPerson } from "./api";
+import { filterCurated } from "./curated";
 import { fetchTMDB, fetchUntilEnough } from "./fetchTMDB";
 
 const COUNTRY_DECADES = [
@@ -53,26 +54,31 @@ export function getCurrentDirector() {
 	return ESSENTIAL_DIRECTORS[getWeekIndex() % ESSENTIAL_DIRECTORS.length];
 };
 
-export async function getDirectorsEssential(directorName: string): Promise<{
-	director: string;
-	items: MovieDetailsWithImages[];
-} | null> {
+export async function getDirectorsEssential(directorName: string): Promise<{ director: string; directorId?: number; items: any[] } | null> {
 
-	const person = await getPerson(directorName);
-	if (person.length == 0) return null;
-
-	const director = person[0];
-
-	const data = await fetchUntilEnough<MovieDetailsWithImages>(
-		page => `/discover/movie?with_crew=${director.id}&sort_by=vote_average.desc&vote_count.gte=100&page=${page}`,
-		"movie",
-		8,
-		3
+	const personRes = await fetchTMDB(
+		`/search/person?query=${encodeURIComponent(directorName)}&language=en-US`,
+		{ next: { revalidate: 604800 } }
 	);
 
+	const person = personRes.results?.[0];
+	if (!person) return null;
+
+	const credits = await fetchTMDB(
+		`/person/${person.id}/movie_credits`,
+		{ next: { revalidate: 604800 } }
+	);
+
+	const directed = (credits.crew ?? [])
+		.filter((c: any) => c.job === "Director")
+		.sort((a: any, b: any) => (b.vote_count ?? 0) - (a.vote_count ?? 0));
+
+	const filtered = await filterCurated(directed);
+
 	return {
-		director: director.name,
-		items: data
+		director: directorName,
+		directorId: person.id,
+		items: filtered,
 	};
 
 };

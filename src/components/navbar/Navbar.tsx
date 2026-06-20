@@ -21,7 +21,7 @@ interface NavbarProps {
 const links = [
 	{ icon: Home, path: "/", label: "home" },
 	{ icon: Search, path: "/search", label: "search" },
-	{ icon: LayoutGrid, path: "/browse", label: "browse" },
+	// { icon: LayoutGrid, path: "/browse", label: "browse" },
 	{ icon: Bookmark, path: "/list", label: "my list" },
 ];
 

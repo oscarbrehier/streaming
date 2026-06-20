@@ -10,6 +10,7 @@ import { CategorySelector } from "./CategorySelector";
 import { getClassics, getCollection, getCurrentCountryDecade, getCurrentDirector, getDirectorsEssential, getFeaturedFilm, getFromCountry, getHiddenGems, getRecentAcclaimed, getWorldCinema } from "@/lib/tmdb/editorial";
 import { BackdropCard } from "@/components/cards/Backdrop";
 import { cn } from "@/lib/utils";
+import { MediaRow } from "@/components/MediaRow";
 
 export default async function Page({
 	searchParams
@@ -40,15 +41,23 @@ export default async function Page({
 
 	const collection = await getCollection("french_new_wave");
 
-	const carousels: CarouselItem<any>[] = [
-		{ data: directorsEssential?.items ?? [], Card: BackdropCard, title: `Essential ${directorsEssential?.director ?? director}` },
-		{ data: classics, Card: BackdropCard, title: "Classics" },
-		{ data: fromCountry, Card: BackdropCard, title: label },
-		...(collection ? [{ data: collection.items, Card: BackdropCard, title: collection.label }] : []),
-		{ data: watchlist, Card: BackdropCard, title: "Watchlist" },
-		{ data: recentlyWatched, Card: BackdropCard, title: "Continue Watching" },
-	];
+	// const carousels: CarouselItem<any>[] = [
+	// 	{ data: directorsEssential?.items ?? [], Card: BackdropCard, title: `Essential ${directorsEssential?.director ?? director}` },
+	// 	{ data: classics, Card: BackdropCard, title: "Classics" },
+	// 	{ data: fromCountry, Card: BackdropCard, title: label },
+	// 	...(collection ? [{ data: collection.items, Card: BackdropCard, title: collection.label }] : []),
+	// 	{ data: watchlist, Card: BackdropCard, title: "Watchlist" },
+	// 	{ data: recentlyWatched, Card: BackdropCard, title: "Continue Watching" },
+	// ];
 
+	const rows = [
+		{ data: directorsEssential?.items ?? [], title: `Essential ${directorsEssential?.director ?? director}`, href: directorsEssential?.directorId ? `/person/${directorsEssential.directorId}` : undefined },
+		{ data: classics, title: "Classics", href: "/collection/classics" },
+		{ data: fromCountry, title: label, href: `/country/${country}?decade=${decade}` },
+		...(collection ? [{ data: collection.items, title: collection.label, href: `/collection/french_new_wave` }] : []),
+		{ data: watchlist, title: "Watchlist", href: "/list" },
+		{ data: recentlyWatched, title: "Continue Watching", href: "/history" },
+	];
 
 	return (
 
@@ -63,7 +72,7 @@ export default async function Page({
 				"xl:px-40 lg:px-10 px-4",
 			)}>
 
-				{carousels.map((item, idx) => (
+				{/* {carousels.map((item, idx) => (
 					item.data.length > 0 && (
 						<Carousel
 							key={idx}
@@ -73,6 +82,10 @@ export default async function Page({
 							ranked={item.ranked}
 						/>
 					)
+				))} */}
+
+				{rows.map((row, idx) => (
+					<MediaRow key={idx} {...row} Card={BackdropCard} />
 				))}
 
 			</div>
