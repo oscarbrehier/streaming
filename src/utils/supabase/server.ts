@@ -1,6 +1,5 @@
 "use server"
 
-import { BASE_PATH } from '@/lib/basePath';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
@@ -42,7 +41,7 @@ export async function createClient() {
 							name,
 							value,
 							...options,
-							path: BASE_PATH
+							path: "/"
 						}))
 					} catch {
 					}

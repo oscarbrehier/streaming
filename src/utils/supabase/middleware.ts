@@ -1,6 +1,5 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextRequest, NextResponse } from 'next/server'
-import { getRedirectURL } from '../redirect';
 
 async function check2FAStatus(access_token: string | undefined, request: NextRequest) {
 
@@ -32,11 +31,7 @@ async function check2FAStatus(access_token: string | undefined, request: NextReq
 
 export async function updateSession(request: NextRequest) {
 
-	let internalPathname = request.nextUrl.pathname;
-
-	if (process.env.NODE_ENV === "production") {
-		internalPathname = internalPathname.replace(/^\/streaming/, "");
-	};
+	let pathname = request.nextUrl.pathname;
 
 	let supabaseResponse = NextResponse.next({
 		request,
@@ -69,13 +64,13 @@ export async function updateSession(request: NextRequest) {
 	const { data, error } = await supabase.auth.getClaims();
 	const user = data?.claims;
 
-	const isPublic = internalPathname.startsWith('/login') || internalPathname.startsWith('/register')
+	const isPublic = pathname.startsWith('/login') || pathname.startsWith('/register')
 
 	if ((!user || error) && !isPublic) {
-		return NextResponse.redirect(new URL(getRedirectURL("/login"), request.url));
+		return NextResponse.redirect(new URL("/login", request.url));
 	};
 
-	if (user && !isPublic && !internalPathname.startsWith("/2fa")) {
+	if (user && !isPublic && !pathname.startsWith("/2fa")) {
 
 		const { data: { session } } = await supabase.auth.getSession();
 		const access_token = session?.access_token;
@@ -83,7 +78,7 @@ export async function updateSession(request: NextRequest) {
 		const is2FARequired = await check2FAStatus(access_token, request);
 
 		if (is2FARequired) {
-			return NextResponse.redirect(new URL(getRedirectURL("/2fa"), request.url));
+			return NextResponse.redirect(new URL("/2fa", request.url));
 		} else {
 
 			supabaseResponse.cookies.set("2fa_verified", "true", {
@@ -98,18 +93,18 @@ export async function updateSession(request: NextRequest) {
 
 	};
 
-	if (user && !isPublic && !internalPathname.startsWith("/2fa")) {
+	if (user && !isPublic && !pathname.startsWith("/2fa")) {
 		
 		const profileId = request.cookies.get("active_profile")?.value;
-		const isOnProfilePage = internalPathname.startsWith("/profiles");
+		const isOnProfilePage = pathname.startsWith("/profiles");
 
 		if (!profileId && !isOnProfilePage) {
-			return NextResponse.redirect(new URL(getRedirectURL("/profiles"), request.url));
+			return NextResponse.redirect(new URL("/profiles", request.url));
 		};
 
 	};
 
-	const isAdminRoute = internalPathname.startsWith("/dashboard");
+	const isAdminRoute = pathname.startsWith("/dashboard");
 
 	if (isAdminRoute && user) {
 
