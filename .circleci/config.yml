@@ -57,12 +57,9 @@ jobs:
           name: Deploy to VPS
           command: |
             ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} "mkdir -p ~/streaming"
-
             cd ~/repo
-            tar czf deploy.tar.gz .next node_modules package.json pnpm-lock.yaml public next.config.ts components.json tsconfig.json
-
+            tar czf deploy.tar.gz .next package.json pnpm-lock.yaml public next.config.ts components.json tsconfig.json
             scp -o StrictHostKeyChecking=no deploy.tar.gz deployer@${SERVER_IP}:~/streaming/
-
             ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} "
               cd ~/streaming
               tar xzf deploy.tar.gz
