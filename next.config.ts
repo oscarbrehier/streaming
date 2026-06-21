@@ -15,8 +15,6 @@ const nextConfig: NextConfig = {
 		];
 	},
 
-	basePath: isProd ? "/streaming" : "",
-
 	cacheComponents: true,
 
 	reactCompiler: true,
