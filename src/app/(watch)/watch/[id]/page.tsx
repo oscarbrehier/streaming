@@ -86,6 +86,16 @@ export default async function Page({ params }: PageProps) {
 		return <MediaNotFound />
 	};
 
+	const proxiedSources = sources.files.map((s) => {
+
+		const proxied = `/api/proxy/m3u8?url=${encodeURIComponent(s.file)}`;
+		return {
+			...s,
+			file: proxied,
+		};
+
+	});
+
 	return (
 
 		<VideoPlayer
@@ -94,7 +104,10 @@ export default async function Page({ params }: PageProps) {
 			userId={user.id}
 			profileId={profileId}
 			mediaStatus={mediaStatus}
-			sources={sources}
+			sources={{
+				files: proxiedSources,
+				subtitles: sources.subtitles
+			}}
 		/>
 
 	);
