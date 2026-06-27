@@ -56,16 +56,16 @@ jobs:
       - run:
           name: Deploy to VPS
           command: |
-            ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} "mkdir -p ~/streaming"
+            ssh -o StrictHostKeyChecking=no deploy@${SERVER_IP} "mkdir -p /opt/streaming"
             cd ~/repo
             tar czf deploy.tar.gz .next package.json pnpm-lock.yaml public next.config.ts components.json tsconfig.json
-            scp -o StrictHostKeyChecking=no deploy.tar.gz deployer@${SERVER_IP}:~/streaming/
-            ssh -o StrictHostKeyChecking=no deployer@${SERVER_IP} "
-              cd ~/streaming
+            scp -o StrictHostKeyChecking=no deploy.tar.gz deploy@${SERVER_IP}:/opt/streaming/
+            ssh -o StrictHostKeyChecking=no deploy@${SERVER_IP} "
+              cd /opt/streaming
               tar xzf deploy.tar.gz
               rm deploy.tar.gz
               pnpm install --prod --frozen-lockfile
-              pm2 restart streaming || pm2 start pnpm --name streaming --cwd ~/streaming -- start
+              pm2 restart streaming || pm2 start pnpm --name streaming --cwd /opt/streaming -- start
             "
 
 workflows:
