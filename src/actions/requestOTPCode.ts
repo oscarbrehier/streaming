@@ -112,7 +112,7 @@ export async function requestOTPCode(): Promise<{ error: string | null }> {
 				resource: "otp_request",
 			});
 
-			return { error: "Please wait 60 seconds before requesting anoter code." };
+			return { error: "Please wait 60 seconds before requesting another code." };
 
 		};
 

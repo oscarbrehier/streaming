@@ -64,7 +64,7 @@ jobs:
               cd /opt/streaming
               tar xzf deploy.tar.gz
               rm deploy.tar.gz
-              pnpm install --prod --frozen-lockfile
+              pnpm install --prod --frozen-lockfile --ignore-scripts
               pm2 restart streaming || pm2 start pnpm --name streaming --cwd /opt/streaming -- start
             "
 

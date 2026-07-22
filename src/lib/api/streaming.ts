@@ -91,6 +91,7 @@ export async function getStreamingSources(mediaId: string, type: "movie" | "tv")
 export async function scrape(mediaId: string) {
 
 	const media = await getMovieFromTmdb(mediaId);
+	console.log(media);
 	const res = await getLookmovie(media);
 
 	return res;
