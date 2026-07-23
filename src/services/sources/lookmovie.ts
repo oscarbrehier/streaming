@@ -1,4 +1,4 @@
-import { MovieInfo, TvInfo } from "./tmdb";
+import { MovieMedia } from "./tmdb";
 import { v4 as uuid } from "uuid";
 
 async function hashString(str: string) {
@@ -13,19 +13,26 @@ async function hashString(str: string) {
 
 async function search(query: string) {
 
-	const cacheKey = `search-${await hashString(query)}`;
+	try {
 
-	const res = await fetch(`https://www.lookmovie2.to/api/v1/movies/do-search/?q=${encodeURIComponent(query)}`, {
-		headers: {
-			'Cache-Control': "max-age=3600",
-			'x-cache-key': cacheKey
-		}
-	});
+		const cacheKey = `search-${await hashString(query)}`;
 
-	if (!res.ok) return null;
+		const res = await fetch(`https://www.lookmovie2.to/api/v1/movies/do-search/?q=${encodeURIComponent(query)}`, {
+			headers: {
+				'Cache-Control': "max-age=3600",
+				'x-cache-key': cacheKey
+			}
+		});
 
-	const data = await res.json();
-	return data;
+		console.log("QUERY", res.status)
+		if (!res.ok) return null;
+
+		const data = await res.json();
+		return data;
+
+	} catch (err) {
+		return null;
+	};
 
 };
 
@@ -49,7 +56,7 @@ async function getLibrary(mediaId: string) {
 
 };
 
-export async function getLookmovie(media: MovieInfo): Promise<MediaSources> {
+export async function getLookmovie(media: MovieMedia): Promise<MediaSources> {
 
 	const data: MediaSources = {
 		files: [],

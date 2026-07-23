@@ -63,18 +63,18 @@ export function ViewControls({
 	const settings = useSettingsController("sources");
 
 	const panelConfigs = useMemo<SettingsPanelConfig[]>(() => [
-		// {
-		// 	id: "sources",
-		// 	title: "Sources",
-		// 	trigger: { icon: Cloud },
-		// 	render: () => (
-		// 		<MediaSourceSelector
-		// 			sources={sources.files}
-		// 			currentSource={currentSource}
-		// 			onSourceChange={onSourceChange}
-		// 		/>
-		// 	),
-		// },
+		{
+			id: "sources",
+			title: "Sources",
+			trigger: { icon: Cloud },
+			render: () => (
+				<MediaSourceSelector
+					sources={sources.files}
+					currentSource={currentSource}
+					onSourceChange={onSourceChange}
+				/>
+			),
+		},
 		{
 			id: "subtitles",
 			title: "Subtitles",

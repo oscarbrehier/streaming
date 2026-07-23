@@ -63,6 +63,8 @@ export default async function Page({ params }: PageProps) {
 	const { id } = await params;
 
 	const { sources } = await getStreamingSources(id, "movie");
+
+	console.log("SOURCES", sources);
 	
 	if (!sources?.files || sources?.files.length === 0) return <MediaNotFound />
 	
@@ -104,10 +106,7 @@ export default async function Page({ params }: PageProps) {
 			userId={user.id}
 			profileId={profileId}
 			mediaStatus={mediaStatus}
-			sources={{
-				files: proxiedSources,
-				subtitles: sources.subtitles
-			}}
+			sources={sources}
 		/>
 
 	);

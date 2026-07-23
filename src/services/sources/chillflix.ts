@@ -1,4 +1,5 @@
 import { v4 as uuid } from "uuid";
+import { MovieMedia } from "./tmdb";
 
 interface StreamProvider {
 	id: string;
@@ -17,9 +18,13 @@ interface StreamSource {
 	quality: string;
 };
 
-async function getProviders(): Promise<string[]> {
+async function getProviders(mediaId: number): Promise<string[]> {
 
-	const res = await fetch("https://www.chillflix.lol/api/stream-sources");
+	const res = await fetch("https://www.chillflix.lol/api/stream-sources", {
+		headers: {
+			'Referer': `https://www.chillflix.lol/movie/${mediaId}`
+		}
+	});
 
 	if (!res.ok) return [];
 
@@ -33,16 +38,16 @@ async function getProviders(): Promise<string[]> {
 
 };
 
-export async function getChillflix(mediaId: number): Promise<MediaSources> {
+export async function getChillflix(movie: MovieMedia): Promise<MediaSources> {
 
-	const providers = await getProviders();
+	const providers = await getProviders(movie.tmdb);
 
 	const results = await Promise.all(
 		providers.map(async (provider) => {
 
 			const params = new URLSearchParams({
 				type: "movie",
-				tmdbId: String(mediaId),
+				tmdbId: String(movie.tmdb),
 				retry: "1",
 				fresh: "1",
 				provider,
@@ -50,10 +55,18 @@ export async function getChillflix(mediaId: number): Promise<MediaSources> {
 
 			try {
 
-				const res = await fetch(`https://www.chillflix.lol/api/cinepro/sources?${params}`);
+				const res = await fetch(`https://www.chillflix.lol/api/cinepro/sources?${params}`, {
+					headers: {
+						'Referer': `https://www.chillflix.lol/movie/${movie.tmdb}`
+					}
+				});
+				console.log("RES", res.status, res)
 				if (!res.ok) return [];
 
 				const data: { sources?: StreamSource[] } = await res.json();
+
+				console.log("DATA", data)
+
 				return (data.sources ?? [])
 					.filter((s) => s.type === "hls")
 					.map((s) => ({
