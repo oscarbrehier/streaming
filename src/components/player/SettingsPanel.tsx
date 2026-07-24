@@ -71,7 +71,7 @@ export function SettingsPanel({
 
 			</div>
 
-			<div className="h-96 w-full p-2">
+			<div className="h-96 w-full p-2 mb-4">
 				{children}
 			</div>
 
@@ -98,9 +98,9 @@ export function SettingsOptionButton({
 		<button
 			onClick={onClick}
 			className={cn(
-				"w-full py-3 px-4 rounded-lg",
+				"w-full py-3 px-4 rounded-lg cursor-pointer",
 				"flex items-center space-x-4",
-				active && "bg-panel2",
+				active ? "bg-panel2" : "hover:bg-panel",
 				className
 			)}
 			{...props}

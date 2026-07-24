@@ -61,6 +61,7 @@ export default function VideoPlayer({
 	const videoRef = useRef<HTMLVideoElement>(null);
 	const playerRef = useRef<HTMLDivElement>(null);
 	const hlsRef = useRef<Hls>(null);
+	const savedTimeRef = useRef<number>(0);
 
 	const {
 		timecode, setTimecode,
@@ -90,6 +91,11 @@ export default function VideoPlayer({
 		const wasSwitched = nextSource();
 		if (!wasSwitched) notFound();
 
+	};
+
+	function handleSourceChange(sourceIdx: number) {
+		savedTimeRef.current = videoRef.current?.currentTime ?? 0;
+		changeSource(sourceIdx);
 	};
 
 	// HLS support
@@ -438,10 +444,22 @@ export default function VideoPlayer({
 				ref={videoRef}
 				onLoadedMetadata={() => {
 
-					if (videoRef.current && mediaStatus.progress_sec > 0) {
+					if (!videoRef.current) return;
+
+					const restoreTime = savedTimeRef.current > 0
+						? savedTimeRef.current
+						: mediaStatus.progress_sec > 0
+							? mediaStatus.progress_sec
+							: null;
+
+					if (restoreTime) {
+
 						setPlayerState("loading");
-						videoRef.current.currentTime = mediaStatus.progress_sec;
+
+						videoRef.current.currentTime = restoreTime;
 						updatePlaybackTime();
+						savedTimeRef.current = 0;
+
 					};
 
 				}}
@@ -582,7 +600,7 @@ export default function VideoPlayer({
 							onQualityChange={changeQuality}
 							sources={sources}
 							currentSource={currentSource}
-							onSourceChange={(sourceIdx) => changeSource(sourceIdx)}
+							onSourceChange={(sourceIdx) => handleSourceChange(sourceIdx)}
 							onSubtitleChange={changeSubtitleTrack}
 						/>
 
