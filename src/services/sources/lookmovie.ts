@@ -70,7 +70,8 @@ export async function getLookmovie(media: MovieMedia): Promise<MediaSources> {
 	const searchRes = await search(title);
 	if (!searchRes || !searchRes.result || searchRes.result.length === 0) throw new Error("[Lookmovie] No data found for this media");
 
-	const mediaId = searchRes.result[0].id_movie;
+	const match = searchRes.result.find((m: any) => m.year === media.releaseYear);
+	const mediaId = match?.id_movie ?? searchRes.result[0]?.id_movie;
 
 	const library = await getLibrary(mediaId);
 

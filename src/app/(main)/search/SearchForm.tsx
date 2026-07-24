@@ -38,6 +38,18 @@ const SEARCH_PHASES = {
 	done: { title: "Search complete", description: null },
 } as const;
 
+function isValidQuery(query: string): boolean {
+
+	if (!query.trim()) return false;
+	if (query.length > 100) return false;
+
+	const words = query.trim().split(/\s+/);
+	if (words.some(w => w.length > 30)) return false;
+
+	return true;
+
+};
+
 export function SearchForm({
 	query,
 	type,
@@ -78,6 +90,11 @@ export function SearchForm({
 
 		setSearchQuery(value);
 
+		if (!isValidQuery(value)) {
+			router.replace(`/search?type=${mediaType}`);
+			return;
+		};
+
 		const path = value
 			? `/search?query=${encodeURIComponent(value)}&type=${mediaType}`
 			: `/search?type=${mediaType}`;
@@ -88,11 +105,18 @@ export function SearchForm({
 
 	useEffect(() => {
 
-		if (!query) {
+		if (!query || !isValidQuery(query)) {
+		
 			setEnhancedResults(null);
 			setIsEnhancing(false);
 			setIntentChips([]);
+			setPhase(null);
+			setProgress(0);
+			setSearchTriggered(false);
+			setHasAnyResults(false);
+		
 			return;
+		
 		};
 
 		enhanceController.current?.abort();
@@ -114,6 +138,13 @@ export function SearchForm({
 		console.log("QUERY:", query);
 
 		const timer = setTimeout(async () => {
+
+			if (!query || !isValidQuery(query)) {
+				setEnhancedResults(null);
+				setIsEnhancing(false);
+				setIntentChips([]);
+				return;
+			};
 
 			try {
 
@@ -459,7 +490,9 @@ export function SearchForm({
 								<p className="text-3xl font-bold text-center">
 									No results for
 									<br />
-									<span className="text-lavender">"{query}"</span>
+									<span className="text-lavender">
+										"{query.length > 40 ? `${query.slice(0, 40)}...` : query}"
+									</span>
 								</p>
 
 								<p className="text-ink/50">Try a different search term or check your spelling.</p>
