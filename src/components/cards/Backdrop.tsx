@@ -25,7 +25,7 @@ export function BackdropCard({
 	const releaseYear = (media.release_date ?? media.first_air_date)?.split("-")[0];
 	const country = getCountryName(media.origin_country?.[0] ?? media.production_countries?.[0]?.iso_3166_1);
 
-	const mediaType = media.mediaType ?? (media as any)?.media_type;
+	const mediaType = media.mediaType ?? (media as any)?.media_type ?? "movie";
 	const href = mediaType ? `/${mediaType}/${media.id}` : undefined;
 
 	const Wrapper = href

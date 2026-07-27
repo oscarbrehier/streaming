@@ -50,6 +50,8 @@ export default async function Page({
 	// 	{ data: recentlyWatched, Card: BackdropCard, title: "Continue Watching" },
 	// ];
 
+	console.log(directorsEssential?.items[1])
+
 	const rows = [
 		{ data: directorsEssential?.items ?? [], title: `Essential ${directorsEssential?.director ?? director}`, href: directorsEssential?.directorId ? `/person/${directorsEssential.directorId}` : undefined },
 		{ data: classics, title: "Classics", href: "/collection/classics" },

@@ -84,29 +84,28 @@ export function SearchForm({
 	const intentPeriodRef = useRef<{ from: number; to: number } | null>(null);
 	const intentLanguageRef = useRef<string[] | null>(null);
 
+	const urlTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
 	const displayResults: SearchResult[] = enhancedResults ?? (data?.results as unknown as SearchResult[]) ?? [];
 
 	function handleSearch(value: string) {
 
-		setSearchQuery(value);
+		if (urlTimer.current) clearTimeout(urlTimer.current);
 
-		if (!isValidQuery(value)) {
-			router.replace(`/search?type=${mediaType}`);
-			return;
-		};
-
-		const path = value
-			? `/search?query=${encodeURIComponent(value)}&type=${mediaType}`
-			: `/search?type=${mediaType}`;
-
-		router.replace(path);
-
+		urlTimer.current = setTimeout(() => {
+			router.replace(
+				isValidQuery(value)
+					? `/search?query=${encodeURIComponent(value)}&type=${mediaType}`
+					: `/search?type=${mediaType}`
+			);
+		}, 300);
+	
 	};
 
 	useEffect(() => {
 
 		if (!query || !isValidQuery(query)) {
-		
+
 			setEnhancedResults(null);
 			setIsEnhancing(false);
 			setIntentChips([]);
@@ -114,9 +113,9 @@ export function SearchForm({
 			setProgress(0);
 			setSearchTriggered(false);
 			setHasAnyResults(false);
-		
+
 			return;
-		
+
 		};
 
 		enhanceController.current?.abort();
@@ -291,10 +290,6 @@ export function SearchForm({
 			: `/search?type=${mediaType}`;
 		router.replace(path);
 	}, [mediaType]);
-
-	useEffect(() => {
-		setSearchQuery(query ?? null);
-	}, [query]);
 
 	useEffect(() => {
 
