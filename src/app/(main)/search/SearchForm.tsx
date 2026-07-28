@@ -90,6 +90,8 @@ export function SearchForm({
 
 	function handleSearch(value: string) {
 
+		setSearchQuery(value);
+
 		if (urlTimer.current) clearTimeout(urlTimer.current);
 
 		urlTimer.current = setTimeout(() => {
