@@ -11,14 +11,34 @@ const names = [
 	"Roy", "Joseph", "Bill", "Johnny", "NoHo", "Abby",
 ];
 
-function getServerName(url: string): string {
-
+function hashIndex(url: string): number {
 	const hash = SHA256(url).toString();
-	const hashInt = parseInt(hash.slice(0, 8), 16);
+	return parseInt(hash.slice(0, 8), 16) % names.length;
+}
 
-	const index = hashInt % names.length;
+function assignNames(sources: MediaSourceFile[]): string[] {
 
-	return names[index];
+	const used = new Set<number>();
+
+	return sources.map((source) => {
+
+		const start = hashIndex(source.file);
+
+		for (let i = 0; i < names.length; i++) {
+
+			const idx = (start + i) % names.length;
+
+			if (!used.has(idx)) {
+				used.add(idx);
+				return names[idx];
+			};
+
+		};
+
+		const idx = start;
+		return `${names[idx]} ${sources.length}`;
+
+	});
 
 };
 
@@ -33,7 +53,14 @@ export default function MediaSourceSelector({
 }) {
 
 	const serverNames = useMemo(() => {
-		return sources.map((source) => getServerName(source.file));
+	
+		const order = [...sources].sort((a, b) => a.file.localeCompare(b.file));
+		const nameByFile = new Map(
+			assignNames(order).map((name, i) => [order[i].file, name])
+		);
+	
+		return sources.map((s) => nameByFile.get(s.file)!);
+	
 	}, [sources]);
 
 	return (

@@ -17,7 +17,6 @@ import { useMediaState } from "@/hooks/player/useMediaState";
 import { ViewControls } from "./ViewControls";
 import { useVideoQuality } from "@/hooks/player/useVideoQuality";
 import { cn } from "@/lib/utils";
-import { glass } from "@/styles";
 import { useMediaSources } from "@/hooks/player/useMediaSources";
 import { useSubtitles } from "@/hooks/player/useSubtitles";
 import { Loader2 } from "lucide-react";
@@ -53,7 +52,6 @@ export default function VideoPlayer({
 	mediaStatus,
 	sources
 }: VideoPlayerProps) {
-
 	const { updateRating, setMediaDuration } = new MediaService(supabase, mediaId, userId, profileId);
 
 	const router = useRouter();
@@ -61,7 +59,10 @@ export default function VideoPlayer({
 	const videoRef = useRef<HTMLVideoElement>(null);
 	const playerRef = useRef<HTMLDivElement>(null);
 	const hlsRef = useRef<Hls>(null);
+	const prevDurationRef = useRef<number | null>(null);
 	const savedTimeRef = useRef<number>(0);
+	const wasPlayingRef = useRef(false);
+	const lastProgressRef = useRef<number>(0);
 
 	const {
 		timecode, setTimecode,
@@ -70,13 +71,12 @@ export default function VideoPlayer({
 		formattedTime, setFormattedTime,
 		formattedDuration, setFormattedDuration,
 		updatePlaybackTime
-	} = useMediaState(videoRef)
+	} = useMediaState(videoRef);
 
 	const [fullscreen, setFullscreen] = useState(false);
-
 	const [rating, setRating] = useState(mediaStatus.rating ?? 0);
-
 	const [playerState, setPlayerState] = useState<PlayerState>("loading");
+	const [showPlayOverlay, setShowPlayOverlay] = useState(false);
 
 	const { currentSource, changeSource, nextSource } = useMediaSources(sources);
 	const { currentTrack, changeSubtitleTrack } = useSubtitles(sources.subtitles);
@@ -86,47 +86,50 @@ export default function VideoPlayer({
 	const { controls } = useVideoControls(videoRef, isPlaying);
 	const { handleProgressUpdate } = useVideoProgress(videoRef, mediaId, userId, profileId, mediaStatus.completed);
 
-	function handleSourceFailover() {
-
+	const handleSourceFailover = useCallback(() => {
 		const wasSwitched = nextSource();
 		if (!wasSwitched) notFound();
+	}, [nextSource]);
 
-	};
+	const handleSourceChange = useCallback((sourceIdx: number) => {
 
-	function handleSourceChange(sourceIdx: number) {
 		savedTimeRef.current = videoRef.current?.currentTime ?? 0;
+		wasPlayingRef.current = !videoRef.current?.paused;
+
 		changeSource(sourceIdx);
-	};
+
+		if (wasPlayingRef.current && videoRef.current) {
+			videoRef.current.play().catch(() => {
+				console.log("Autoplay blocked, user interaction required");
+			});
+		};
+
+	}, [changeSource]);
 
 	// HLS support
 	useEffect(() => {
-
 		if (!currentSource || !currentSource.file || !videoRef.current) return;
 
 		const videoUrl = currentSource.file;
-
 		const video = videoRef.current;
 
 		if (Hls.isSupported()) {
-
 			const hls = new Hls();
 
 			setPlayerState("loading");
-
 			hlsRef.current = hls;
-
 			setupQualityListener(hls);
 
 			hls.loadSource(videoUrl);
 
 			hls.on(Hls.Events.ERROR, (event, data) => {
-
 				if (data.fatal) {
-
-					if (data.details === Hls.ErrorDetails.FRAG_LOAD_ERROR ||
-						data.details === Hls.ErrorDetails.FRAG_LOAD_TIMEOUT) {
+					if (
+						data.details === Hls.ErrorDetails.FRAG_LOAD_ERROR ||
+						data.details === Hls.ErrorDetails.FRAG_LOAD_TIMEOUT
+					) {
 						return;
-					};
+					}
 
 					setPlayerState("error");
 
@@ -138,54 +141,50 @@ export default function VideoPlayer({
 						hls.recoverMediaError();
 					} else {
 						hls.destroy();
-					};
-
-				};
-
+					}
+				}
 			});
-
-			// hls.on(Hls.Events.MANIFEST_PARSED, (_, __) => {
-			// 	setPlayerState("ready");
-			// });
 
 			hls.attachMedia(video);
 
 			return () => {
 				hls.destroy();
+				hlsRef.current = null;
+				wasPlayingRef.current = false;
+				savedTimeRef.current = 0;
 			};
-
-		};
+		}
 
 		// Safari support
 		if (video.canPlayType("application/vnd.apple.mpegurl")) {
-
 			video.src = videoUrl;
 
 			const setReady = () => setPlayerState("ready");
-			video.addEventListener("canplay", setReady);
-			video.addEventListener("loadedmetadata", setReady);
-
-			video.addEventListener("error", handleSourceFailover, { once: true });
-
-			return () => {
-				video.removeEventListener("error", handleSourceFailover);
-				video.removeEventListener("canplay", setReady);
-				video.removeEventListener("loadedmetadata", setReady);
+			const handleError = () => {
+				console.log("Safari video error, trying failover");
+				handleSourceFailover();
 			};
 
+			video.addEventListener("canplay", setReady);
+			video.addEventListener("loadedmetadata", setReady);
+			video.addEventListener("error", handleError, { once: true });
+
+			return () => {
+				video.removeEventListener("canplay", setReady);
+				video.removeEventListener("loadedmetadata", setReady);
+				video.removeEventListener("error", handleError);
+			};
 		} else {
 			video.src = videoUrl;
-		};
-
-	}, [currentSource]);
+		}
+	}, [currentSource, handleSourceFailover, setupQualityListener]);
 
 	useEffect(() => {
-
 		const video = videoRef.current;
 		if (!video) return;
 
-		const handleWaiting = () => setPlayerState(prev => (prev !== "error" ? "loading" : prev));
-		const handlePlaying = () => setPlayerState("ready");
+		const handleWaiting = () => setPlayerState(prev => prev === "error" ? prev : "loading");
+		const handlePlaying = () => setPlayerState(prev => prev === "loading" ? "ready" : prev);
 		const handleSeeked = () => {
 			if (video.readyState >= 3) setPlayerState("ready");
 		};
@@ -208,84 +207,104 @@ export default function VideoPlayer({
 			video.removeEventListener("play", handlePlayState);
 			video.removeEventListener("pause", handlePauseState);
 		};
-
 	}, [videoRef]);
 
 	useEffect(() => {
+		const duration = videoRef.current?.duration;
+		if (duration === undefined || prevDurationRef.current === duration) return;
 
-		if (!videoRef || !videoRef.current) return;
-
+		prevDurationRef.current = duration;
 		if (!mediaStatus.duration_sec) {
-			console.log(videoRef.current.duration)
-			setMediaDuration(videoRef.current.duration);
-		};
-
-	}, [videoRef.current?.duration]);
+			setMediaDuration(duration);
+		}
+	}, [videoRef.current?.duration, mediaStatus.duration_sec, setMediaDuration]);
 
 	// Update timecode display
 	useEffect(() => {
-
 		if (videoRef.current?.duration) {
 			setFormattedDuration(formatTime(videoRef.current.duration));
-		};
+		}
 
 		const playbackInterval = isPlaying ? setInterval(updatePlaybackTime, 100) : null;
-		const updateProgressInterval = setInterval(async () => handleProgressUpdate(), 20 * 1000);
+		const updateProgressInterval = setInterval(() => {
+			const currentTime = videoRef.current?.currentTime;
+			if (currentTime && Math.abs(currentTime - lastProgressRef.current) >= 5) {
+				handleProgressUpdate();
+				lastProgressRef.current = currentTime;
+			}
+		}, 20 * 1000);
 
 		return () => {
 			if (playbackInterval) clearInterval(playbackInterval);
 			clearInterval(updateProgressInterval);
 		};
-
-	}, [isPlaying, handleProgressUpdate]);
+	}, [isPlaying, handleProgressUpdate, updatePlaybackTime]);
 
 	useEffect(() => {
-
 		const handleVisibilityChange = () => {
 			if (document.visibilityState === "hidden") {
 				handleProgressUpdate();
-			};
+			}
 		};
 
 		document.addEventListener("visibilitychange", handleVisibilityChange);
 		return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
-
 	}, [handleProgressUpdate]);
 
 	useEffect(() => {
-
 		const handleBeforeUnload = () => {
-
 			const progress = videoRef.current?.currentTime;
-
 			if (!progress) return;
 			navigator.sendBeacon(`/api/progress`, JSON.stringify({
 				mediaId, userId, profileId, progress_sec: Math.floor(progress)
 			}));
-
 		};
 
 		window.addEventListener("beforeunload", handleBeforeUnload);
 		return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-
-	}, []);
+	}, [mediaId, userId, profileId]);
 
 	useEffect(() => {
-
 		return () => {
 			handleProgressUpdate();
 		};
+	}, [handleProgressUpdate]);
 
-	}, []);
+	useEffect(() => {
 
+		if (!hlsRef.current || !videoRef.current) return;
 
-	const handleMediaButtons = async () => {
+		const hls = hlsRef.current;
+		const handleQualityChange = () => {
+
+			if (wasPlayingRef.current) {
+
+				videoRef.current?.play().catch(() => {
+					console.log("Autoplay blocked after quality change");
+				});
+
+			};
+
+		};
+
+		hls.on(Hls.Events.LEVEL_SWITCHED, handleQualityChange);
+
+		return () => {
+			hls.off(Hls.Events.LEVEL_SWITCHED, handleQualityChange);
+		};
+
+	}, [wasPlayingRef.current]);
+
+	const handleMediaButtons = useCallback(async () => {
 
 		if (!videoRef.current) return;
 
 		if (isPlaying) {
+
 			videoRef.current.pause();
 			setIsPlaying(false);
+			wasPlayingRef.current = false;
+
 		} else {
 
 			try {
@@ -293,8 +312,11 @@ export default function VideoPlayer({
 				const playPromise = videoRef.current.play();
 
 				if (playPromise !== undefined) {
+
 					await playPromise;
 					setIsPlaying(true);
+					wasPlayingRef.current = true;
+
 				};
 
 			} catch (err) {
@@ -302,84 +324,70 @@ export default function VideoPlayer({
 				if (err instanceof Error && err.name === 'AbortError') {
 					console.log("Playback was interrupted by a new request");
 				} else {
-					console.error("PLayback error:", err);
+					console.error("Playback error:", err);
 				};
 
 			};
 
 		};
 
-		handleProgressUpdate();
-
-	};
+	}, [isPlaying, videoRef, setIsPlaying]);
 
 	const handleSeek = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-
 		if (!videoRef.current) return;
 
 		updatePlaybackTime();
+		wasPlayingRef.current = !videoRef.current.paused;
 
 		const newTime = (Number(e.target.value) / 100) * videoRef.current.duration;
 		videoRef.current.currentTime = newTime;
-
 		setTimecode(newTime);
-
-	}, []);
+	}, [updatePlaybackTime, setTimecode]);
 
 	const changeVolume = useCallback((value: number) => {
-
 		setVolume(value);
-
 		if (videoRef.current) {
 			videoRef.current.volume = value;
-		};
+		}
+	}, [setVolume]);
 
-	}, []);
-
-	const handleFullscreen = () => {
-
+	const handleFullscreen = useCallback(() => {
 		if (!playerRef.current) return;
 
 		if (fullscreen) {
 			document.exitFullscreen();
 		} else {
 			playerRef.current.requestFullscreen();
-		};
-
+		}
 		setFullscreen(!fullscreen);
-
-	};
+	}, [fullscreen, playerRef]);
 
 	const handleUpdateRating = (ratingValue: number) => {
-
 		setRating(ratingValue);
 		updateRating(ratingValue);
-
 	};
 
-	const skipForward = () => {
-
+	const skipForward = useCallback(() => {
 		if (videoRef.current) {
-
-			videoRef.current.currentTime = Math.min(
+			const newTime = Math.min(
 				videoRef.current.currentTime + 10,
 				videoRef.current.duration
 			);
+			videoRef.current.currentTime = newTime;
+			setTimecode(newTime);
+		}
+	}, [setTimecode]);
 
-		};
-
-	};
-
-	const skipBackward = () => {
-
+	const skipBackward = useCallback(() => {
 		if (videoRef.current) {
-			videoRef.current.currentTime = Math.max(
+			const newTime = Math.max(
 				videoRef.current.currentTime - 10,
 				0
 			);
-		};
-
-	};
+			videoRef.current.currentTime = newTime;
+			setTimecode(newTime);
+		}
+	}, [setTimecode]);
 
 	useKeyBoardShortcuts(
 		playerState,
@@ -390,7 +398,6 @@ export default function VideoPlayer({
 	);
 
 	useEffect(() => {
-
 		const video = videoRef.current;
 		if (!video) return;
 
@@ -406,18 +413,14 @@ export default function VideoPlayer({
 		}
 
 		const trackElement = document.createElement('track');
-
 		trackElement.kind = 'subtitles';
 		trackElement.label = currentTrack.lang;
-
 		const cacheBuster = `?t=${Date.now()}`;
-
 		trackElement.src = `/api/sub-proxy?url=${currentTrack.url}${cacheBuster}`;
 		trackElement.srclang = currentTrack.lang;
 		trackElement.default = true;
 
 		video.appendChild(trackElement);
-
 		video.textTracks[0].mode = 'hidden';
 
 		const handleLoad = () => {
@@ -432,16 +435,20 @@ export default function VideoPlayer({
 
 		return () => {
 			trackElement.removeEventListener('load', handleLoad);
+			trackElement.remove();
 		};
-
 	}, [currentTrack]);
 
 	return (
-		<div className="h-auto w-auto relative bg-black" ref={playerRef}>
-
+		<div
+			className={cn("h-screen w-auto relative bg-black", !controls && "cursor-none")}
+			ref={playerRef}
+		>
 			<video
 				className="h-screen w-full absolute object-contain bg-black"
 				ref={videoRef}
+				autoPlay
+				playsInline
 				onLoadedMetadata={() => {
 
 					if (!videoRef.current) return;
@@ -453,12 +460,26 @@ export default function VideoPlayer({
 							: null;
 
 					if (restoreTime) {
-
 						setPlayerState("loading");
-
 						videoRef.current.currentTime = restoreTime;
 						updatePlaybackTime();
 						savedTimeRef.current = 0;
+					};
+
+					if (wasPlayingRef.current) {
+
+						videoRef.current.play().catch((err) => {
+
+							console.log("Autoplay blocker:", err);
+
+							setShowPlayOverlay(true);
+							setIsPlaying(false);
+
+						});
+
+						wasPlayingRef.current = false;
+
+
 
 					};
 
@@ -482,19 +503,24 @@ export default function VideoPlayer({
 				</div>
 			)}
 
-			<div className={`h-screen w-full absolute flex flex-col justify-between z-2147483640 transition-opacity duration-300 ${controls ? 'opacity-100' : 'opacity-0'}`}
+			{playerState === "loading" && (
+				<div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30">
+					<div className="animate-spin">
+						<Loader2 size={26} />
+					</div>
+				</div>
+			)}
 
+			<div className={`h-screen w-full absolute flex flex-col justify-between z-2147483640 transition-opacity duration-300 ${controls ? 'opacity-100' : 'opacity-0'}`}
 				style={{
 					background: controls
 						? "radial-gradient(circle, transparent 40%, rgba(0, 0, 0, 0.5) 80%, rgba(0, 0, 0, 0.82) 100%)"
 						: "none"
-				}}>
-
+				}}
+			>
 				{/* Top Bar - Back Button */}
 				<div className="h-auto w-full flex items-center justify-center px-6 pt-6 relative">
-
 					<div className="absolute left-6 flex space-x-2">
-
 						<button
 							onClick={() => router.back()}
 							className={cn(
@@ -513,7 +539,6 @@ export default function VideoPlayer({
 							)}
 						>
 							{ratings.map((r, i) => (
-
 								<button
 									key={i}
 									title={r.title}
@@ -526,11 +551,8 @@ export default function VideoPlayer({
 										{r.emoji}
 									</span>
 								</button>
-
 							))}
-
 						</div>
-
 					</div>
 
 					{title && (
@@ -538,37 +560,10 @@ export default function VideoPlayer({
 							{title}
 						</p>
 					)}
-
 				</div>
-
-				<div className="flex-1 flex justify-center items-center relative">
-
-					{/* Rating (when paused and activated) */}
-					{/* {isPlaying === false && playerState !== "loading" && showRating && (
-
-						<RatingOverlay
-							rating={rating}
-							onRatingUpdate={(v) => handleUpdateRating(v)}
-							ratings={ratings}
-						/>
-
-					)} */}
-
-					{playerState === "loading" && (
-
-						<div className="absolute animate-spin">
-							<Loader2 size={26} />
-						</div>
-
-					)}
-
-				</div>
-
-
 
 				{/* Bottom Controls */}
 				<div className="flex flex-col items-center px-6 pb-2">
-
 					<ProgressBar
 						playerState={playerState}
 						timecode={timecode}
@@ -579,7 +574,6 @@ export default function VideoPlayer({
 
 					{/* Control Buttons */}
 					<div className="w-full h-10 flex items-center justify-between">
-
 						<PlaybackControls
 							playerState={playerState}
 							isPlaying={isPlaying}
@@ -600,18 +594,28 @@ export default function VideoPlayer({
 							onQualityChange={changeQuality}
 							sources={sources}
 							currentSource={currentSource}
-							onSourceChange={(sourceIdx) => handleSourceChange(sourceIdx)}
+							onSourceChange={handleSourceChange}
 							onSubtitleChange={changeSubtitleTrack}
 						/>
-
 					</div>
-
 				</div>
-
 			</div>
+
+			{showPlayOverlay && (
+				<div className="absolute inset-0 flex items-center justify-center bg-black/50 z-50">
+					<button
+						onClick={() => {
+							videoRef.current?.play();
+							setShowPlayOverlay(false);
+						}}
+						className="bg-white/90 text-black px-6 py-3 rounded-full text-lg font-medium hover:bg-white transition-colors"
+					>
+						Resume Playback
+					</button>
+				</div>
+			)}
 
 		</div>
 
 	);
-
 };
