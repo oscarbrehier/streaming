@@ -3,7 +3,7 @@ import { glass } from "@/styles";
 import { lchownSync } from "fs";
 import React, { useEffect, useRef } from "react";
 
-export type SettingsView = null | "sources" | "subtitles" | "quality";
+export type SettingsView = null | "sources" | "subtitles" | "quality" | "subtitle-settings";
 
 export function SettingsPanel({
 	view,

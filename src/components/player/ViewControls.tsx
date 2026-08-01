@@ -1,7 +1,7 @@
 "use client"
 
 import { QualityLevel } from "@/hooks/player/useVideoQuality";
-import { ClosedCaption, Cloud, LucideProps, SunMedium, TvMinimal } from "lucide-react";
+import { ClosedCaption, Cloud, LucideProps, Palette, SunMedium, TvMinimal } from "lucide-react";
 import { BiFullscreen } from "react-icons/bi";
 import { MdOutlineSubtitles, MdSubtitles } from "react-icons/md";
 import { PointerEvent, useMemo } from "react";
@@ -10,6 +10,7 @@ import dynamic from "next/dynamic";
 import { SubtitleSelector } from "./SubtitleSelector";
 import { useSettingsController } from "@/hooks/player/useSettingsController";
 import QualitySelector from "./QualitySelector";
+import { SubtitleCustomizer } from "./SubtitleCustomizer";
 
 const MediaSourceSelector = dynamic(() => import("./MediaSourceSelector"));
 
@@ -34,6 +35,7 @@ const panels: { title: SettingsView }[] = [
 	{ title: "sources", },
 	{ title: "subtitles", },
 	{ title: "quality", },
+	{ title: "subtitle-settings" }
 ];
 
 type SettingsPanelConfig = {
@@ -89,6 +91,15 @@ export function ViewControls({
 					onTrackChange={onSubtitleChange}
 				/>
 			),
+		},
+		{
+			id: "subtitle-settings",
+			title: "Subtitle Style",
+			trigger: {
+				icon: Palette,
+				isVisible: () => sources.subtitles.length > 0,
+			},
+			render: () => <SubtitleCustomizer />,
 		},
 		{
 			id: "quality",

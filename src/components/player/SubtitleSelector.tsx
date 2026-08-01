@@ -1,18 +1,20 @@
-"use client"
+"use client";
 
 import { cn } from "@/lib/utils";
 import { SettingsOptionButton } from "./SettingsPanel";
-import { Check, ChevronRight } from "lucide-react";
+import { Check, ChevronRight, Sliders } from "lucide-react";
 import { useState } from "react";
 
 export function SubtitleSelector({
 	subtitles,
 	currentTrack,
-	onTrackChange
+	onTrackChange,
+	onCustomize,
 }: {
 	subtitles: SubtitleSource[];
 	currentTrack: SubtitleSource | null;
 	onTrackChange: (track: SubtitleSource) => void;
+	onCustomize?: () => void;
 }) {
 
 	const [expandedLang, setExpandedLang] = useState<string | null>(null);
@@ -31,13 +33,17 @@ export function SubtitleSelector({
 				onClick={() => onTrackChange(null as any)}
 				active={currentTrack === null}
 			>
-				<Check size={16} strokeWidth={3} className={cn("text-olive", currentTrack !== null && "opacity-0")} />
+				<Check
+					size={16}
+					strokeWidth={3}
+					className={cn("text-olive", currentTrack !== null && "opacity-0")}
+				/>
 				<span className="text-sm font-semibold text-ink/90">Off</span>
 			</SettingsOptionButton>
 
 			{Object.entries(grouped).map(([lang, tracks]) => {
 
-				const isActive = tracks.some(t => t.id === currentTrack?.id);
+				const isActive = tracks.some((t) => t.id === currentTrack?.id);
 				const hasMultiple = tracks.length > 1;
 				const isExpanded = expandedLang === lang;
 
@@ -55,7 +61,11 @@ export function SubtitleSelector({
 							}}
 							active={isActive}
 						>
-							<Check size={16} strokeWidth={3} className={cn("text-olive", !isActive && "opacity-0")} />
+							<Check
+								size={16}
+								strokeWidth={3}
+								className={cn("text-olive", !isActive && "opacity-0")}
+							/>
 							<span className="text-sm font-semibold text-ink/90">{lang}</span>
 							<span className="flex-1 flex justify-end">
 								{hasMultiple && (
@@ -75,7 +85,11 @@ export function SubtitleSelector({
 										onClick={() => onTrackChange(track)}
 										active={currentTrack?.id === track.id}
 									>
-										<Check size={16} strokeWidth={3} className={cn("text-olive", currentTrack?.id !== track.id && "opacity-0")} />
+										<Check
+											size={16}
+											strokeWidth={3}
+											className={cn("text-olive", currentTrack?.id !== track.id && "opacity-0")}
+										/>
 										<span className="text-sm text-ink/70">{track.lang} - {i + 1}</span>
 									</SettingsOptionButton>
 								))}
@@ -87,6 +101,16 @@ export function SubtitleSelector({
 				);
 
 			})}
+
+			{onCustomize && (
+				<button
+					onClick={onCustomize}
+					className="mt-2 flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm font-semibold text-ink/70 transition-all duration-200 ease-in-out hover:bg-neutral-700"
+				>
+					<Sliders size={14} />
+					Customize subtitles
+				</button>
+			)}
 
 		</div>
 

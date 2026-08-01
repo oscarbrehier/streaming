@@ -22,6 +22,7 @@ import { useSubtitles } from "@/hooks/player/useSubtitles";
 import { Loader2 } from "lucide-react";
 import { Button } from "../Button";
 import { useSubtitleCue } from "@/hooks/player/useSubtitleCue";
+import { useSubtitleStyles } from "@/hooks/player/useSubtitlesStyle";
 
 const supabase = createClient();
 
@@ -82,6 +83,7 @@ export default function VideoPlayer({
 	const { currentTrack, changeSubtitleTrack } = useSubtitles(sources.subtitles);
 	const { qualities, changeQuality, currentQuality, setupQualityListener } = useVideoQuality(hlsRef);
 	const cueText = useSubtitleCue(videoRef);
+	const { textColor, backgroundColor, backgroundOpacity, fontSize, offsetMs } = useSubtitleStyles();
 
 	const { controls } = useVideoControls(videoRef, isPlaying);
 	const { handleProgressUpdate } = useVideoProgress(videoRef, mediaId, userId, profileId, mediaStatus.completed);
