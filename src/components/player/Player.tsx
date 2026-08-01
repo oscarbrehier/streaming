@@ -44,6 +44,16 @@ const ratings = [
 	{ value: 3, emoji: "👎", title: "Not for Me" }
 ];
 
+function hexToRgba(hex: string, alpha: number) {
+
+	const h = hex.replace("#", "");
+	const full = h.length === 3 ? h.split("").map((c) => c + c).join("") : h;
+	const int = parseInt(full, 16);
+
+	return `rgba(${(int >> 16) & 255}, ${(int >> 8) & 255}, ${int & 255}, ${alpha})`;
+
+};
+
 export default function VideoPlayer({
 	userId,
 	profileId,
@@ -64,6 +74,7 @@ export default function VideoPlayer({
 	const savedTimeRef = useRef<number>(0);
 	const wasPlayingRef = useRef(false);
 	const lastProgressRef = useRef<number>(0);
+	const appliedOffsetRef = useRef(0);
 
 	const {
 		timecode, setTimecode,
@@ -297,6 +308,47 @@ export default function VideoPlayer({
 
 	}, [wasPlayingRef.current]);
 
+	useEffect(() => {
+		appliedOffsetRef.current = 0;
+	}, [currentTrack]);
+
+	useEffect(() => {
+		const video = videoRef.current;
+		if (!video) return;
+
+		let raf = 0;
+		let tries = 0;
+
+		const apply = () => {
+
+			const cues = video.textTracks[0]?.cues;
+
+			if (!cues || cues.length === 0) {
+				if (tries++ < 60) raf = requestAnimationFrame(apply);
+				return;
+			}
+
+			const deltaSec = (offsetMs - appliedOffsetRef.current) / 1000;
+
+			if (deltaSec !== 0) {
+			
+				for (let i = 0; i < cues.length; i++) {
+					const cue = cues[i];
+					cue.startTime = Math.max(0, cue.startTime + deltaSec);
+					cue.endTime = Math.max(0, cue.endTime + deltaSec);
+				}
+			
+				appliedOffsetRef.current = offsetMs;
+			
+			};
+		
+		};
+
+		apply();
+		return () => cancelAnimationFrame(raf);
+	
+	}, [offsetMs, currentTrack]);
+
 	const handleMediaButtons = useCallback(async () => {
 
 		if (!videoRef.current) return;
@@ -495,9 +547,18 @@ export default function VideoPlayer({
 						controls ? "bottom-24" : "bottom-8"
 					)}
 				>
-					<p className="text-white text-3xl text-center max-w-2xl leading-relaxed px-4 whitespace-pre-line"
+					<p
+						className="text-center max-w-2xl leading-relaxed px-4 whitespace-pre-line rounded"
 						style={{
-							textShadow: "0 1px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.6)"
+							color: textColor,
+							fontSize: `${1.875 * fontSize}rem`, // 1.875rem = old text-3xl base
+							backgroundColor: backgroundColor === "transparent"
+								? "transparent"
+								: hexToRgba(backgroundColor, backgroundOpacity),
+							padding: backgroundColor === "transparent" ? undefined : "0.1em 0.4em",
+							textShadow: backgroundColor === "transparent"
+								? "0 1px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.6)"
+								: undefined,
 						}}
 					>
 						{cueText}
