@@ -1,7 +1,7 @@
 "use client"
 
 import { cn } from "@/lib/utils";
-import { Bookmark, Home, LayoutGrid, Lock, Pencil, Search, Settings, SunMedium, Users } from "lucide-react";
+import { Bookmark, Clock, ClockFading, Film, Home, LayoutGrid, Lock, Pencil, Rewind, Search, Settings, SunMedium, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { User } from "@supabase/supabase-js";
@@ -21,7 +21,7 @@ interface NavbarProps {
 const links = [
 	{ icon: Home, path: "/", label: "home" },
 	{ icon: Search, path: "/search", label: "search" },
-	// { icon: LayoutGrid, path: "/browse", label: "browse" },
+	{ icon: Clock, path: "/history", label: "history" },
 	{ icon: Bookmark, path: "/list", label: "my list" },
 ];
 

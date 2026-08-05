@@ -1,8 +1,10 @@
 import { getMovie } from "@/lib/tmdb/movie";
 import { createClient } from "../server";
 import { getActiveProfileId } from "@/utils/profiles";
+import { getSerie } from "@/lib/tmdb/series";
 
-export async function getRecentlyWatched(userId: string): Promise<MovieSummary[]> {
+export async function getRecentlyWatched(userId: string): Promise<(MovieSummary | TvSummary)[]> {
+
 
 	const supabase = await createClient();
 
@@ -14,24 +16,69 @@ export async function getRecentlyWatched(userId: string): Promise<MovieSummary[]
 		.select("*")
 		.eq("user_id", userId)
 		.eq("profile_id", profileId)
-		.order("last_watched", { ascending: false });;
+		.order("last_watched", { ascending: false })
+		.limit(20);
 
-	if (error || data.length === 0) return [];
+	if (error || !data?.length) return [];
 
-	const movies = [];
+	const results = await Promise.all(
+		data.map(async (entry) => {
+			try {
+				return entry.media_type === "tv"
+					? await getSerie<TvSummary>(entry.media_id)
+					: await getMovie<MovieSummary>(entry.media_id);
+			} catch {
+				return null;
+			}
+		})
+	);
 
-	for (const entry of data) {
+	return results.filter(Boolean) as (MovieSummary | TvSummary)[];
 
-		try {
+};
 
-			const movie = await getMovie<MovieSummary>(entry.media_id);
-			if (movie) movies.push(movie);
+export async function getWatchHistory(limit = 50): Promise<((MovieDetailsWithImages | TvDetailsWithImages) & { mediaStatus: UserMediaStatus })[]> {
 
-		} catch (err) { };
+	const supabase = await createClient();
 
-	};
+	const { data: { user } } = await supabase.auth.getUser();
+	if (!user) return [];
 
-	return movies;
+	const profileId = await getActiveProfileId();
+	if (!profileId) return [];
+
+	const { data, error } = await supabase
+		.from("user_media_status")
+		.select("*")
+		.eq("user_id", user.id)
+		.eq("profile_id", profileId)
+		.order("last_watched", { ascending: false })
+		.limit(limit);
+
+	if (error || !data?.length) return [];
+
+	const results = await Promise.all(
+		data.map(async (entry) => {
+
+			try {
+
+				const media = entry.media_type === "tv"
+					? await getSerie<TvDetailsWithImages>(entry.media_id)
+					: await getMovie<MovieDetailsWithImages>(entry.media_id);
+
+
+				if (!media) return null;
+
+				return { ...media, mediaStatus: entry };
+
+			} catch {
+				return null;
+			};
+
+		})
+	);
+
+	return results.filter(Boolean) as ((MovieDetailsWithImages | TvDetailsWithImages) & { mediaStatus: UserMediaStatus })[];
 
 };
 
