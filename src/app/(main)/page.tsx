@@ -1,12 +1,9 @@
-import { Carousel, CarouselItem } from "@/components/Carousel";
 import { HeroBanner } from "@/components/HeroBanner";
-import { PostCardItem, PosterCard } from "@/components/cards/Poster";
 import { getRecentlyWatched } from "@/utils/supabase/queries/userMedia";
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import { getWatchlist } from "@/utils/db/watchlist";
 import { getHeroBannerItems } from "@/utils/db/featuredContent";
-import { CategorySelector } from "./CategorySelector";
 import { getClassics, getCollection, getCurrentCountryDecade, getCurrentDirector, getDirectorsEssential, getFeaturedFilm, getFromCountry, getHiddenGems, getRecentAcclaimed, getWorldCinema } from "@/lib/tmdb/editorial";
 import { BackdropCard } from "@/components/cards/Backdrop";
 import { cn } from "@/lib/utils";
@@ -56,24 +53,11 @@ export default async function Page({
 
 			<HeroBanner items={heroBannerItems} />
 
-			{/* <CategorySelector /> */}
-
 			<div className={cn(
 				"w-full flex flex-col items-center mt-20 pb-20 space-y-12",
 				"xl:px-40 lg:px-10 px-4",
 			)}>
 
-				{/* {carousels.map((item, idx) => (
-					item.data.length > 0 && (
-						<Carousel
-							key={idx}
-							data={item.data}
-							Card={item.Card}
-							title={item.title}
-							ranked={item.ranked}
-						/>
-					)
-				))} */}
 
 				{rows.map((row, idx) => (
 					<MediaRow key={idx} {...row} Card={BackdropCard} />

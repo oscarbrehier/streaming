@@ -20,43 +20,43 @@ export async function GET(req: NextRequest) {
 	const cacheKey = `search:${query.toLowerCase().trim()}:${type}:${strict}`;
 	const encoder = new TextEncoder();
 
-	// const cached = await getCache(cacheKey);
+	const cached = await getCache(cacheKey);
 
-	// if (cached) {
+	if (cached) {
 
-	// 	try {
+		try {
 
-	// 		const { results, intent } = JSON.parse(cached);
-	
-	// 		const stream = new ReadableStream({
-	// 			start(controller) {
+			const { results, intent } = JSON.parse(cached);
 
-	// 				const send = (data: any) => controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
+			const stream = new ReadableStream({
+				start(controller) {
 
-	// 				send({ type: "results", results: results.filter((r: any) => r._source === "title") });
-	// 				send({ type: "intent", intent });
+					const send = (data: any) => controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
 
-	// 				const nonTitle = results.filter((r: any) => r._source !== "title");
+					send({ type: "results", results: results.filter((r: any) => r._source === "title") });
+					send({ type: "intent", intent });
 
-	// 				if (nonTitle.length > 0) send({ type: "append", results: nonTitle, label: "cached" });
-	// 				send({ type: "done" });
+					const nonTitle = results.filter((r: any) => r._source !== "title");
 
-	// 				controller.close();
+					if (nonTitle.length > 0) send({ type: "append", results: nonTitle, label: "cached" });
+					send({ type: "done" });
 
-	// 			}
-	// 		});
+					controller.close();
 
-	// 		return new Response(stream, {
-	// 			headers: {
-	// 				"Content-Type": "text/event-stream",
-	// 				"Cache-Control": "no-cache",
-	// 				"Connection": "keep-alive",
-	// 			}
-	// 		});
+				}
+			});
 
-	// 	} catch {};
+			return new Response(stream, {
+				headers: {
+					"Content-Type": "text/event-stream",
+					"Cache-Control": "no-cache",
+					"Connection": "keep-alive",
+				}
+			});
 
-	// };
+		} catch { };
+
+	};
 
 	const stream = new ReadableStream({
 		async start(controller) {
@@ -126,6 +126,7 @@ export async function GET(req: NextRequest) {
 							if (filtered.length > 0) {
 								const tagged = tagSource(filtered, `director:${d}`);
 								batches.push({ results: tagged, label: d });
+								allTagged.push(...tagged);
 								send({ type: "append", results: tagged, label: d });
 							}
 						})
@@ -136,6 +137,7 @@ export async function GET(req: NextRequest) {
 							if (filtered.length > 0) {
 								const tagged = tagSource(filtered, `actor:${a}`);
 								batches.push({ results: tagged, label: a });
+								allTagged.push(...tagged);
 								send({ type: "append", results: tagged, label: a });
 							}
 						})
@@ -146,6 +148,7 @@ export async function GET(req: NextRequest) {
 							if (filtered.length > 0) {
 								const tagged = tagSource(filtered, `keyword:${k}`);
 								batches.push({ results: tagged, label: k });
+								allTagged.push(...tagged);
 								send({ type: "append", results: tagged, label: k });
 							}
 						})
@@ -156,6 +159,7 @@ export async function GET(req: NextRequest) {
 							if (filtered.length > 0) {
 								const tagged = tagSource(filtered, `movement:${m}`);
 								batches.push({ results: tagged, label: m });
+								allTagged.push(...tagged);
 								send({ type: "append", results: tagged, label: m });
 							}
 						})
@@ -164,7 +168,7 @@ export async function GET(req: NextRequest) {
 
 				await Promise.allSettled(allSearches);
 
-				// await setCache(cacheKey, JSON.stringify({ results: allTagged, intent }));
+				await setCache(cacheKey, JSON.stringify({ results: allTagged, intent }));
 
 
 				send({ type: "done" });
