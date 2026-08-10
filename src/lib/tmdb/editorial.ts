@@ -83,23 +83,23 @@ export async function getDirectorsEssential(directorName: string): Promise<{ dir
 
 };
 
-export async function getClassics(): Promise<MovieDetails[]> {
+export async function getClassics(limit = 8): Promise<MovieDetails[]> {
 
 	return fetchUntilEnough<MovieDetails>(
 		page => `/discover/movie?sort_by=vote_average.desc&vote_average.gte=7.5&vote_count.gte=500&primary_release_date.lte=1970-12-31&page=${page}`,
 		"movie",
-		8,
+		limit,
 		3
 	);
 
 };
 
-export async function getFromCountry(country: string, decade: number): Promise<MovieDetails[]> {
+export async function getFromCountry(country: string, decade: number, limit = 8): Promise<MovieDetails[]> {
 
 	return fetchUntilEnough<MovieDetails>(
 		page => `/discover/movie?&sort_by=vote_average.desc&vote_count.gte=100&primary_release_date.gte=${decade}-12-31&primary_release_date.lte=${decade + 9}-12-31&with_origin_country=${country}&page=${page}`,
 		"movie",
-		8,
+		limit,
 		14
 	);
 
@@ -175,7 +175,7 @@ const COLLECTIONS: Record<string, {
 
 };
 
-export async function getCollection(key: string): Promise<{
+export async function getCollection(key: string, limit = 8): Promise<{
 	label: string;
 	items: MovieDetails[];
 } | null> {
@@ -186,7 +186,7 @@ export async function getCollection(key: string): Promise<{
 	const items = await fetchUntilEnough<MovieDetails>(
 		collection.buildUrl,
 		collection.mediaType,
-		8,
+		limit,
 		3
 	);
 

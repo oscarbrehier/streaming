@@ -41,17 +41,6 @@ export default async function Page({
 
 	const collection = await getCollection("french_new_wave");
 
-	// const carousels: CarouselItem<any>[] = [
-	// 	{ data: directorsEssential?.items ?? [], Card: BackdropCard, title: `Essential ${directorsEssential?.director ?? director}` },
-	// 	{ data: classics, Card: BackdropCard, title: "Classics" },
-	// 	{ data: fromCountry, Card: BackdropCard, title: label },
-	// 	...(collection ? [{ data: collection.items, Card: BackdropCard, title: collection.label }] : []),
-	// 	{ data: watchlist, Card: BackdropCard, title: "Watchlist" },
-	// 	{ data: recentlyWatched, Card: BackdropCard, title: "Continue Watching" },
-	// ];
-
-	console.log(directorsEssential?.items[1])
-
 	const rows = [
 		{ data: directorsEssential?.items ?? [], title: `Essential ${directorsEssential?.director ?? director}`, href: directorsEssential?.directorId ? `/person/${directorsEssential.directorId}` : undefined },
 		{ data: classics, title: "Classics", href: "/collection/classics" },
